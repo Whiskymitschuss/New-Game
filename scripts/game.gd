@@ -504,7 +504,7 @@ func spawn_enemy(boss: bool=false) -> Dictionary:
   kind=9
   template=Content.ENEMIES[kind]
   health=(450+boss_id*200)*(1+level*0.025)
- var e={"type":kind,"x":555.0,"y":rng.randf_range(283,335),"hp":health,"max_hp":health,"speed":float(template[2]),"damage":float(template[3])*(1+level*0.018),"reward":int(template[5]),"timer":1.0,"flash":0.0,"age":0.0,"poison":0.0,"burn":0.0,"slow":0.0,"boss":boss,"boss_id":boss_id,"telegraph":0.0,"phase":1,"dead":false}
+ var e={"type":kind,"x":520.0,"y":rng.randf_range(283,335),"hp":health,"max_hp":health,"speed":float(template[2]),"damage":float(template[3])*(1+level*0.018),"reward":int(template[5]),"timer":1.0,"flash":0.0,"age":0.0,"poison":0.0,"burn":0.0,"slow":0.0,"boss":boss,"boss_id":boss_id,"telegraph":0.0,"phase":1,"dead":false}
  enemies.append(e)
  return e
 

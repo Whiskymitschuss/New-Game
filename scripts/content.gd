@@ -12,7 +12,7 @@ const CLASSES = [
  {"name":"Überlebender", "desc":"Vitalität · starke Regeneration", "hp":165.0, "damage":0.95, "regen":2.0, "ammo":30}]
 # damage, interval, reload, magazine, range, effect, unlock level
 const WEAPONS = [
- ["Pistole",12.0,0.52,1.0,12,480.0,"bullet",1],
+ ["Pistole",12.0,0.52,1.0,12,310.0,"bullet",1],
  ["Revolver",30.0,0.85,1.4,6,480.0,"pierce",2],
  ["Maschinenpistole",7.0,0.15,1.5,28,350.0,"bullet",4],
  ["Sturmgewehr",16.0,0.25,1.6,24,480.0,"bullet",7],
