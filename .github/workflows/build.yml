@@ -26,6 +26,11 @@ jobs:
         with:
           path: ${{ env.DEADWAVE_TOOLS }}/downloads
           key: deadwave-downloads-godot-4.6.3-android-cli-16111833
+      - name: Retain the prototype debug identity for future APK updates
+        uses: actions/cache@v4
+        with:
+          path: /tmp/deadwave-ci-tools/debug.keystore
+          key: deadwave-prototype-debug-keystore-v1
       - name: Install verified build tools and import project
         run: python3 scripts/bootstrap.py
       - name: Test, export and verify Android and Windows
@@ -33,24 +38,40 @@ jobs:
         run: |
           source "$DEADWAVE_TOOLS/env.sh"
           ./scripts/build.sh
+      - name: Verify visible balls through real OpenGL rendering
+        shell: bash
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          source "$DEADWAVE_TOOLS/env.sh"
+          if ! command -v xvfb-run >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --no-install-recommends -y xvfb
+          fi
+          test_data=$(mktemp -d /tmp/deadwave-render-XXXXXXXX)
+          XDG_DATA_HOME="$test_data" xvfb-run -a "$GODOT_BIN" --path . --rendering-method gl_compatibility --audio-driver Dummy --fixed-fps 60 --script res://tests/render_balls.gd > builds/test-render.log 2>&1
+          cat builds/test-render.log
+          if rg -q 'SCRIPT ERROR|Parse Error|FAIL:' builds/test-render.log; then exit 1; fi
       - name: Upload Android debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: DeadwaveHeroes-v0.1-debug
+          name: DeadwaveHeroes-v0.1.1-debug
           path: |
-            builds/DeadwaveHeroes-v0.1-debug.apk
+            builds/DeadwaveHeroes-v0.1.1-debug.apk
             builds/manifest.json
           if-no-files-found: error
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
-          name: DeadwaveHeroes-v0.1-windows
-          path: builds/DeadwaveHeroes-v0.1-windows.zip
+          name: DeadwaveHeroes-v0.1.1-windows
+          path: builds/DeadwaveHeroes-v0.1.1-windows.zip
           if-no-files-found: error
       - name: Preserve build and test evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: deadwave-build-evidence
-          path: builds/*.log
+          path: |
+            builds/*.log
+            builds/balls-v0.1.1.png
           if-no-files-found: warn

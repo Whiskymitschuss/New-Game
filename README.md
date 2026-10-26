@@ -1,6 +1,6 @@
 # DEADWAVE HEROES · RF Worlds
 
-Spielbarer Godot-4.6.3-Prototyp **v0.1.0**, Android und Windows, Hochformat 540 × 960. Eigenständige prozedurale Vektorgrafik und synthetisierte Originalmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+Spielbarer Godot-4.6.3-Prototyp **v0.1.1**, Android und Windows, Hochformat 540 × 960. Eigenständige prozedurale Vektorgrafik und synthetisierte Originalmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
 
 ## Spielen
 
@@ -14,11 +14,13 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.1.0-debug/DeadwaveHeroes-v0.1-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.1.0-debug). Dieser öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
+**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.1.1-debug/DeadwaveHeroes-v0.1.1-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.1.1-debug). Dieser öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
 
-Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.1-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet pro frischem Runner einen neuen Debug-Schlüssel, daher können APKs aus verschiedenen Builds eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
+Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.1.1-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet pro frischem Runner einen neuen Debug-Schlüssel, daher können APKs aus verschiedenen Builds eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
 
-Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.1-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
+Die Kugeldarstellung wurde in v0.1.1 überarbeitet: gestaffelter Abwurf statt überlagerter Sofortemission, größere kontrastreiche Kugeln mit Spur und eine unabhängige Vordergrund-Zeichenebene. Gerenderte Pixel und sichtbare Bewegung werden nun zusätzlich geprüft. Gegenüber v0.1.0 hat v0.1.1 einen neuen Debug-Schlüssel; Android kann deshalb zuerst die Deinstallation der alten Testversion verlangen, wodurch deren lokaler Spielstand gelöscht wird. Der Debug-Schlüssel wird ab v0.1.1 im Buildcache für weitere Test-Updates aufbewahrt.
+
+Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.1.1-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
 
 ## Entwicklung und Builds (Linux)
 

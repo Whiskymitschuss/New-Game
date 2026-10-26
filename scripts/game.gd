@@ -15,6 +15,10 @@ var ui: CanvasLayer
 var controls: Control
 var geometry: Node2D
 var pool: Array[AmmoBall] = []
+var ball_visuals: BallVisuals
+var pending_balls: Array = []
+var drop_emit_timer := 0.0
+const DROP_INTERVAL := 0.065
 var rotors: Array = []
 var obstacles: Array = []
 var enemies: Array = []
@@ -83,6 +87,9 @@ func _ready() -> void:
   var ball=AmmoBall.new()
   add_child(ball)
   pool.append(ball)
+ ball_visuals=BallVisuals.new()
+ ball_visuals.balls=pool
+ add_child(ball_visuals)
  show_menu()
  if "--smoke" in OS.get_cmdline_user_args():
   auto_test=true
@@ -151,7 +158,7 @@ func show_menu() -> void:
  button("WELTKARTE",Rect2(30,722,232,55),show_map)
  button("HELD & ARSENAL",Rect2(278,722,232,55),show_armory)
  button("EINSTELLUNGEN",Rect2(30,793,480,48),show_settings)
- label("OFFLINE  •  KEINE WERBUNG  •  v0.1.0",Vector2(34,901),12,MUTED)
+ label("OFFLINE  •  KEINE WERBUNG  •  v0.1.1",Vector2(34,901),12,MUTED)
 
 func page_header(title: String,subtitle: String) -> void:
  clear_ui()
@@ -360,6 +367,8 @@ func build_maze() -> void:
   obstacles.append(ob)
 
 func clear_balls() -> void:
+ pending_balls.clear()
+ drop_emit_timer=0
  for ball in pool:
   ball.deactivate()
 
@@ -379,19 +388,31 @@ func emit_ball(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> bool:
  return false
 
 func drop_ammo() -> void:
- if mode!="play" or attempts<=0:
+ if mode!="play" or attempts<=0 or not pending_balls.is_empty():
   return
  var count=int(stats["drop"])
- if active_balls()+count>(MAX_BALLS if quality==1 else 64):
+ if active_balls()+pending_balls.size()+count>(MAX_BALLS if quality==1 else 64):
   status_text="Kugeln unterwegs – gleich ist wieder Platz."
   return
  attempts-=1
  dropped+=count
  profile.data["stats"]["drops"]+=1
  for i in range(count):
-  emit_ball(Vector2(aim+rng.randf_range(-9,9),488-i*2),Vector2(rng.randf_range(-35,35)+(aim-270)*0.16,rng.randf_range(5,35)))
+  pending_balls.append({"at":Vector2(aim+rng.randf_range(-20,20),498),"velocity":Vector2(rng.randf_range(-48,48)+(aim-270)*0.16,rng.randf_range(8,25))})
+ drop_emit_timer=0
  audio.play_effect("drop")
  status_text="Jede Kugel zählt. Multiplikatoren vervielfachen ihren Wert."
+
+func emit_pending_balls(delta: float) -> void:
+ if pending_balls.is_empty():
+  return
+ drop_emit_timer-=delta
+ while drop_emit_timer<=0 and not pending_balls.is_empty():
+  var next: Dictionary=pending_balls[0]
+  if not emit_ball(next["at"],next["velocity"]):
+   return # Preserve queued units when representative splits occupy the pool.
+  pending_balls.pop_front()
+  drop_emit_timer+=DROP_INTERVAL
 
 func gate_split(row: int) -> float:
  return 270.0+sin(clock*1.3)*75 if bool(layout["gates"][row]["moving"]) else 270.0
@@ -428,6 +449,7 @@ func collect_ball(ball: AmmoBall) -> void:
  audio.play_effect("collect",rng.randf_range(0.85,1.2))
 
 func physics_balls(delta: float) -> void:
+ emit_pending_balls(delta)
  for rotor in rotors:
   if rotor["kind"]=="trapdoor":
    rotor["body"].rotation=sin(clock*rotor["speed"])*1.25
@@ -577,7 +599,7 @@ func update_combat(delta: float) -> void:
     finish_level(true)
    else:
     choose_upgrade()
- elif ammo<=0 and attempts<=0 and active_balls()==0:
+ elif ammo<=0 and attempts<=0 and active_balls()==0 and pending_balls.is_empty():
   status_text="Keine Munition. Halte mit IMPULS und Drohnen durch!"
   # Explicit surrender avoids a soft lock with regenerating/armored targets.
 
@@ -735,6 +757,7 @@ func special_attack() -> void:
 
 func choose_upgrade() -> void:
  mode="upgrade"
+ ball_visuals.hide()
  clear_ui()
  cards.clear()
  while cards.size()<3:
@@ -780,6 +803,7 @@ func apply_upgrade(id: int) -> void:
 
 func finish_level(win: bool) -> void:
  mode="victory" if win else "defeat"
+ ball_visuals.hide()
  hero_pose="victory" if win else "defeat"
  clear_ui()
  var stars=clampi(ceili(hp/float(stats["max_hp"])*3),1,3) if win else 0
@@ -802,6 +826,7 @@ func pause_game() -> void:
  if mode!="play":
   return
  mode="pause"
+ ball_visuals.hide()
  clear_ui()
  label("DURCHATMEN.",Vector2(30,422),38,LIME)
  label("Physik und Kampf pausieren vollständig.",Vector2(30,484),15,MUTED)
@@ -841,6 +866,8 @@ func _physics_process(delta: float) -> void:
   begin_wave()
 
 func _process(delta: float) -> void:
+ if is_instance_valid(ball_visuals):
+  ball_visuals.visible=mode=="play"
  if mode!="pause" and mode!="upgrade":
   clock+=delta
   damage_flash=maxf(0,damage_flash-delta)
@@ -861,8 +888,8 @@ func _process(delta: float) -> void:
    if floats[i]["life"]<=0:
     floats.remove_at(i)
  if is_instance_valid(drop_button):
-  drop_button.text="ABWERFEN  ·  %d ÜBRIG"%attempts
-  drop_button.disabled=attempts<=0
+  drop_button.text="ABWURF LÄUFT …" if not pending_balls.is_empty() else "ABWERFEN  ·  %d ÜBRIG"%attempts
+  drop_button.disabled=attempts<=0 or not pending_balls.is_empty()
  if is_instance_valid(special_button):
   special_button.text="IMPULS %d%%"%int(energy)
   special_button.disabled=energy<50
@@ -1182,6 +1209,12 @@ func _draw() -> void:
  for i in range(12):
   line(Vector2(42+i*39,846),Vector2(53+i*39,857),Color("40767a"),3)
  text_at("SAMMLER",Vector2(231,858),10,INK)
+ var in_flight: int=0
+ for ball in pool:
+  if ball.live:
+   in_flight+=ball.weight
+ if in_flight>0 or not pending_balls.is_empty():
+  text_at("KUGELWERT %s   ·   %d IM ABWURF"%[compact(in_flight),pending_balls.size()],Vector2(43,822),11,INK)
  text_at(status_text.left(72),Vector2(27,429),11,MUTED)
  for particle in sparks:
   draw_circle(particle["pos"],2.2,Color(particle["color"],clampf(particle["life"]*3,0,1)))

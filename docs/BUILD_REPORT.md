@@ -46,3 +46,14 @@ Keine APK-Installation und Ausführung auf einem physischen Smartphone oder Andr
 Die unveränderte APK aus Build #2 wurde zusätzlich als ausdrücklich markierte Debug-Vorabversion veröffentlicht: [v0.1.0-debug](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.1.0-debug). [Veröffentlichungsworkflow #1](https://github.com/Whiskymitschuss/New-Game/actions/runs/40371689015): **Success**, Gesamtdauer 13s. Der Workflow prüft Größe und SHA-256 gegen das Manifest des ursprünglichen Build-Artefakts vor dem Hochladen.
 
 [Direkte APK-Datei](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.1.0-debug/DeadwaveHeroes-v0.1-debug.apk), ohne GitHub-Anmeldung und ohne ZIP-Umweg. Der öffentliche Download wurde anschließend vollständig heruntergeladen, gegen die veröffentlichten SHA-256-Prüfsummen geprüft und erneut mit `apksigner verify` validiert. Dies bestätigt den funktionierenden Download und die APK-Integrität, weiterhin keinen Gerätetest.
+
+
+## v0.1.1 – sichtbarer Kugelstrom
+
+Nutzerbefund: Auf Android steigt nach ABWERFEN der Munitionszähler, ohne dass die Kugeln erkennbar sind. Die lokale OpenGL-Reproduktion zeigte funktionierende Physik und gezeichnete, aber kleine, fast überlagerte Kugeln mit sehr kurzer Flugzeit. Die genaue Ursache auf dem Smartphone wurde ohne Zugriff auf das Gerät nicht separat nachgewiesen.
+
+Korrektur: eigene foreground-Zeichenebene (`BallVisuals`, z_index 20), unabhängig vom Sichtbarkeits-/Redrawzustand gepoolter RigidBody2D-Knoten; größere kontrastreiche Kugeln, Lichtkante und kurze Spur; gestaffelte Freigabe alle 65 ms statt einer überlagerten Sofortemission; reduzierte Kugelgravitation; begrenzte Emissionswarteschlange und explizites Ausblenden in modalen Menüs. Virtuelle Kugelwerte, Poolgrenze und Munitionszuordnung bleiben erhalten.
+
+Lokal bestanden: 314 Spiel-/Physik-/Speicherprüfungen, vollständige Tutorial-Durchläufe 1–3 sowie **14 neue Prüfungen mit echtem OpenGL-Rendering**, darunter helle Bildpunkte an statischen und bewegten Physikpositionen, sichtbare virtuelle Repräsentanten, Queue-Zeitverlauf, Sammler und Pause. Screenshot: `builds/balls-v0.1.1.png`. Der GitHub-Build führt diese Grafikprüfung ebenfalls unter Xvfb aus; der Veröffentlichungsworkflow wird erst nach erfolgreichem Build ausgelöst.
+
+APK-Version 0.1.1 / Versionscode 2. Die direkte Downloadadresse ist `https://github.com/Whiskymitschuss/New-Game/releases/download/v0.1.1-debug/DeadwaveHeroes-v0.1.1-debug.apk`. Gegenüber dem ursprünglichen GitHub-APK wurde ein neuer Debug-Schlüssel erzeugt; Installation über die alte Version kann deshalb abgewiesen werden. Eine Deinstallation entfernt den lokalen Spielstand. Ab diesem Build wird der Debug-Schlüssel im Actions-Cache wiederverwendet, solange dieser Cache erhalten bleibt. Die Savegame-Struktur selbst wurde nicht geändert. Ein Gerätetest der neuen Version steht aus.

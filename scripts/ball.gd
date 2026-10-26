@@ -10,12 +10,13 @@ var glow := 0.0
 
 func _ready() -> void:
  var shape := CircleShape2D.new()
- shape.radius=5
+ shape.radius=6
  var collider := CollisionShape2D.new()
  collider.shape=shape
  add_child(collider)
  collision_layer=2
  collision_mask=1
+ gravity_scale=0.42
  var material := PhysicsMaterial.new()
  material.bounce=0.65
  material.friction=0.18
@@ -48,8 +49,3 @@ func deactivate() -> void:
  collision_mask=0
  linear_velocity=Vector2.ZERO
  position=Vector2(-200,-200)
-
-func _draw() -> void:
- draw_circle(Vector2(1,2),6,Color(0.01,0.03,0.05,0.5))
- draw_circle(Vector2.ZERO,5,Color("d5fc84") if weight>1 else Color("e9f5ff"))
- draw_circle(Vector2(-1.5,-1.5),1.8,Color.WHITE)
