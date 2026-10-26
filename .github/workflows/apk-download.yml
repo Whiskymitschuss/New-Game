@@ -1,0 +1,48 @@
+name: Publish installable debug APK
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful build run containing the verified Android artifact
+        required: true
+        default: '40367847222'
+  push:
+    branches: [main]
+    paths: [.github/workflows/apk-download.yml]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish-debug-download:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SOURCE_RUN_ID: ${{ inputs.source_run_id || '40367847222' }}
+      RELEASE_TAG: v0.1.0-debug
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the already tested APK
+        run: gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name DeadwaveHeroes-v0.1-debug --dir release-assets
+      - name: Verify APK matches the successful build manifest
+        run: |
+          python3 - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          root=Path('release-assets')
+          name='DeadwaveHeroes-v0.1-debug.apk'
+          info=json.loads((root/'manifest.json').read_text())[name]
+          apk=root/name
+          assert apk.stat().st_size==info['bytes'], 'APK size mismatch'
+          assert hashlib.sha256(apk.read_bytes()).hexdigest()==info['sha256'], 'APK SHA-256 mismatch'
+          (root/'SHA256SUMS.txt').write_text(info['sha256']+'  '+name+'\n')
+          print('APK verified against successful build manifest')
+          PY
+      - name: Publish direct download as an explicitly marked debug prerelease
+        run: |
+          cat > /tmp/deadwave-release-notes.md <<'NOTES'
+          Spielbarer Prototyp v0.1 von RF Worlds. Die APK unten direkt herunterladen und auf Android installieren. Android 7 oder neuer, ARMv7/ARM64. Die Datei stammt unverändert aus dem erfolgreichen und geprüften GitHub-Build #2.
+
+          Debug-Testversion: kein fertiger Release und noch nicht auf einem physischen Smartphone getestet. Bei Bedarf die Installation aus dieser Downloadquelle erlauben. Windows und Buildprotokolle stehen im ursprünglichen Actions-Lauf bereit.
+          NOTES
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --title 'DEADWAVE HEROES v0.1 · Android Debug' --notes-file /tmp/deadwave-release-notes.md release-assets/DeadwaveHeroes-v0.1-debug.apk release-assets/SHA256SUMS.txt
