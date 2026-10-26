@@ -7,6 +7,33 @@ var previous := Vector2.ZERO
 var live := false
 var portal_used := false
 var glow := 0.0
+var reset_pending := false
+var reset_at := Vector2.ZERO
+var reset_velocity := Vector2.ZERO
+
+func set_physics_pose(at: Vector2,velocity: Vector2) -> void:
+ reset_at=at
+ reset_velocity=velocity
+ reset_pending=true
+ # Node2D.position alone can be replaced by the previous server snapshot on reuse.
+ var pose=Transform2D(0,at)
+ transform=pose
+ PhysicsServer2D.body_set_state(get_rid(),PhysicsServer2D.BODY_STATE_TRANSFORM,pose)
+ PhysicsServer2D.body_set_state(get_rid(),PhysicsServer2D.BODY_STATE_LINEAR_VELOCITY,velocity)
+ PhysicsServer2D.body_set_state(get_rid(),PhysicsServer2D.BODY_STATE_ANGULAR_VELOCITY,0.0)
+ reset_physics_interpolation()
+
+func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
+ if reset_pending:
+  state.transform=Transform2D(0,reset_at)
+  state.linear_velocity=reset_velocity
+  state.angular_velocity=0
+  state.sleeping=false
+  reset_pending=false
+
+func teleport_to(at: Vector2,velocity: Vector2) -> void:
+ previous=at
+ set_physics_pose(at,velocity)
 
 func _ready() -> void:
  var shape := CircleShape2D.new()
@@ -25,7 +52,6 @@ func _ready() -> void:
  deactivate()
 
 func activate(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> void:
- position=at
  previous=at
  weight=amount
  gates=mask
@@ -35,7 +61,7 @@ func activate(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> void:
  visible=true
  freeze=false
  sleeping=false
- linear_velocity=velocity
+ set_physics_pose(at,velocity)
  angular_velocity=0
  collision_layer=2
  collision_mask=1
@@ -43,6 +69,7 @@ func activate(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> void:
 
 func deactivate() -> void:
  live=false
+ reset_pending=false
  visible=false
  freeze=true
  collision_layer=0

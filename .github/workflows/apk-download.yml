@@ -20,21 +20,21 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SOURCE_RUN_ID: ${{ inputs.source_run_id || github.event.workflow_run.id }}
-      RELEASE_TAG: v0.1.1-debug
+      RELEASE_TAG: v0.2.0-debug
       SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Download the already tested APK
-        run: gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name DeadwaveHeroes-v0.1.1-debug --dir release-assets
+        run: gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name DeadwaveHeroes-v0.2.0-debug --dir release-assets
       - name: Verify APK matches the successful build manifest
         run: |
           python3 - <<'PY'
           import hashlib,json
           from pathlib import Path
           root=Path('release-assets')
-          name='DeadwaveHeroes-v0.1.1-debug.apk'
+          name='DeadwaveHeroes-v0.2.0-debug.apk'
           info=json.loads((root/'manifest.json').read_text())[name]
           apk=root/name
           assert apk.stat().st_size==info['bytes'], 'APK size mismatch'
@@ -45,11 +45,11 @@ jobs:
       - name: Publish direct download as an explicitly marked debug prerelease
         run: |
           cat > /tmp/deadwave-release-notes.md <<'NOTES'
-          Spielbarer Prototyp v0.1.1 von RF Worlds. Die APK unten direkt herunterladen und auf Android installieren. Android 7 oder neuer, ARMv7/ARM64. Die Datei stammt unverändert aus dem zugehörigen erfolgreich geprüften GitHub-Build.
+          Spielbarer Prototyp v0.2.0 von RF Worlds. Die APK unten direkt herunterladen und auf Android installieren. Android 7 oder neuer, ARMv7/ARM64. Die Datei stammt unverändert aus dem zugehörigen erfolgreich geprüften GitHub-Build.
 
-          Kugeldarstellung korrigiert: größere kontrastreiche Kugeln, gestaffelter Abwurf und eigene Vordergrund-Zeichenebene.
+          Neon Update: neuer Sci-Fi-Look mit detaillierten Helden/Gegnern, eigener Stadtgrafik, futuristischem HUD, Reaktor-Labyrinth und Upgrade-Karten. Der Fehler beim wiederholten Abwurf ist an der Ursache korrigiert: gepoolte Physikkörper werden nun im Physikserver korrekt zurückgesetzt.
 
-          Gegenüber v0.1.0 wurde ein neuer Debug-Schlüssel verwendet. Android kann deshalb eine Deinstallation der alten Testversion vor der Installation verlangen; dabei wird deren lokaler Spielstand gelöscht. Der Debug-Schlüssel für künftige Tests wird jetzt im Buildcache wiederverwendet.
+          Das Savegame-Format bleibt kompatibel. Der Debug-Schlüssel wird aus dem Buildcache wiederverwendet.
 
           Debug-Testversion: kein fertiger Release und noch nicht auf einem physischen Smartphone getestet. Bei Bedarf die Installation aus dieser Downloadquelle erlauben. Windows und Buildprotokolle stehen im ursprünglichen Actions-Lauf bereit.
           NOTES
@@ -57,4 +57,4 @@ jobs:
             echo "This version already has a direct download; keeping its existing APK."
             exit 0
           fi
-          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --prerelease --title 'DEADWAVE HEROES v0.1.1 · Android Debug' --notes-file /tmp/deadwave-release-notes.md release-assets/DeadwaveHeroes-v0.1.1-debug.apk release-assets/SHA256SUMS.txt
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --prerelease --title 'DEADWAVE HEROES v0.2.0 · Android Debug' --notes-file /tmp/deadwave-release-notes.md release-assets/DeadwaveHeroes-v0.2.0-debug.apk release-assets/SHA256SUMS.txt docs/screenshots/neon-gameplay-4k.png docs/screenshots/neon-upgrades-4k.png

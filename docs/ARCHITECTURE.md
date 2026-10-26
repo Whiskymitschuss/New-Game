@@ -15,3 +15,12 @@
 `tests/run.gd` prüft Inhaltsgenerator, Laden, Upgrades, Waffen, Bossphasen, echte Physik und Savegames. `tests/campaign.gd` spielt Tutoriallevel 1–3 mit normalen Werten durch und klickt echte Upgrade-Buttons per Signal. Tests verwenden isolierte User-Datenverzeichnisse. Die grafische Sitzung und lokale Builds prüfen zusätzliche, ausdrücklich protokollierte Aspekte.
 
 `tests/render_balls.gd` benötigt einen echten OpenGL-Renderer (lokal X11, CI Xvfb). Es prüft sichtbare Pixel an den Positionen statischer, virtueller und bewegter Kugeln sowie Zeichenreihenfolge, Deaktivierung, Abwurfdauer und Sammler. Ein reiner Headless-Physiktest reicht hierfür nicht.
+
+
+## Neon Update / Physikrecycling
+
+`AmmoBall.set_physics_pose` setzt Transform und Geschwindigkeiten über PhysicsServer2D und bestätigt den Spawn in `_integrate_forces`. Solange `reset_pending` gilt, verarbeitet der Besitzer keine Gates und keine Sammlung. `Node2D.position` allein wurde zuvor durch den alten Server-Snapshot überschrieben: ab Abwurf zwei landeten Körper unmittelbar wieder hinter dem Sammler. Der Vorher-/Nachher-Nachweis verwendet dieselben RIDs über 24 Abwürfe, keine neu erzeugten Ersatzkörper. Teleporter benutzen denselben sicheren Resetpfad.
+
+`future_art.gd` kapselt die Sci-Fi-Präsentation. Hintergrund und Figurenatlanten werden einmal geladen, Spritequellrechtecke aus `assets/art/regions.json` gelesen. Dieses Hilfsmetadatenformat wird vorab aus Alpha-Grenzen ermittelt; mobile Laufzeit muss keine komprimierten Texturen auslesen. Hologrammpanels, Linien, Gates und Typografie skalieren über CanvasItems. Keine Vollbild-Bloom- oder kostenintensiven Postprocessing-Shader. Texturen und SVGeffekte sind lokal im Export enthalten.
+
+`ui_layout.gd` ruft den produktiven Karten-Builder für alle 48 Karten auf und prüft Textbegrenzungen, Höhen und drei Auswahlkontrollen. `capture.gd` stellt eine reproduzierbare UI-Szene mit echten Spielfunktionen für Screenshots her; mit `-- --4k` rendert Godot 2160 × 3840 Pixel. Dies ist keine gemessene Android-Leistungszusage.

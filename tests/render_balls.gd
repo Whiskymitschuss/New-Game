@@ -69,12 +69,27 @@ func run() -> void:
       matched+=1
    check(matched>0,"moving balls produce visible pixels at physics positions (frame %d)"%i)
    if i==60:
-    image.save_png("res://builds/balls-v0.1.1.png")
+    image.save_png("res://builds/balls-v0.2.0.png")
   if game.active_balls()>0:
    visible_frames+=1
  check(all_emitted_at>=0.65,"twelve balls are staggered over at least 650 ms")
  check(visible_frames>=75,"visible physical stream lasts at least 1.25 seconds")
  check(game.collected>0,"visible stream reaches the ammunition collector")
+ # Recycle the same server bodies several times; the original bug passed the first drop.
+ for repeat in range(3):
+  game.clear_balls()
+  game.attempts=2
+  game.aim=400
+  game.drop_ammo()
+  for frame in range(65):
+   game.physics_balls(1.0/60.0)
+   await physics_frame
+  image=await frame_image()
+  var seen=0
+  for recycled in game.pool:
+   if recycled.live and recycled.position.y>505 and recycled.position.y<830 and bright_pixels(image,recycled.position)>35:
+    seen+=1
+  check(seen>0,"recycled drop %d still renders real moving balls"%(repeat+2))
  game.clear_balls()
  game.emit_ball(Vector2(200,520),Vector2.ZERO)
  game.pool[0].freeze=true

@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 : "${GODOT_BIN:=godot}"
 mkdir -p builds
 # Tests use a disposable profile; never mutate the player's local progression.
-for suite in run campaign; do
+for suite in run reuse ui_layout campaign; do
   test_data=$(mktemp -d /tmp/deadwave-test-XXXXXXXX)
   XDG_DATA_HOME="$test_data" "$GODOT_BIN" --headless --path . --fixed-fps 60 --script "res://tests/$suite.gd" > "builds/test-$suite.log" 2>&1
   cat "builds/test-$suite.log"

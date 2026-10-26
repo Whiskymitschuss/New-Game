@@ -1,14 +1,15 @@
 extends Node2D
 # RF Worlds · original vector art, physics production and automatic combat.
-const BG = Color("091320")
-const PANEL = Color("142536")
-const INK = Color("e8f1ef")
-const MUTED = Color("8ba3b3")
-const LIME = Color("c9fc60")
-const CORAL = Color("ff795f")
-const CYAN = Color("66dbe6")
+const BG = Color("070c18")
+const PANEL = Color("111d32")
+const INK = Color("eef4ff")
+const MUTED = Color("8a9dbb")
+const LIME = Color("5af5c5")
+const CORAL = Color("ff7286")
+const CYAN = Color("55d8ff")
 const MAX_BALLS = 128
-var font = preload("res://assets/fonts/Interface.ttf")
+var font = preload("res://assets/fonts/SpaceGrotesk.ttf")
+var future: FutureArt
 var profile = Profile.new()
 var audio: GameAudio
 var ui: CanvasLayer
@@ -70,6 +71,7 @@ var hero_dot = 0.0
 var boss_slow = 0.0
 
 func _ready() -> void:
+ future=FutureArt.new(self)
  profile.load_game()
  rng.randomize()
  quality=int(profile.data["settings"]["quality"])
@@ -103,14 +105,17 @@ func clear_ui() -> void:
  special_button=null
  hud_label=null
 
-func label(text: String,at: Vector2,size: int=18,color: Color=INK,width: float=460) -> Label:
+func label(text: String,at: Vector2,size: int=18,color: Color=INK,width: float=460,wrap: bool=false) -> Label:
  var item=Label.new()
- item.text=text
- item.position=at
- item.size=Vector2(width,60)
  item.add_theme_font_override("font",font)
  item.add_theme_font_size_override("font_size",size)
  item.add_theme_color_override("font_color",color)
+ if wrap:
+  item.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+  item.clip_text=true
+ item.text=text
+ item.position=at
+ item.size=Vector2(width,60)
  item.mouse_filter=Control.MOUSE_FILTER_IGNORE
  controls.add_child(item)
  return item
@@ -124,16 +129,23 @@ func button(text: String,rect: Rect2,callback: Callable,accent: bool=false) -> B
  item.add_theme_font_size_override("font_size",16)
  var normal=StyleBoxFlat.new()
  normal.bg_color=LIME if accent else PANEL
- normal.set_corner_radius_all(14)
+ normal.set_corner_radius_all(9)
  normal.content_margin_left=12
  normal.content_margin_right=12
- normal.border_color=Color("335064")
- normal.set_border_width_all(0 if accent else 1)
+ normal.border_color=Color("294261")
+ normal.set_border_width_all(1)
+ normal.shadow_color=Color(CYAN,0.08)
+ normal.shadow_size=4 if accent else 0
  item.add_theme_stylebox_override("normal",normal)
  var hover=normal.duplicate()
- hover.bg_color=Color("aee54b") if accent else Color("284254")
+ hover.bg_color=Color("a1ffe5") if accent else Color("223854")
  item.add_theme_stylebox_override("hover",hover)
  item.add_theme_stylebox_override("pressed",hover)
+ var disabled=normal.duplicate()
+ disabled.bg_color=Color("0c1727")
+ disabled.border_color=Color("1d2e46")
+ item.add_theme_stylebox_override("disabled",disabled)
+ item.add_theme_color_override("font_disabled_color",Color("59708b"))
  item.add_theme_color_override("font_color",BG if accent else INK)
  item.add_theme_color_override("font_hover_color",BG if accent else LIME)
  item.add_theme_color_override("font_pressed_color",BG if accent else LIME)
@@ -148,21 +160,21 @@ func show_menu() -> void:
  enemies.clear()
  clear_ui()
  audio.play_music("menu")
- label("RF WORLDS  /  ORIGINAL GAMES",Vector2(32,30),12,LIME)
- label("DEADWAVE",Vector2(30,96),53)
- label("HEROES",Vector2(32,155),64,LIME)
- label("DIE HORDE KOMMT. DU LIEFERST DIE MUNITION.",Vector2(34,246),11,MUTED)
- label("01  /  PRODUZIEREN     02  /  ÜBERLEBEN",Vector2(34,592),12,CYAN)
+ label("RF  /  WORLDS                 PROTOCOL 02",Vector2(32,26),11,CYAN)
+ label("DEADWAVE",Vector2(28,77),55)
+ label("HEROES",Vector2(28,133),73,INK)
+ label("DEIN REAKTOR. DEINE MUNITION. DEIN ÜBERLEBEN.",Vector2(31,224),10,MUTED)
+ label("01 / ERZEUGEN    →    02 / ÜBERLEBEN",Vector2(32,602),11,CYAN)
  var unlocked=int(profile.data["unlocked"])
  button("EINSATZ STARTEN  →  LEVEL %02d"%unlocked,Rect2(30,642,480,64),func(): start_level(unlocked),true)
  button("WELTKARTE",Rect2(30,722,232,55),show_map)
  button("HELD & ARSENAL",Rect2(278,722,232,55),show_armory)
  button("EINSTELLUNGEN",Rect2(30,793,480,48),show_settings)
- label("OFFLINE  •  KEINE WERBUNG  •  v0.1.1",Vector2(34,901),12,MUTED)
+ label("OFFLINE  •  KEINE WERBUNG  •  v0.2.0",Vector2(34,901),12,MUTED)
 
 func page_header(title: String,subtitle: String) -> void:
  clear_ui()
- label("RF WORLDS / DEADWAVE HEROES",Vector2(28,26),12,LIME)
+ label("RF / WORLDS     •     DEADWAVE SYSTEMS",Vector2(28,26),11,CYAN)
  label(title,Vector2(28,70),32)
  label(subtitle,Vector2(30,122),13,MUTED)
  button("← ZURÜCK",Rect2(30,888,480,48),show_menu)
@@ -186,8 +198,30 @@ func show_armory() -> void:
  page_header("HELD & ARSENAL","Level %d · %d XP · %d Münzen"%[profile.data["level"],profile.data["xp"],profile.data["coins"]])
  for i in range(3):
   var c=Content.CLASSES[i]
-  var item=button(("● " if int(profile.data["class"])==i else "")+c["name"]+"\n"+c["desc"],Rect2(30,173+i*74,480,62),func(): profile.data["class"]=i; profile.save_game(); show_armory(),int(profile.data["class"])==i)
-  item.add_theme_font_size_override("font_size",14)
+  var x=30+i*164
+  var selected=int(profile.data["class"])==i
+  var item=button("",Rect2(x,171,152,213),func(): profile.data["class"]=i; profile.save_game(); show_armory())
+  var box=StyleBoxFlat.new()
+  box.bg_color=Color("172d40") if selected else Color("111c31")
+  box.border_color=CYAN if selected else Color("2c405a")
+  box.set_border_width_all(2 if selected else 1)
+  box.set_corner_radius_all(9)
+  item.add_theme_stylebox_override("normal",box)
+  var portrait=TextureRect.new()
+  portrait.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+  var image=AtlasTexture.new()
+  image.atlas=future.heroes
+  image.region=future.frame_region("heroes",i,future.heroes,3,1)
+  portrait.texture=image
+  portrait.position=Vector2(x+13,190)
+  portrait.size=Vector2(126,126)
+  portrait.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+  portrait.mouse_filter=Control.MOUSE_FILTER_IGNORE
+  controls.add_child(portrait)
+  var title=label(c["name"],Vector2(x+8,322),16,INK,136)
+  title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+  var detail=label(["PRÄZISION / SCHADEN","DROHNEN / ENERGIE","VITALITÄT / REGEN"][i],Vector2(x+7,350),8,CYAN if selected else MUTED,138)
+  detail.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
  label("WAFFE AUSWÄHLEN",Vector2(30,405),13,CYAN)
  button("ATTRIBUTE →",Rect2(349,399,161,34),show_character)
  for i in range(12):
@@ -247,6 +281,7 @@ func show_settings() -> void:
    audio.effects_volume=float(profile.data["settings"]["sfx"])
    audio.play_music("menu")
    profile.save_game())
+  future.style_slider(slider)
   controls.add_child(slider)
  button("QUALITÄT: "+("STANDARD" if quality==1 else "SPARSAM"),Rect2(30,560,480,60),func(): quality=1-quality; profile.data["settings"]["quality"]=quality; profile.save_game(); show_settings())
  button("OUTFIT: "+["PATROUILLE","NACHTWACHE","RETTUNG"][int(profile.data["outfit"])],Rect2(30,650,480,60),func(): profile.data["outfit"]=(int(profile.data["outfit"])+1)%3; profile.save_game(); show_settings())
@@ -266,7 +301,7 @@ func show_licenses() -> void:
  copy.add_theme_font_override("font",font)
  copy.add_theme_font_size_override("font_size",12)
  copy.text="DEADWAVE HEROES / RF Worlds\nGodot 4.6.3 / DejaVu Sans\n\n"
- for path in ["res://assets/licenses/Godot-LICENSE.txt","res://assets/licenses/Godot-COPYRIGHT.txt","res://assets/licenses/DejaVu.txt"]:
+ for path in ["res://assets/licenses/Godot-LICENSE.txt","res://assets/licenses/Godot-COPYRIGHT.txt","res://assets/licenses/DejaVu.txt","res://assets/licenses/SpaceGrotesk.txt","res://assets/licenses/JetBrainsMono.txt"]:
   copy.text+=FileAccess.get_file_as_string(path)+"\n\n"
  scroll.add_child(copy)
 
@@ -305,7 +340,7 @@ func start_level(number: int) -> void:
 
 func build_hud() -> void:
  clear_ui()
- button("Ⅱ",Rect2(468,22,48,42),pause_game)
+ button("Ⅱ",Rect2(467,27,43,39),pause_game)
  drop_button=button("ABWERFEN",Rect2(24,888,310,54),drop_ammo,true)
  special_button=button("IMPULS",Rect2(350,888,166,54),special_attack)
  var slider=HSlider.new()
@@ -315,6 +350,7 @@ func build_hud() -> void:
  slider.max_value=490
  slider.value=aim
  slider.value_changed.connect(func(value): aim=value)
+ future.style_slider(slider)
  controls.add_child(slider)
 
 func clear_geometry() -> void:
@@ -456,7 +492,7 @@ func physics_balls(delta: float) -> void:
   else:
    rotor["body"].rotation+=delta*rotor["speed"]
  for ball in pool:
-  if not ball.live:
+  if not ball.live or ball.reset_pending:
    continue
   ball.age+=delta
   for row in range(3):
@@ -471,9 +507,8 @@ func physics_balls(delta: float) -> void:
    match ob["kind"]:
     "portal":
      if distance<20 and not ball.portal_used:
-      ball.position=Vector2(540-ob["pos"].x,ob["pos"].y+35)
+      ball.teleport_to(Vector2(540-ob["pos"].x,ob["pos"].y+35),Vector2(30*(variant-1),180))
       ball.portal_used=true
-      ball.linear_velocity=Vector2(30*(variant-1),180)
     "boost":
      if distance<32:
       ball.apply_central_force(Vector2((variant-1)*400,1100))
@@ -496,8 +531,7 @@ func physics_balls(delta: float) -> void:
   if ball.position.y>=854 or ball.age>10:
    collect_ball(ball)
   elif ball.position.x<28 or ball.position.x>512:
-   ball.position.x=clampf(ball.position.x,30,510)
-   ball.linear_velocity.x*=-0.5
+   ball.teleport_to(Vector2(clampf(ball.position.x,30,510),ball.position.y),Vector2(-ball.linear_velocity.x*0.5,ball.linear_velocity.y))
   ball.previous=ball.position
 
 func begin_wave() -> void:
@@ -686,7 +720,7 @@ func shoot() -> void:
  target["poison"]=float(stats["poison"])
  target["burn"]=float(stats["burn"])+(8 if effect=="fire" else 0)
  var impact=Vector2(target["x"],target["y"]-28)
- tracers.append({"from":Vector2(124,292),"to":impact,"life":0.12 if effect!="laser" else 0.2,"color":CYAN if effect in ["laser","plasma"] else LIME})
+ tracers.append({"from":Vector2(146,263),"to":impact,"life":0.12 if effect!="laser" else 0.2,"color":CYAN if effect in ["laser","plasma"] else LIME})
  var count=1
  for e in enemies:
   if e==target or e["dead"]:
@@ -763,22 +797,57 @@ func choose_upgrade() -> void:
  while cards.size()<3:
   var id=rng.randi_range(0,Content.UPGRADES.size()-1)
   var card=Content.UPGRADES[id]
-  if card.size()>4 and int(card[4])!=int(profile.data["class"]):
-   continue
-  if not id in cards:
-   cards.append(id)
- label("WELLE %d ABGESCHLOSSEN"%wave,Vector2(30,395),14,LIME)
- label("Werde zur Gegenwelle.",Vector2(30,428),28)
- label("Wähle eine kostenlose Verbesserung.",Vector2(30,475),14,MUTED)
+  if card.size()>4 and int(card[4])!=int(profile.data["class"]):continue
+  if not id in cards:cards.append(id)
+ build_upgrade_picker()
+
+func build_upgrade_picker() -> void:
+ clear_ui()
+ label("WELLE %02d GESICHERT   /   EVOLUTION BEREIT"%wave,Vector2(30,414),10,CYAN)
+ label("Wähle deine Evolution.",Vector2(28,446),31,INK)
+ label("Ein Upgrade. Neue Möglichkeiten. Kostenlos.",Vector2(30,492),13,MUTED)
  for i in range(3):
   var card=Content.UPGRADES[cards[i]]
-  button("%02d   %s\n%s"%[i+1,card[0],card[1]],Rect2(30,535+i*104,480,88),func():
+  var x=24+i*168
+  var tint=[CYAN,Color("ad8cff"),Color("ffc880")][i]
+  var pick=button("",Rect2(x,544,156,261),func():
    apply_upgrade(cards[i])
    mode="play"
    wave+=1
    attempts+=2
    build_hud()
-   begin_wave(),i==0)
+   begin_wave())
+  var normal=StyleBoxFlat.new()
+  normal.bg_color=Color("142039")
+  normal.border_color=Color(tint,0.65)
+  normal.set_border_width_all(1)
+  normal.set_corner_radius_all(10)
+  normal.shadow_color=Color(tint,0.08)
+  normal.shadow_size=8
+  pick.add_theme_stylebox_override("normal",normal)
+  var hover=normal.duplicate()
+  hover.bg_color=Color("203554")
+  hover.border_color=tint
+  pick.add_theme_stylebox_override("hover",hover)
+  pick.add_theme_stylebox_override("pressed",hover)
+  var index_label=label("MOD / %02d"%(i+1),Vector2(x+13,557),10,tint,130)
+  var icon=TextureRect.new()
+  icon.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+  icon.texture=future.icons[future.icon_key(cards[i])]
+  icon.position=Vector2(x+26,586)
+  icon.size=Vector2(104,104)
+  icon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+  icon.mouse_filter=Control.MOUSE_FILTER_IGNORE
+  controls.add_child(icon)
+  var title=label(card[0],Vector2(x+13,697),17,INK,130,true)
+  title.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+  title.size=Vector2(130,51)
+  title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+  var description=label(card[1],Vector2(x+12,751),11,MUTED,132,true)
+  description.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+  description.size=Vector2(132,46)
+  description.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+ label("DEINE WAHL GILT FÜR DIESEN EINSATZ",Vector2(105,835),10,MUTED)
  audio.play_effect("upgrade")
 
 func apply_upgrade(id: int) -> void:
@@ -937,74 +1006,10 @@ func bar(rect: Rect2,value: float,color: Color) -> void:
   panel(Rect2(rect.position,Vector2(rect.size.x*clampf(value,0,1),rect.size.y)),color,4)
 
 func backdrop(world: int,top: float=120.0,bottom: float=380.0) -> void:
- var color=Color(Content.COLORS[world])
- draw_rect(Rect2(0,top,540,bottom-top),color)
- draw_circle(Vector2(433,top+49),27,Color(color.lightened(0.32),0.55))
- # Layered skyline: deterministic silhouettes, antennas, windows, vegetation.
- for layer in range(3):
-  var shade=color.darkened(0.15+layer*0.19)
-  for i in range(11):
-   var x=float(i*59-18)+sin(i*17.1+world)*14
-   var height=42+fmod(i*73+world*31+layer*43,98)
-   var ground=bottom-31+layer*8
-   if world in [1,5,6]:
-    line(Vector2(x+16,ground),Vector2(x+16,ground-height),shade,8)
-    for j in range(3):
-     polygon([Vector2(x-13,ground-height*0.35-j*21),Vector2(x+16,ground-height-23-j*7),Vector2(x+47,ground-height*0.35-j*21)],shade)
-   else:
-    var r=Rect2(x,ground-height,46,height)
-    draw_rect(r,shade)
-    if i%3==0:
-     line(Vector2(x+25,r.position.y),Vector2(x+25,r.position.y-23),shade,3)
-     line(Vector2(x+17,r.position.y-17),Vector2(x+35,r.position.y-17),shade,2)
-    for j in range(2):
-     for k in range(3):
-      if (i+j+k)%3!=0:
-       draw_rect(Rect2(x+8+j*19,ground-height+14+k*21,7,10),Color("c2c394").darkened(layer*0.25))
- draw_rect(Rect2(0,bottom-24,540,24),Color("15232b"))
- for i in range(16):
-  line(Vector2(i*39,bottom-14),Vector2(i*39+19,bottom-14),Color("32433d"),2)
+ future.skyline(world,top,bottom)
 
 func draw_hero(at: Vector2,scale_value: float=1.0,pose: String="idle") -> void:
- var bob=sin(clock*3)*1.5
- var suit=[Color("e99b54"),Color("74bdc7"),Color("d65e62")][int(profile.data["outfit"])]
- if damage_flash>0:
-  suit=Color.WHITE
- draw_set_transform(at+Vector2(0,-12 if pose=="defeat" else 0),-PI/2 if pose=="defeat" else 0,Vector2.ONE*scale_value)
- draw_ellipse_shadow(Vector2(0,4),27,8)
- # Boots, legs, utility coat and backpack.
- line(Vector2(-10,-18),Vector2(-13,0),Color("0b1421"),13)
- line(Vector2(8,-18),Vector2(13,0),Color("0b1421"),13)
- panel(Rect2(-24,-51+bob,17,30),Color("25364a"),5)
- polygon([Vector2(-18,-49+bob),Vector2(13,-49+bob),Vector2(20,-15),Vector2(-20,-15)],Color("101b2b"))
- polygon([Vector2(-16,-48+bob),Vector2(10,-48+bob),Vector2(16,-24),Vector2(-16,-21)],suit)
- line(Vector2(-10,-43+bob),Vector2(9,-30),Color("f5d99a"),4)
- draw_rect(Rect2(-17,-25,34,7),Color("26354a"))
- draw_rect(Rect2(-5,-24,9,6),Color("c7c9a2"))
- # Face mask, swept hair and luminous visor.
- panel(Rect2(-17,-76+bob,35,31),Color("101a29"),9)
- panel(Rect2(-13,-72+bob,28,23),Color("e3b48d"),7)
- polygon([Vector2(-18,-68+bob),Vector2(-13,-84+bob),Vector2(7,-89+bob),Vector2(3,-81+bob),Vector2(20,-80+bob),Vector2(14,-68+bob),Vector2(-2,-73+bob)],Color("3a292c"))
- panel(Rect2(-5,-67+bob,25,10),CYAN,3)
- line(Vector2(0,-65+bob),Vector2(12,-65+bob),Color("e8ffff"),2)
- panel(Rect2(-4,-53+bob,19,8),Color("26364b"),2)
- # Arm, glove and weapon silhouette.
- var recoil=-5.0 if shoot_flash>0 else 0.0
- line(Vector2(9,-42+bob),Vector2(29+recoil,-40+bob),suit,12)
- draw_circle(Vector2(27+recoil,-40+bob),6,Color("e3b48d"))
- var w=int(profile.data["weapon"])
- panel(Rect2(24+recoil,-48+bob,26+(w%4)*5,11),Color("0b1421"),2)
- draw_rect(Rect2(30+recoil,-49+bob,15,3),Color("89a2ab"))
- line(Vector2(33+recoil,-40+bob),Vector2(30+recoil,-29+bob),Color("101a29"),7)
- if shoot_flash>0:
-  polygon([Vector2(51,-43),Vector2(66,-51),Vector2(61,-42),Vector2(76,-36),Vector2(55,-34)],LIME)
- if shield>0 or pose=="special":
-  draw_arc(Vector2(0,-35),49,-1.6,1.6,24,Color(CYAN,0.65),3,true)
- if pose=="victory":
-  line(Vector2(-15,-40),Vector2(-30,-78+sin(clock*5)*5),suit,10)
- if pose=="defeat":
-  line(Vector2(-18,-4),Vector2(26,-4),CORAL,3)
- draw_set_transform(Vector2.ZERO)
+ future.hero(at,scale_value,pose)
 
 func draw_ellipse_shadow(at: Vector2,w: float,h: float) -> void:
  var points=PackedVector2Array()
@@ -1013,6 +1018,8 @@ func draw_ellipse_shadow(at: Vector2,w: float,h: float) -> void:
  draw_colored_polygon(points,Color(0,0,0,0.25))
 
 func draw_enemy(e: Dictionary) -> void:
+ if future.enemy(e):
+  return
  var kind=int(e["type"])
  var boss=bool(e["boss"])
  var size_value=1.0
@@ -1112,115 +1119,37 @@ func draw_enemy(e: Dictionary) -> void:
 
 func _draw() -> void:
  draw_rect(Rect2(0,0,540,960),BG)
+ if future==null:return
  if mode=="menu":
-  backdrop(0,305,567)
-  draw_hero(Vector2(144,547),2.15)
-  var preview={"type":7,"boss":false,"x":424.0,"y":541.0,"age":clock,"flash":0.0,"hp":1.0,"max_hp":1.0,"telegraph":0.0}
-  draw_enemy(preview)
-  line(Vector2(218,451),Vector2(359,457),LIME,3)
-  panel(Rect2(31,279,116,26),Color("243a40"),6)
-  text_at("PHYSICS × SURVIVAL",Vector2(41,297),10,LIME)
+  future.menu()
   return
  if mode in ["map","armory","settings","character","licenses"]:
-  for i in range(12):
-   line(Vector2(0,155+i*64),Vector2(540,155+i*64),Color("0d1c2a"),1)
+  future.page_background()
+  future.plate(Rect2(16,15,508,138),CYAN,Color(0.04,0.07,0.13,0.85),10)
   return
- if layout.is_empty():
-  return
+ if layout.is_empty():return
  backdrop(int(layout["world"]),121,380)
- # Tactical HUD, two readable levels of information.
- text_at("DEADWAVE / %02d"%level,Vector2(24,39),17,LIME)
- text_at("%s"%Content.WORLDS[int(layout["world"])],Vector2(24,61),12,MUTED)
- text_at("WELLE %02d / %02d"%[wave,wave_count],Vector2(291,42),14,INK)
- bar(Rect2(24,82,260,10),hp/maxf(1,float(stats["max_hp"])),CORAL)
- text_at("%d / %d HP%s"%[maxi(0,int(hp)),int(stats["max_hp"]),"  +%d SCHILD"%int(shield) if shield>0 else ""],Vector2(24,113),12,INK)
- text_at("%d MÜNZEN"%int(profile.data["coins"]),Vector2(357,104),13,LIME)
  draw_hero(Vector2(94,340),1.1,hero_pose)
  if float(stats.get("drone",0))>0:
-  var p=Vector2(122,239+sin(clock*4)*4)
-  panel(Rect2(p-Vector2(14,6),Vector2(28,12)),CYAN,4)
-  line(p+Vector2(-24,-9),p+Vector2(-5,-9),INK,2)
-  line(p+Vector2(5,-9),p+Vector2(24,-9),INK,2)
- for e in enemies:
-  draw_enemy(e)
+  var p=Vector2(125,211+sin(clock*4)*4)
+  draw_circle(p,14,Color(CYAN,0.08))
+  future.plate(Rect2(p-Vector2(12,5),Vector2(24,12)),CYAN,Color("30455c"),3)
+  draw_circle(p,3,CYAN)
+  line(p+Vector2(-22,-9),p+Vector2(-7,-9),INK,1.5)
+  line(p+Vector2(7,-9),p+Vector2(22,-9),INK,1.5)
+ for e in enemies:draw_enemy(e)
  for t in tracers:
-  line(t["from"],t["to"],Color(t["color"],clampf(t["life"]*7,0,1)),3)
- panel(Rect2(16,354,508,53),PANEL,10)
- text_at("MUNITION",Vector2(30,373),10,MUTED)
- text_at(compact(ammo),Vector2(30,398),25,LIME)
- text_at("%s  +%d"%[weapon()[0],int(profile.data["weapon_levels"].get(str(profile.data["weapon"]),0))],Vector2(181,379),13,INK)
- text_at("NACHLADEN" if reload_timer>0 else "%d IM MAGAZIN"%magazine,Vector2(181,398),11,MUTED)
- text_at("ENERGIE",Vector2(405,375),10,MUTED)
- bar(Rect2(404,387,99,7),energy/100.0,CYAN)
- # The lower factory: original teal / acid art direction.
- panel(Rect2(16,471,508,403),Color("0d1e2a"),12)
- for i in range(12):
-  line(Vector2(30,495+i*31),Vector2(510,495+i*31),Color("152b38"),1)
- for i in range(15):
-  line(Vector2(32+i*34,480),Vector2(32+i*34,863),Color("122735"),1)
- draw_rect(Rect2(18,481,9,378),Color("3b5664"))
- draw_rect(Rect2(513,481,9,378),Color("3b5664"))
- for row in range(3):
-  var gate=layout["gates"][row]
-  var y=float(gate["y"])
-  var split=gate_split(row)
-  for side in range(2):
-   var x=31.0 if side==0 else split+5
-   var width=split-36 if side==0 else 509-split
-   var tint=LIME if int(gate["left"] if side==0 else gate["right"])>=3 else CYAN
-   panel(Rect2(x,y-11,width,23),Color(tint,0.13),3)
-   line(Vector2(x,y+11),Vector2(x+width,y+11),Color(tint,0.6),1)
-   text_at("×%d"%int(gate["left"] if side==0 else gate["right"]),Vector2(x+width/2-15,y+7),18,tint)
-  draw_circle(Vector2(split,y),4,INK)
- for ob in obstacles:
-  if ob["broken"]:
-   continue
-  var p: Vector2=ob["pos"]
-  var kind=String(ob["kind"])
-  var variant=int(ob["variant"])
-  if ob["body"]!=null:
-   var body=ob["body"]
-   if kind=="peg":
-    draw_circle(p,12+variant*3,Color("406073"))
-    draw_circle(p-Vector2(2,2),5,CYAN)
-   else:
-    draw_set_transform(p,body.rotation)
-    panel(Rect2(-33-variant*6,-5,66+variant*12,10),Color("6e8794") if kind!="breakable" else Color("b47657"),4)
-    line(Vector2(-25,-2),Vector2(25,-2),Color("c6d4ce"),1)
-    if kind in ["rotor","trapdoor"]:
-     draw_circle(Vector2.ZERO,7,CORAL)
-     draw_circle(Vector2.ZERO,3,INK)
-    draw_set_transform(Vector2.ZERO)
-  elif kind=="portal":
-   draw_arc(p,18,clock*2,clock*2+5.4,24,CYAN,4)
-   draw_arc(Vector2(540-p.x,p.y+35),18,-clock*2,-clock*2+5.4,24,Color("bc8df4"),4)
-  elif kind=="boost":
-   for i in range(3):
-    line(p+Vector2(-9,-8+i*9),p+Vector2(0,-1+i*9),CYAN,3)
-    line(p+Vector2(0,-1+i*9),p+Vector2(9,-8+i*9),CYAN,3)
-  elif kind=="bonus":
-   draw_circle(p,20,Color(LIME,0.12))
-   text_at("+%d"%(5*(variant+1)),p+Vector2(-13,6),15,LIME)
- # Articulated launcher above board, collection trough below.
- line(Vector2(aim,467),Vector2(aim,493),Color("44596c"),15)
- panel(Rect2(aim-23,467,46,22),Color("849caa"),5)
- line(Vector2(aim-14,470),Vector2(aim+14,470),LIME,3)
- panel(Rect2(29,839,482,26),Color("234953"),6)
- for i in range(12):
-  line(Vector2(42+i*39,846),Vector2(53+i*39,857),Color("40767a"),3)
- text_at("SAMMLER",Vector2(231,858),10,INK)
- var in_flight: int=0
- for ball in pool:
-  if ball.live:
-   in_flight+=ball.weight
- if in_flight>0 or not pending_balls.is_empty():
-  text_at("KUGELWERT %s   ·   %d IM ABWURF"%[compact(in_flight),pending_balls.size()],Vector2(43,822),11,INK)
- text_at(status_text.left(72),Vector2(27,429),11,MUTED)
+  line(t["from"],t["to"],Color(t["color"],clampf(t["life"]*3,0,0.25)),7)
+  line(t["from"],t["to"],Color(t["color"],clampf(t["life"]*7,0,1)),2)
+ future.hud()
+ future.factory()
+ future.text("INJECTION CONTROL",Vector2(26,432),9,CYAN,true)
+ future.text("POSITION WÄHLEN  /  ABWERFEN",Vector2(278,432),9,MUTED,true)
  for particle in sparks:
-  draw_circle(particle["pos"],2.2,Color(particle["color"],clampf(particle["life"]*3,0,1)))
- for f in floats:
-  text_at(f["text"],f["pos"],15,Color(f["color"],minf(1,f["life"]*2)))
+  draw_circle(particle["pos"],3,Color(particle["color"],clampf(particle["life"]*0.9,0,0.3)))
+  draw_circle(particle["pos"],1.4,Color(particle["color"],clampf(particle["life"]*3,0,1)))
+ for f in floats:text_at(f["text"],f["pos"],14,Color(f["color"],minf(1,f["life"]*2)))
  if mode in ["upgrade","pause","victory","defeat"]:
-  draw_rect(Rect2(0,387,540,573),Color(BG,0.97))
- if damage_flash>0:
-  draw_rect(Rect2(0,0,540,960),Color(CORAL,damage_flash*0.25))
+  draw_rect(Rect2(0,387,540,573),Color(BG,0.98))
+  future.plate(Rect2(16,398,508,474),CYAN,Color("0b1426"),12)
+ if damage_flash>0:draw_rect(Rect2(0,0,540,960),Color(CORAL,damage_flash*0.25))

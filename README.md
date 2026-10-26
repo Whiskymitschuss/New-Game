@@ -1,6 +1,6 @@
 # DEADWAVE HEROES · RF Worlds
 
-Spielbarer Godot-4.6.3-Prototyp **v0.1.1**, Android und Windows, Hochformat 540 × 960. Eigenständige prozedurale Vektorgrafik und synthetisierte Originalmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+Spielbarer Godot-4.6.3-Prototyp **v0.2.0**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche und synthetisierte Originalmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
 
 ## Spielen
 
@@ -14,13 +14,15 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.1.1-debug/DeadwaveHeroes-v0.1.1-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.1.1-debug). Dieser öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
+**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.0-debug/DeadwaveHeroes-v0.2.0-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.0-debug). Dieser öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
 
-Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.1.1-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet pro frischem Runner einen neuen Debug-Schlüssel, daher können APKs aus verschiedenen Builds eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
+Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.0-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut. Geht dieser Cache verloren, kann ein späterer Testbuild eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
 
-Die Kugeldarstellung wurde in v0.1.1 überarbeitet: gestaffelter Abwurf statt überlagerter Sofortemission, größere kontrastreiche Kugeln mit Spur und eine unabhängige Vordergrund-Zeichenebene. Gerenderte Pixel und sichtbare Bewegung werden nun zusätzlich geprüft. Gegenüber v0.1.0 hat v0.1.1 einen neuen Debug-Schlüssel; Android kann deshalb zuerst die Deinstallation der alten Testversion verlangen, wodurch deren lokaler Spielstand gelöscht wird. Der Debug-Schlüssel wird ab v0.1.1 im Buildcache für weitere Test-Updates aufbewahrt.
+**Neon Update 0.2.0:** Der wiederholte Abwurf wird im Physikserver korrekt zurückgesetzt; 24 Abwürfe mit denselben Poolkörpern werden in beiden Qualitätsstufen geprüft. Neue detaillierte Helden-/Gegnergrafiken, eigene Sci-Fi-Stadt, futuristisches HUD, Reaktor-Labyrinth, Klassenporträts und dreispaltige Upgrade-Karten sind integriert. Die Oberfläche skaliert als Vektor-/Canvas-UI; echte Vorschauen mit 2160 × 3840 Pixeln stehen unter `docs/screenshots/neon-*-4k.png`. Das ist ein Nachweis der hochauflösenden Darstellung, keine Zusage von 4K/60 FPS auf einem Smartphone.
 
-Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.1.1-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
+Das Savegame-Format ist unverändert. Debug-Schlüssel werden seit v0.1.1 im Buildcache wiederverwendet; die Signaturkompatibilität des veröffentlichten APK wird im Buildbericht festgehalten.
+
+Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.0-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
 
 ## Entwicklung und Builds (Linux)
 
@@ -52,12 +54,24 @@ source /workspace/tools/env.sh
 - 100 reproduzierbare und gespeicherte Level, fünf bis vierzehn Wellen, Progression, Waffenverbesserung, Klassen-/Waffenauswahl, Outfits, Charakterwerte, Pause, Sieg, Niederlage, Musik-/Effektregler.
 - Versionierter JSON-Spielstand mit temporärer Datei, Backup und Wiederherstellung. Level-Layouts, Seeds, Sterne, XP, Münzen, Entdeckungen, Klassen, Waffenverbesserungen, Statistiken und Einstellungen werden gespeichert. Abgeworfene Run-Upgrades gelten für den aktuellen Einsatz.
 
+## Design und Regressionstests
+
+`tests/reuse.gd` prüft das wiederholte Recycling derselben Physikkörper (120 Assertions). `tests/ui_layout.gd` prüft alle 48 Upgrade-Karten und die Klassenporträts (228 Assertions). `tests/render_balls.gd` prüft echte sichtbare Bildpunkte und vier aufeinanderfolgende gerenderte Abwürfe (17 Assertions, grafische Sitzung erforderlich). Die bestehende Suite enthält weitere 314 Assertions; dazu kommen drei vollständige Tutorial-Durchläufe.
+
+```bash
+# In einer vorhandenen grafischen Sitzung, nachdem env.sh geladen wurde:
+"$GODOT_BIN" --path . --audio-driver Dummy --fixed-fps 60 --script res://tests/render_balls.gd
+"$GODOT_BIN" --path . --audio-driver Dummy --fixed-fps 60 --script res://tests/capture.gd -- --4k
+```
+
+Die Capture-Szene stellt Gegner für reproduzierbare UI-Aufnahmen auf. Sie verwendet echte Spielressourcen, Physik und Menüs. Details zu Assetauflösungen und visuellen Grenzen: `docs/ART_DIRECTION.md`.
+
 ## Bewusster Entwicklungsstand
 
-Dies ist **kein fertiges v1.0-Spiel**. Die Inhaltszahl ist technisch vorhanden; das beweist nicht, dass alle 100 Level unter menschlichen Spielbedingungen ausbalanciert oder alle Bossbegegnungen ausreichend abwechslungsreich sind. Die Waffen verwenden direkte Treffer mit sichtbaren Schussspuren und Status-/Flächeneffekten; physikalisch fliegende Raketen und Granaten sind weitere Arbeit. Gegner und Bosse nutzen gemeinsame prozedurale Animationsbausteine. Grafiken, Umgebung und Audio sind erste eigenständige Assets, keine finale Art-Produktion. Eine separate Ausrüstungsbeute-/Skinfreischaltungsökonomie, mehr Boss-Angriffsmuster, Welt-Ambiences, detaillierte Tutorialführung, Gerätemessungen und Releasevorbereitung fehlen noch. Keine Android-Gerätetests und keine Windows-Ausführung sind durch den Linux-Export allein nachgewiesen.
+Dies ist **kein fertiges v1.0-Spiel**. Die Inhaltszahl ist technisch vorhanden; das beweist nicht, dass alle 100 Level unter menschlichen Spielbedingungen ausbalanciert oder alle Bossbegegnungen ausreichend abwechslungsreich sind. Die Waffen verwenden direkte Treffer mit sichtbaren Schussspuren und Status-/Flächeneffekten; physikalisch fliegende Raketen und Granaten sind weitere Arbeit. Gegner und Bosse nutzen gemeinsame Animations-/Spritebausteine. Das Neon-Design ist ein umfassender visueller Ausbau, aber die Rasterfiguren haben noch keine vollständig gezeichneten Animationssequenzen. Audio und einzelne Weltvarianten benötigen weitere Art-Produktion. Eine separate Ausrüstungsbeute-/Skinfreischaltungsökonomie, mehr Boss-Angriffsmuster, Welt-Ambiences, detaillierte Tutorialführung, Gerätemessungen und Releasevorbereitung fehlen noch. Keine Android-Gerätetests und keine Windows-Ausführung sind durch den Linux-Export allein nachgewiesen.
 
 Siehe `docs/ROADMAP.md`, `docs/BUILD_REPORT.md` und `docs/ARCHITECTURE.md`.
 
 ## Lizenzen
 
-Spielcode und eigens erzeugte Spielgrafiken/-töne: RF Worlds, alle Rechte vorbehalten. Schrift: DejaVu Sans, Lizenz unter `assets/fonts/LICENSE-DejaVu.txt`. Godot und Android-Buildwerkzeuge behalten ihre jeweiligen Lizenzen; Godot-Hinweise unter https://godotengine.org/license/ und in `docs/THIRD_PARTY.md`.
+Spielcode und eigens erzeugte Spielgrafiken/-töne: RF Worlds, alle Rechte vorbehalten. Schriften: Space Grotesk und JetBrains Mono (SIL Open Font License), DejaVu-Lizenz zusätzlich erhalten; Lizenzdateien unter `assets/fonts/` und im Offline-Creditsmenü. Godot und Android-Buildwerkzeuge behalten ihre jeweiligen Lizenzen; Godot-Hinweise unter https://godotengine.org/license/ und in `docs/THIRD_PARTY.md`.
