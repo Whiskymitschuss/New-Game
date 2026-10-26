@@ -19,7 +19,8 @@ func run() -> void:
    if cycle==4 or cycle==8:
     game.wave+=1
     game.begin_wave()
-   game.clear_balls();game.attempts=2;game.aim=410
+   game.layout["gates"]=Content.level_data(1)["gates"]
+   game.clear_balls();game.ammo=0;game.attempts=2;game.aim=410
    var before=game.collected;game.drop_ammo()
    var board_frames=0;var ready_in_factory=false;var maximum=0;var ticks=0
    for tick in range(600):

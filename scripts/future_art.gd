@@ -171,6 +171,7 @@ func hud() -> void:
  text("RF / DEADWAVE",Vector2(30,37),11,BLUE,true)
  text("SEKTOR %02d"%g.level,Vector2(29,63),24,PAPER)
  text(Content.WORLDS[int(g.layout["world"])].to_upper(),Vector2(30,81),10,QUIET,true)
+ text("%02d FEINDE"%(g.remaining+g.enemies.size()),Vector2(331,80),9,QUIET,true)
  var title="WELLE %02d"%g.wave
  text(title,Vector2(330,41),15,PAPER)
  text("/ %02d"%g.wave_count,Vector2(419,41),11,QUIET,true)
@@ -182,7 +183,7 @@ func hud() -> void:
  plate(Rect2(16,354,508,57),BLUE,Color("101c30"),8)
  g.draw_line(Vector2(169,366),Vector2(169,400),Color(BLUE,0.16),1,true)
  g.draw_line(Vector2(370,366),Vector2(370,400),Color(BLUE,0.16),1,true)
- text("MUNITION",Vector2(29,370),9,QUIET,true)
+ text("MUNITION / %s"%g.compact(int(g.stats["capacity"])),Vector2(29,370),9,QUIET,true)
  text(g.compact(g.ammo),Vector2(29,400),29,MINT)
  text(g.weapon()[0].to_upper(),Vector2(183,375),12,PAPER)
  var state="NACHLADEN" if g.reload_timer>0 else "%02d IM MAGAZIN"%g.magazine

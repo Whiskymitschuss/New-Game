@@ -170,7 +170,7 @@ func show_menu() -> void:
  button("WELTKARTE",Rect2(30,722,232,55),show_map)
  button("HELD & ARSENAL",Rect2(278,722,232,55),show_armory)
  button("EINSTELLUNGEN",Rect2(30,793,480,48),show_settings)
- label("OFFLINE  •  KEINE WERBUNG  •  v0.2.1",Vector2(34,901),12,MUTED)
+ label("OFFLINE  •  KEINE WERBUNG  •  v0.2.2",Vector2(34,901),12,MUTED)
 
 func page_header(title: String,subtitle: String) -> void:
  clear_ui()
@@ -255,7 +255,7 @@ func show_character() -> void:
  var w=weapon()
  var rank=int(profile.data["weapon_levels"].get(str(profile.data["weapon"]),0))
  label(cls["name"].to_upper()+" / LEVEL %d"%int(profile.data["level"]),Vector2(30,188),24,LIME)
- var values=["Erfahrung|%d / %d"%[profile.data["xp"],int(profile.data["level"])*100],"Maximalleben|%d"%int(float(cls["hp"])+(int(profile.data["level"])-1)*4),"Angriffsschaden|%.1f"%(float(w[1])*float(cls["damage"])*(1+rank*0.1)),"Schüsse / Sekunde|%.2f"%(1.0/float(w[2])),"Kritische Chance|5%", "Kritischer Schaden|175%", "Rüstung|0 + Run-Upgrades", "Ausweichchance|0% + Run-Upgrades", "Regeneration|%.1f HP / s"%cls["regen"], "Munitionskapazität|5000", "Spezialenergie|100 / Impuls kostet 50", "Entdeckte Fähigkeiten|%d / %d"%[profile.data["abilities"].size(),Content.UPGRADES.size()]]
+ var values=["Erfahrung|%d / %d"%[profile.data["xp"],int(profile.data["level"])*100],"Maximalleben|%d"%int(float(cls["hp"])+(int(profile.data["level"])-1)*4),"Angriffsschaden|%.1f"%(float(w[1])*float(cls["damage"])*(1+rank*0.1)),"Schüsse / Sekunde|%.2f"%(1.0/float(w[2])),"Kritische Chance|5%", "Kritischer Schaden|175%", "Rüstung|0 + Run-Upgrades", "Ausweichchance|0% + Run-Upgrades", "Regeneration|%.1f HP / s"%cls["regen"], "Munitionskapazität|%d"%Content.ammo_capacity(int(profile.data["unlocked"])), "Spezialenergie|100 / Impuls kostet 50", "Entdeckte Fähigkeiten|%d / %d"%[profile.data["abilities"].size(),Content.UPGRADES.size()]]
  for i in range(values.size()):
   var parts=values[i].split("|")
   label(parts[0],Vector2(30,260+i*43),14,MUTED)
@@ -311,14 +311,14 @@ func start_level(number: int) -> void:
  profile.save_game()
  rng.seed=int(layout["seed"])+int(profile.data["stats"]["wins"])*31
  var cls=Content.CLASSES[int(profile.data["class"])]
- stats={"max_hp":float(cls["hp"])+float(profile.data["level"]-1)*4,"damage":float(cls["damage"]),"speed":1.0,"crit":0.05,"crit_damage":1.75,"armor":0.0,"dodge":0.0,"regen":float(cls["regen"]),"capacity":5000.0,"pierce":0.0,"multishot":0.0,"poison":0.0,"burn":0.0,"drone":1.0 if int(profile.data["class"])==1 else 0.0,"slow":0.0,"recycle":0.0,"splash":0.0,"leech":0.0,"bounty":1.0,"wisdom":1.0,"drop":12.0,"collection":1.0,"reload":0.0,"magazine":0.0,"special":1.0,"energy_regen":4.0 if int(profile.data["class"])==1 else 2.0,"range":0.0,"thorns":0.0}
+ stats={"max_hp":float(cls["hp"])+float(profile.data["level"]-1)*4,"damage":float(cls["damage"]),"speed":1.0,"crit":0.05,"crit_damage":1.75,"armor":0.0,"dodge":0.0,"regen":float(cls["regen"]),"capacity":float(Content.ammo_capacity(level)),"pierce":0.0,"multishot":0.0,"poison":0.0,"burn":0.0,"drone":1.0 if int(profile.data["class"])==1 else 0.0,"slow":0.0,"recycle":0.0,"splash":0.0,"leech":0.0,"bounty":1.0,"wisdom":1.0,"drop":12.0,"collection":1.0,"reload":0.0,"magazine":0.0,"special":1.0,"energy_regen":4.0 if int(profile.data["class"])==1 else 2.0,"range":0.0,"thorns":0.0}
  hp=stats["max_hp"]
  ammo=int(cls["ammo"])
  shield=0
  hero_dot=0
  boss_slow=0
  energy=30
- attempts=5+level/10
+ attempts=3+mini(2,level/30)
  wave=1
  wave_count=int(layout["waves"])
  run_coins=0
@@ -424,7 +424,7 @@ func emit_ball(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> bool:
  return false
 
 func drop_ammo() -> void:
- if mode!="play" or attempts<=0 or not pending_balls.is_empty():
+ if mode!="play" or attempts<=0 or not pending_balls.is_empty() or ammo>=int(stats["capacity"]):
   return
  var count=int(stats["drop"])
  if active_balls()+pending_balls.size()+count>(MAX_BALLS if quality==1 else 64):
@@ -535,7 +535,8 @@ func physics_balls(delta: float) -> void:
   ball.previous=ball.position
 
 func begin_wave() -> void:
- remaining=3+wave+level/5
+ remaining=Content.wave_enemy_count(level,wave)
+ layout["gates"]=Content.wave_gates(level,wave,profile.get_level(level)["gates"])
  spawn_timer=0.8
  fire_timer=0
  magazine=int(weapon()[4])+int(stats["magazine"])
@@ -572,10 +573,12 @@ func update_combat(delta: float) -> void:
   hp-=2.5*delta
  energy=minf(100,energy+float(stats["energy_regen"])*delta)
  spawn_timer-=delta
- if remaining>0 and spawn_timer<=0 and enemies.size()<28:
-  spawn_enemy()
-  remaining-=1
-  spawn_timer=maxf(0.35,1.6-level*0.008)
+ if remaining>0 and spawn_timer<=0 and enemies.size()<40:
+  var batch=1 if wave==1 and level<=3 else (3 if level>=30 else 2)
+  for i in range(mini(batch,mini(remaining,40-enemies.size()))):
+   spawn_enemy()
+   remaining-=1
+  spawn_timer=maxf(0.45,0.95-level*0.003-wave*0.025)
  if remaining==0 and wave==wave_count and bool(layout["boss"]) and not boss_spawned:
   spawn_enemy(true)
   boss_spawned=true
@@ -628,7 +631,7 @@ func update_combat(delta: float) -> void:
   finish_level(false)
  elif remaining==0 and enemies.is_empty():
   wave_delay+=delta
-  if wave_delay>0.9:
+  if wave_delay>0.9 and active_balls()==0 and pending_balls.is_empty():
    if wave>=wave_count:
     finish_level(true)
    else:
@@ -758,7 +761,7 @@ func hit_enemy(e: Dictionary,amount: float,visual: bool=true,critical: bool=fals
   profile.data["stats"]["kills"]+=1
   profile.add_xp(int((6+level)*float(stats["wisdom"])))
   hp=minf(float(stats["max_hp"]),hp+float(stats["leech"]))
-  energy=minf(100,energy+2)
+  energy=minf(100,energy+0.65)
   burst(Vector2(e["x"],e["y"]-15),Color("7f9a80"),8)
   audio.play_effect("zombie",rng.randf_range(0.8,1.25))
   if int(e["type"])==6 and float(e["x"])<185:
@@ -814,7 +817,7 @@ func build_upgrade_picker() -> void:
    apply_upgrade(cards[i])
    mode="play"
    wave+=1
-   attempts+=2
+   attempts+=1
    build_hud()
    begin_wave())
   var normal=StyleBoxFlat.new()
@@ -864,7 +867,7 @@ func apply_upgrade(id: int) -> void:
   "energy": energy=minf(100,energy+value)
   "attempt": attempts+=int(value)
   "vitality": stats["max_hp"]+=value; hp+=value
-  "salvage": ammo+=int(value); profile.data["coins"]+=int(value)
+  "salvage": ammo=mini(int(stats["capacity"]),ammo+int(value)); profile.data["coins"]+=int(value)
   "field": shield+=value; stats["regen"]+=0.5
   _: stats[key]+=value
  if not id in profile.data["abilities"]:
@@ -930,7 +933,7 @@ func _physics_process(delta: float) -> void:
   apply_upgrade(cards[0])
   mode="play"
   wave+=1
-  attempts+=2
+  attempts+=1
   build_hud()
   begin_wave()
 
@@ -958,7 +961,8 @@ func _process(delta: float) -> void:
     floats.remove_at(i)
  if is_instance_valid(drop_button):
   drop_button.text="ABWURF LÄUFT …" if not pending_balls.is_empty() else "ABWERFEN  ·  %d ÜBRIG"%attempts
-  drop_button.disabled=attempts<=0 or not pending_balls.is_empty()
+  drop_button.disabled=attempts<=0 or not pending_balls.is_empty() or ammo>=int(stats["capacity"])
+  if ammo>=int(stats["capacity"]) and pending_balls.is_empty():drop_button.text="MUNITIONSLAGER VOLL"
  if is_instance_valid(special_button):
   special_button.text="IMPULS %d%%"%int(energy)
   special_button.disabled=energy<50

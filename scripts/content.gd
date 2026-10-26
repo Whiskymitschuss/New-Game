@@ -93,3 +93,26 @@ static func level_data(number: int) -> Dictionary:
   item["y"] = 605 + (i%3)*98 + rng.randf_range(-12,12)
   pieces.append(item)
  return {"number":number,"seed":seed_value,"world":world,"waves":clampi(5+(number-1)/10,5,15),"gates":gates,"pieces":pieces,"boss":number%10==0}
+
+static func wave_enemy_count(number: int,wave: int) -> int:
+ return clampi(12+wave*3+(number-1)/3,15,90)
+
+static func ammo_capacity(number: int) -> int:
+ return 240+clampi(number,1,100)*8
+
+static func wave_gates(number: int,wave: int,original: Array) -> Array:
+ var result=original.duplicate(true)
+ var plans=[[[2,1],[1,3],[2,2]],[[1,3],[3,1],[2,2]],[[3,1],[2,2],[1,3]],[[2,2],[1,3],[3,1]],[[1,2],[2,1],[3,3]]]
+ var phase=posmod(wave-1+(number-1)%3,plans.size())
+ var plan=plans[phase]
+ for row in range(result.size()):
+  result[row]["left"]=plan[row][0]
+  result[row]["right"]=plan[row][1]
+ # Later worlds introduce larger single gates, balanced by neutral downstream lanes.
+ if number>=10:
+  var strongest=MULTIPLIERS[mini(10,1+(number-1)/10)]
+  var selected=(wave+number)%3
+  var side="left" if wave%2==0 else "right"
+  for row in range(result.size()):
+   result[row][side]=strongest if row==selected else 1
+ return result

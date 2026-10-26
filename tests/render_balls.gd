@@ -78,6 +78,7 @@ func run() -> void:
  # Recycle the same server bodies several times; the original bug passed the first drop.
  for repeat in range(3):
   game.clear_balls()
+  game.ammo=0
   game.attempts=2
   game.aim=400
   game.drop_ammo()

@@ -55,16 +55,16 @@ jobs:
       - name: Upload Android debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: DeadwaveHeroes-v0.2.1-debug
+          name: DeadwaveHeroes-v0.2.2-debug
           path: |
-            builds/DeadwaveHeroes-v0.2.1-debug.apk
+            builds/DeadwaveHeroes-v0.2.2-debug.apk
             builds/manifest.json
           if-no-files-found: error
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
-          name: DeadwaveHeroes-v0.2.1-windows
-          path: builds/DeadwaveHeroes-v0.2.1-windows.zip
+          name: DeadwaveHeroes-v0.2.2-windows
+          path: builds/DeadwaveHeroes-v0.2.2-windows.zip
           if-no-files-found: error
       - name: Preserve build and test evidence
         if: always()
