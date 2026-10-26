@@ -39,3 +39,10 @@ Keine eigenen Secrets und keine zusätzliche Freigabe waren zum Ausführen diese
 ## Nicht durchgeführt / noch offen
 
 Keine APK-Installation und Ausführung auf einem physischen Smartphone oder Android-Emulator; keine Touch-/Geräte-/Thermal-/Akkutests, keine FPS-Messung auf Android, kein Windows-Lauf, keine vollständigen Spielbalance-Durchläufe über 100 Level und alle Klassen/Waffen. Tests zu Bossphasen sind Funktionsprüfungen, keine vollständigen Boss-Sieg-Durchläufe. 60 FPS sind ein Ziel, kein gemessenes Versprechen. Kein sicher signierter Release-Build und keine Store-Veröffentlichung. Umfangreiche weitere Produktarbeit ist unter `ROADMAP.md` beschrieben.
+
+
+## Direkter Smartphone-Download
+
+Die unveränderte APK aus Build #2 wurde zusätzlich als ausdrücklich markierte Debug-Vorabversion veröffentlicht: [v0.1.0-debug](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.1.0-debug). [Veröffentlichungsworkflow #1](https://github.com/Whiskymitschuss/New-Game/actions/runs/40371689015): **Success**, Gesamtdauer 13s. Der Workflow prüft Größe und SHA-256 gegen das Manifest des ursprünglichen Build-Artefakts vor dem Hochladen.
+
+[Direkte APK-Datei](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.1.0-debug/DeadwaveHeroes-v0.1-debug.apk), ohne GitHub-Anmeldung und ohne ZIP-Umweg. Der öffentliche Download wurde anschließend vollständig heruntergeladen, gegen die veröffentlichten SHA-256-Prüfsummen geprüft und erneut mit `apksigner verify` validiert. Dies bestätigt den funktionierenden Download und die APK-Integrität, weiterhin keinen Gerätetest.
