@@ -20,7 +20,7 @@ Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.0-debug.apk` (Android 7/API 2
 
 **Neon Update 0.2.0:** Der wiederholte Abwurf wird im Physikserver korrekt zurückgesetzt; 24 Abwürfe mit denselben Poolkörpern werden in beiden Qualitätsstufen geprüft. Neue detaillierte Helden-/Gegnergrafiken, eigene Sci-Fi-Stadt, futuristisches HUD, Reaktor-Labyrinth, Klassenporträts und dreispaltige Upgrade-Karten sind integriert. Die Oberfläche skaliert als Vektor-/Canvas-UI; echte Vorschauen mit 2160 × 3840 Pixeln stehen unter `docs/screenshots/neon-*-4k.png`. Das ist ein Nachweis der hochauflösenden Darstellung, keine Zusage von 4K/60 FPS auf einem Smartphone.
 
-Das Savegame-Format ist unverändert. Debug-Schlüssel werden seit v0.1.1 im Buildcache wiederverwendet; die Signaturkompatibilität des veröffentlichten APK wird im Buildbericht festgehalten.
+Das Savegame-Format ist unverändert. Debug-Schlüssel werden seit v0.1.1 im Buildcache wiederverwendet; der Zertifikatsvergleich der veröffentlichten APKs bestätigt für v0.2.0 dieselbe Signieridentität wie v0.1.1. Das neue APK kann als Update installiert werden; nicht vorher deinstallieren.
 
 Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.0-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
 
