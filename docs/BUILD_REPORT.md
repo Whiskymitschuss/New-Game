@@ -24,7 +24,17 @@ Datum: 26. Oktober 2026. Arbeitsumgebung: Linux x86-64, Godot 4.6.3.stable.offic
 
 `.github/workflows/build.yml` baut bei Push auf `main`, Pull Requests und manueller Ausführung Android und Windows und lädt APK, Windows-ZIP und Prüfprotokolle als Actions-Artefakte hoch. Der Workflow verwendet nur `contents: read`, die üblichen GitHub-Actions-Runtimeberechtigungen für Artefakte und keine benutzerdefinierten Secrets. Eigene Release-Signierschlüssel sind für Debug nicht erforderlich.
 
-Der erste GitHub-Lauf wurde ausgelöst, scheiterte aber vor Jobstart an einem unzulässigen `runner.temp`-Kontext in der Job-Umgebung. Der Workflow verwendet jetzt einen festen temporären Toolpfad; der Folge-Lauf wird separat geprüft. `actionlint` 1.7.7 hat die korrigierte Workflowdefinition anschließend ohne Fehler geprüft. Ein lokal erfolgreicher Build bestätigt keinen GitHub-Actions-Lauf. Der tatsächliche Status der Remote-Bereitstellung wird im Abschlussbericht genannt. Falls Actions im Repository deaktiviert sind, unter **Settings → Actions → General** die offiziellen `actions/checkout`, `setup-java`, `cache` und `upload-artifact` erlauben. Danach **Actions → Build DEADWAVE HEROES → Run workflow** verwenden. Der Quellcode samt Workflow muss dafür zuerst auf GitHub vorliegen.
+Der erste GitHub-Lauf wurde ausgelöst, scheiterte aber vor Jobstart an einem unzulässigen `runner.temp`-Kontext in der Job-Umgebung. Der Workflow verwendet jetzt einen festen temporären Toolpfad; der Folge-Lauf wird separat geprüft. `actionlint` 1.7.7 hat die korrigierte Workflowdefinition anschließend ohne Fehler geprüft. **Bestätigter GitHub-Erfolg:** [Build #2 / Commit 2387eb2](https://github.com/Whiskymitschuss/New-Game/actions/runs/40367847222), Status **Success**, Gesamtdauer 1m 19s. Die öffentliche GitHub-Zusammenfassung bestätigt drei erzeugte Artefakte:
+
+| Artefakt | Größe laut GitHub | SHA-256 des Artefaktarchivs |
+|---|---|---|
+| `DeadwaveHeroes-v0.1-debug` | 54.3 MB | `163d2c9554a9ea93aa4dbc8842533cb97165303b1306e31e9b5cd2870b8ea9ae` |
+| `DeadwaveHeroes-v0.1-windows` | 32.8 MB | `290c8ecac71771a792c9ef73097b4e749c8e4f07af4906cc0ebba8594cc6f447` |
+| `deadwave-build-evidence` | 9.19 KB | `8ef0774287c0d21b2ae2a4a5cd56a2e6aabb96c989adb52620432bb41e006727` |
+
+Für den Download bei GitHub anmelden und im verlinkten Lauf unter **Artifacts** den gewünschten Eintrag wählen. Das Android-Archiv enthält die installierbare Debug-APK und das Dateimanifest. Diese GitHub-Archivprüfsummen unterscheiden sich von den SHA-256-Werten der enthaltenen Dateien und von lokalen Builds, deren Debug-Schlüssel separat erzeugt wurde. Der Remote-Erfolg ist über Status und Artefaktliste bestätigt; die archivierten Remote-Protokolle wurden nicht separat heruntergeladen. Zwei Hinweise zu älteren offiziellen Actions-Majorversionen sind nicht blockierend; vor dem Release die Actions-Versionen aktualisieren.
+
+Keine eigenen Secrets und keine zusätzliche Freigabe waren zum Ausführen dieses Debug-Workflows nötig. Weitere Pushes auf `main` starten automatisch neue Builds; manuell ist **Actions → Build DEADWAVE HEROES → Run workflow** möglich. GitHub-Artefakte unterliegen der Aufbewahrungsfrist des Repositories.
 
 ## Nicht durchgeführt / noch offen
 
