@@ -170,7 +170,7 @@ func show_menu() -> void:
  button("WELTKARTE",Rect2(30,722,232,55),show_map)
  button("HELD & ARSENAL",Rect2(278,722,232,55),show_armory)
  button("EINSTELLUNGEN",Rect2(30,793,480,48),show_settings)
- label("OFFLINE  •  KEINE WERBUNG  •  v0.2.0",Vector2(34,901),12,MUTED)
+ label("OFFLINE  •  KEINE WERBUNG  •  v0.2.1",Vector2(34,901),12,MUTED)
 
 func page_header(title: String,subtitle: String) -> void:
  clear_ui()

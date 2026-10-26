@@ -1,6 +1,10 @@
 # DEADWAVE HEROES · RF Worlds
 
-Spielbarer Godot-4.6.3-Prototyp **v0.2.0**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche und synthetisierte Originalmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+Spielbarer Godot-4.6.3-Prototyp **v0.2.1**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche und synthetisierte Originalmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+
+## Hintergrundmusik
+
+Die vom Nutzer bereitgestellte Originaldatei „Endless Survival.mp3“ ist unverändert als lokale Hintergrundmusik eingebunden. Sie läuft im Hauptmenü, bei normalen Wellen und Bossen in Schleife weiter; der Wechsel zwischen diesen Zuständen startet den Song nicht neu. Sieg/Niederlage behalten ihre musikalischen Abschlüsse. Musik und Effekte haben getrennte Lautstärkeregler; Musik kann vollständig stummgeschaltet werden. Keine Streamingverbindung erforderlich.
 
 ## Spielen
 
@@ -14,15 +18,15 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.0-debug/DeadwaveHeroes-v0.2.0-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.0-debug). Dieser öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
+**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.1-debug/DeadwaveHeroes-v0.2.1-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.1-debug). Dieser öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
 
-Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.0-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut. Geht dieser Cache verloren, kann ein späterer Testbuild eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
+Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.1-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut. Geht dieser Cache verloren, kann ein späterer Testbuild eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
 
 **Neon Update 0.2.0:** Der wiederholte Abwurf wird im Physikserver korrekt zurückgesetzt; 24 Abwürfe mit denselben Poolkörpern werden in beiden Qualitätsstufen geprüft. Neue detaillierte Helden-/Gegnergrafiken, eigene Sci-Fi-Stadt, futuristisches HUD, Reaktor-Labyrinth, Klassenporträts und dreispaltige Upgrade-Karten sind integriert. Die Oberfläche skaliert als Vektor-/Canvas-UI; echte Vorschauen mit 2160 × 3840 Pixeln stehen unter `docs/screenshots/neon-*-4k.png`. Das ist ein Nachweis der hochauflösenden Darstellung, keine Zusage von 4K/60 FPS auf einem Smartphone.
 
 Das Savegame-Format ist unverändert. Debug-Schlüssel werden seit v0.1.1 im Buildcache wiederverwendet; der Zertifikatsvergleich der veröffentlichten APKs bestätigt für v0.2.0 dieselbe Signieridentität wie v0.1.1. Das neue APK kann als Update installiert werden; nicht vorher deinstallieren.
 
-Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.0-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
+Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.1-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
 
 ## Entwicklung und Builds (Linux)
 

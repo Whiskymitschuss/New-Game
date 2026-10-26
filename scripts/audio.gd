@@ -3,6 +3,8 @@ extends Node
 var effects: Array[AudioStreamPlayer] = []
 var music: AudioStreamPlayer
 var track := ""
+var current_music_path := ""
+const SURVIVAL_MUSIC = "res://assets/audio/endless_survival.mp3"
 var music_volume := 0.45
 var effects_volume := 0.65
 func _ready() -> void:
@@ -24,11 +26,19 @@ func play_effect(name: String,pitch: float=1.0) -> void:
    player.play()
    return
 func play_music(name: String) -> void:
- if track!=name:
-  track=name
-  music.stream=load("res://assets/audio/"+name+".wav")
+ var path=SURVIVAL_MUSIC if name in ["menu","battle","boss"] else "res://assets/audio/"+name+".wav"
+ track=name
+ if current_music_path!=path:
+  current_music_path=path
+  var stream=load(path)
+  if stream is AudioStreamMP3:
+   stream.loop=true
+   stream.loop_offset=0.0
+  music.stream=stream
   music.play()
- music.volume_db=linear_to_db(maxf(0.001,music_volume*0.35))
+ # Context and volume changes must not restart the same background song.
+ music.stream_paused=music_volume<=0
+ music.volume_db=-80.0 if music_volume<=0 else linear_to_db(music_volume*0.35)
 
 func _exit_tree() -> void:
  if is_instance_valid(music):
