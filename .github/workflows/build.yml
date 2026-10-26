@@ -1,0 +1,56 @@
+name: Build DEADWAVE HEROES
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deadwave-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  debug-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      DEADWAVE_TOOLS: ${{ runner.temp }}/deadwave-tools
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/deadwave-tools/downloads
+          key: deadwave-downloads-godot-4.6.3-android-cli-16111833
+      - name: Install verified build tools and import project
+        run: python3 scripts/bootstrap.py
+      - name: Test, export and verify Android and Windows
+        shell: bash
+        run: |
+          source "$DEADWAVE_TOOLS/env.sh"
+          ./scripts/build.sh
+      - name: Upload Android debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeadwaveHeroes-v0.1-debug
+          path: |
+            builds/DeadwaveHeroes-v0.1-debug.apk
+            builds/manifest.json
+          if-no-files-found: error
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: DeadwaveHeroes-v0.1-windows
+          path: builds/DeadwaveHeroes-v0.1-windows.zip
+          if-no-files-found: error
+      - name: Preserve build and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deadwave-build-evidence
+          path: builds/*.log
+          if-no-files-found: warn
