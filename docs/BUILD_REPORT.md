@@ -110,3 +110,13 @@ Zehn vollständige Probeläufe mit unveränderten Kampfwerten und normalen Spiel
 `tests/capture_reactor.gd` dokumentiert einen normalen Level-3-Lauf mit echten Eingaben, ohne Gegnerplatzierung oder geänderte Kampfwerte. Neue Bilder unter `docs/screenshots/reactor-*-v0.2.3*.png` beziehungsweise `reactor-v0.2.3*.png`: Gameplay in Welle 2 mit neun aktiven Gegnern, zwölf sichtbaren Physikkugeln und 79 Munition; Upgrade-Ansicht nach der zweiten Welle mit 123 Munition. Varianten mit `-4k` sind tatsächliche Godot-Ausgaben mit 2160 × 3840 Pixeln. Die neue Rasterkulisse selbst ist 1402 × 1122; keine Behauptung durchgehend nativer 4K-Assets.
 
 Nicht durchgeführt: Installation/Touch-/Audioprüfung auf einem physischen Android-Gerät, gemessene Hardware-FPS und Windows-Ausführung. Savegame-Version bleibt 1; laufende Einsätze werden weiterhin nicht wiederaufgenommen. Veröffentlichung und Vergleich der tatsächlich heruntergeladenen APK-Signatur werden nach dem Remote-Build ergänzt.
+
+### Veröffentlichung verifiziert
+
+- Quellstand: `910a954` auf `main`.
+- GitHub-Build [40467462642](https://github.com/Whiskymitschuss/New-Game/actions/runs/40467462642): erfolgreich, Buildjob 2 min 40 s, einschließlich aller automatischen Suiten und echter OpenGL-Prüfung.
+- Download-Veröffentlichung [40467750744](https://github.com/Whiskymitschuss/New-Game/actions/runs/40467750744): APK aus genau diesem geprüften Build übernommen, Manifest-Prüfsumme vor Veröffentlichung geprüft.
+- Tatsächlich öffentlich heruntergeladene APK: [DeadwaveHeroes-v0.2.3-debug.apk](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.3-debug/DeadwaveHeroes-v0.2.3-debug.apk), 69.070.861 Bytes, SHA-256 `fc0df56501652de4ec1ffa80519686a0418f39e695f174b5725f57a0d3016f2a`.
+- SHA-256 stimmt mit der veröffentlichten `SHA256SUMS.txt` überein. `apksigner verify --verbose` und `zipalign -c -P 16 4` für die heruntergeladene Datei erfolgreich. Paket `com.rfworlds.deadwaveheroes`, Versionsname 0.2.3, Versionscode 6, Mindest-API 24, Ziel-API 36, ARMv7/ARM64.
+- Öffentliches Signierzertifikat stimmt mit der heruntergeladenen v0.2.2 überein. Die APK erfüllt damit Paket-, Versions- und Signaturvoraussetzungen für ein Update; keine vorherige Deinstallation erforderlich. Keine Behauptung eines tatsächlich durchgeführten Installationsversuchs auf einem Gerät.
+- Die Release-Anhänge enthalten außerdem die neuen Gameplay-/Upgrade-Bilder in normaler und echter 4K-Ausgabe.
