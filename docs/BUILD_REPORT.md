@@ -138,3 +138,13 @@ Neue Vorschauen unter `docs/screenshots/progression-*-v0.2.4.png` sind echte 216
 Grenzen: Stichproben bis Einsatz20 sind kein Beleg perfekter Balance aller 100 Einsätze. Keine Installation, Touch-/Audioprüfung oder FPS-Messung auf einem physischen Android-Gerät; kein Windows-Ausführungstest. Remote-Build, Download-Prüfsumme und Signaturvergleich werden nach erfolgreicher Veröffentlichung ergänzt.
 
 Lokale Endprüfung: 6.692 Einzelprüfungen bestanden (Audio11, Layout-/Wellenpläne5705, Fortschritt97, Waffen/AoE56, Reaktor19, Systeme314, Pool-Reuse120, UI241, UX109, OpenGL20). Zusätzlich alle 16 vollständigen Kampagnen-/Waffenläufe bestanden: zehn Klassen-/Bossfälle und sechs Waffenmeilensteine. Der abschließende Grafiktest prüft weiterhin echte sichtbare Kugelpixel nach wiederholtem Abwurf sowie native Mauseingaben. Neue Waffen-SVGs zusätzlich in Godot als 128 × 64-Texturen geladen.
+
+### Veröffentlichung 0.2.4 verifiziert
+
+- Quellstand `80090ff` auf `main`.
+- [GitHub-Build 40560978858](https://github.com/Whiskymitschuss/New-Game/actions/runs/40560978858) erfolgreich, Job 2 min 39 s: 6.692 Einzelprüfungen, 16 vollständige Szenarien, Android-/Windows-Export und echter OpenGL-Test.
+- [Download-Veröffentlichung 40561410627](https://github.com/Whiskymitschuss/New-Game/actions/runs/40561410627) erfolgreich, 18 s. APK unverändert aus genau diesem Build anhand des Manifests geprüft und als Debug-Prerelease veröffentlicht.
+- Öffentlich tatsächlich heruntergeladene [DeadwaveHeroes-v0.2.4-debug.apk](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.4-debug/DeadwaveHeroes-v0.2.4-debug.apk): 69.139.258 Bytes; SHA-256 `8098803613cfb129e5e966d7bc533a4bd3c5b5e8165ee7179bc40bb063355bd5`, identisch mit der veröffentlichten `SHA256SUMS.txt`.
+- `apksigner verify --verbose` und `zipalign -c -P 16 4` bestanden. Paket `com.rfworlds.deadwaveheroes`, Version 0.2.4, Versionscode 7, Mindest-API24, Ziel-API36, ARMv7/ARM64. Öffentliches Signierzertifikat stimmt mit der heruntergeladenen v0.2.3 überein: Update ohne vorherige Deinstallation möglich.
+- Zusätzlich aus der lokal erzeugten APK extrahierte echte Export-Ressourcen geprüft: alle zwölf Waffen-Texturen laden mit 128 × 64, die kompilierten Progression-/Arsenalskripte laden und ein frisches Profil sperrt die Maschinenpistole. Das ist eine Prüfung des Exportinhalts im passenden Godot-Desktop-Runner, kein Android-Gerätetest.
+- Öffentliche Release-Anhänge enthalten die neue Arsenalansicht, gesperrte Waffenvorschau und echte Freischaltung in 2160 × 3840.
