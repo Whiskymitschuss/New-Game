@@ -7,6 +7,7 @@ var previous := Vector2.ZERO
 var live := false
 var portal_used := false
 var glow := 0.0
+var impact_cooldown := 0.0
 var reset_pending := false
 var reset_at := Vector2.ZERO
 var reset_velocity := Vector2.ZERO
@@ -49,6 +50,8 @@ func _ready() -> void:
  material.friction=0.18
  physics_material_override=material
  continuous_cd=RigidBody2D.CCD_MODE_CAST_SHAPE
+ contact_monitor=true
+ max_contacts_reported=2
  deactivate()
 
 func activate(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> void:
@@ -56,6 +59,8 @@ func activate(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> void:
  weight=amount
  gates=mask
  age=0
+ glow=0.0
+ impact_cooldown=0.0
  portal_used=false
  live=true
  visible=true

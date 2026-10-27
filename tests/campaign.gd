@@ -7,8 +7,11 @@ func run() -> void:
  game=load("res://main.tscn").instantiate()
  root.add_child(game)
  await process_frame
- game.profile.reset()
- for n in [1,2,3]:
+ for scenario in [[0,1],[0,2],[0,3],[1,1],[1,3],[2,1],[2,3],[0,10],[1,10],[2,10]]:
+  var cls=int(scenario[0]);var n=int(scenario[1])
+  # Fresh permanent stats: wins must not depend on earlier test rewards.
+  game.profile.reset()
+  game.profile.data["class"]=cls
   game.start_level(n)
   game.aim=413
   var elapsed=0.0
@@ -18,9 +21,9 @@ func run() -> void:
   var fired=false
   while game.mode not in ["victory","defeat"] and elapsed<600:
    if game.mode=="play":
-    if game.ammo<60 and game.active_balls()==0 and game.attempts>0:
+    if game.ammo<45 and game.active_balls()==0 and game.attempts>0:
      game.drop_ammo()
-    if game.energy>=75 and game.enemies.size()>2:
+    if game.energy>=70 and game.enemies.size()>2:
      game.special_attack()
     if game.magazine<int(game.weapon()[4]):
      fired=true
@@ -37,9 +40,11 @@ func run() -> void:
    await physics_frame
    fired_shots+=maxi(0,before_ammo-game.ammo)
    elapsed+=1.0/60.0
-  print("CAMPAIGN level=%d mode=%s seconds=%.1f hp=%.1f ammo=%d produced=%d kills=%d"%[n,game.mode,elapsed,game.hp,game.ammo,game.produced,game.run_kills])
+  print("CAMPAIGN class=%s level=%d mode=%s seconds=%.1f hp=%.1f ammo=%d produced=%d kills=%d"%[Content.CLASSES[cls]["name"],n,game.mode,elapsed,game.hp,game.ammo,game.produced,game.run_kills])
   print("BALANCE shots=%d peak_ammo=%d peak_enemies=%d drops=%d"%[fired_shots,peak_ammo,peak_enemies,game.dropped/12])
-  if game.mode!="victory" or not fired or game.produced<=0 or game.run_kills<100 or peak_enemies<6:
+  var expected=1 if n%10==0 else 0
+  for w in range(1,game.wave_count+1):expected+=Content.wave_enemy_count(n,w)
+  if game.mode!="victory" or not fired or game.produced<=0 or game.run_kills!=expected or peak_enemies<6 or peak_ammo>int(game.stats["capacity"]):
    failed=true
    push_error("Full run failed at level %d"%n)
   if failed:

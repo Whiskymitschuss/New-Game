@@ -3,6 +3,7 @@ extends RefCounted
 # Resolution-independent UI drawing plus original high-resolution production art.
 var g: Node2D
 var city: Texture2D
+var forge: Texture2D
 var heroes: Texture2D
 var enemies: Texture2D
 var regions: Dictionary = {}
@@ -21,6 +22,7 @@ const QUIET = Color("8a9dbb")
 func _init(game: Node2D) -> void:
  g=game
  city=load("res://assets/art/neon_city.png")
+ forge=load("res://assets/art/reactor_forge.png")
  heroes=load("res://assets/art/heroes.png")
  if ResourceLoader.exists("res://assets/art/enemies.png"):
   enemies=load("res://assets/art/enemies.png")
@@ -184,42 +186,71 @@ func hud() -> void:
  g.draw_line(Vector2(169,366),Vector2(169,400),Color(BLUE,0.16),1,true)
  g.draw_line(Vector2(370,366),Vector2(370,400),Color(BLUE,0.16),1,true)
  text("MUNITION / %s"%g.compact(int(g.stats["capacity"])),Vector2(29,370),9,QUIET,true)
- text(g.compact(g.ammo),Vector2(29,400),29,MINT)
+ var ammo_tint=AMBER if g.ammo<=30 else MINT
+ text(g.compact(g.ammo),Vector2(29,395),25,ammo_tint)
+ g.bar(Rect2(30,402,122,3),float(g.ammo)/maxf(1,float(g.stats["capacity"])),ammo_tint)
  text(g.weapon()[0].to_upper(),Vector2(183,375),12,PAPER)
  var state="NACHLADEN" if g.reload_timer>0 else "%02d IM MAGAZIN"%g.magazine
  text(state,Vector2(184,397),9,QUIET,true)
  text("IMPULS",Vector2(385,370),9,QUIET,true)
- text("%03d"%int(g.energy),Vector2(387,391),19,BLUE,true)
+ text("BEREIT" if g.energy>=50 else "%02d / 50"%int(g.energy),Vector2(385,391),15,BLUE,true)
  g.bar(Rect2(385,398,121,4),g.energy/100.0,BLUE)
 
+func wave_cue() -> void:
+ if g.wave_banner<=0 or g.mode!="play":return
+ var alpha=minf(1,g.wave_banner*2)
+ plate(Rect2(173,132,226,36),MINT,Color(0.04,0.1,0.16,alpha*0.94),7)
+ text("WELLE %02d  /  %d FEINDE"%[g.wave,Content.wave_enemy_count(g.level,g.wave)],Vector2(186,155),12,Color(MINT,alpha),true)
+
 func factory() -> void:
- # Reactor chamber, inset steel frame, quiet technical hex pattern.
- plate(Rect2(16,473,508,401),BLUE,Color("080f20"),12)
- for col in range(8):
-  for row in range(7):
-   var p=Vector2(57+col*60,503+row*52+(col%2)*26)
-   if p.y>837:continue
-   var points=PackedVector2Array()
-   for i in range(7):points.append(p+Vector2(cos(i*TAU/6),sin(i*TAU/6))*22)
-   g.draw_polyline(points,Color(BLUE,0.035),1,true)
- for x in [20,510]:
-  g.panel(Rect2(x,488,10,343),Color("20344a"),3)
-  g.draw_line(Vector2(x+3,497),Vector2(x+3,823),Color(BLUE,0.45),1.5,true)
-  for i in range(8):g.draw_line(Vector2(x,512+i*40),Vector2(x+10,504+i*40),Color("496178"),2,true)
+ # Active reactor forge: recessed circular engine, powered rails and three gates.
+ plate(Rect2(16,473,508,401),BLUE,Color("080f1d"),12)
+ g.draw_texture_rect(forge,Rect2(28,486,484,379),false,Color(0.85,0.94,1,1))
+ var center=Vector2(270,668)
+ # Slow induction arcs belong to the back plate; impacts supply the bright action.
+ for radius in [116,159]:
+  g.draw_arc(center,radius,g.clock*0.12+radius,g.clock*0.12+radius+0.8,28,Color(BLUE,0.07),1,true)
+ var busy=g.active_balls()>0 or not g.pending_balls.is_empty()
+ for x in [22,518]:
+  g.draw_line(Vector2(x,490),Vector2(x,857),Color("192b43"),8,true)
+  g.draw_line(Vector2(x,490),Vector2(x,857),Color(BLUE,0.18),1,true)
+  for i in range(10):
+   var y=503+i*34
+   var alpha=0.22+(0.55*maxf(0,sin(g.clock*5-i*0.7)) if busy else 0.0)
+   g.draw_line(Vector2(x,y),Vector2(x,y+16),Color(MINT,alpha),3,true)
+ # Subtle aim guide is honest about the first gate, never a promised trajectory.
+ if not busy:
+  var first_y=float(g.layout["gates"][0]["y"])-23
+  for i in range(5):
+   var y=510+i*7
+   if y<first_y:g.draw_circle(Vector2(g.aim,y),1.1,Color(BLUE,0.25+i*0.08))
  for row in range(3):
   var gate=g.layout["gates"][row];var y=float(gate["y"]);var split=g.gate_split(row)
   for side in range(2):
-   var x=32.0 if side==0 else split+5
-   var width=split-37 if side==0 else 507-split
+   var x=35.0 if side==0 else split+7
+   var width=split-42 if side==0 else 505-split-7
    var factor=int(gate["left"] if side==0 else gate["right"])
    var tint=MINT if factor>=3 else BLUE
-   g.draw_rect(Rect2(x,y-10,width,21),Color(tint,0.075))
-   g.draw_line(Vector2(x,y+11),Vector2(x+width,y+11),Color(tint,0.12),7,true)
-   g.draw_line(Vector2(x,y+11),Vector2(x+width,y+11),Color(tint,0.65),1.5,true)
-   var center=x+width*0.5
-   plate(Rect2(center-28,y-14,56,28),tint,Color("102235"),5)
-   text("×%d"%factor,Vector2(center-15,y+7),20,tint)
-  g.draw_arc(Vector2(split,y),5,0,TAU,12,Color(BLUE,0.7),1.2,true)
+   if factor==1:tint=QUIET
+   var power=g.reactor_fx.gate_charge[row*2+side]
+   g.draw_rect(Rect2(x,y-16,width,32),Color(tint,0.025+power*0.09))
+   # Segmented laser field, glass badge and illuminated electrode endcaps.
+   for offset in [-8,8]:
+    g.draw_line(Vector2(x,y+offset),Vector2(x+width,y+offset),Color(tint,0.12+power*0.3),1,true)
+   g.draw_line(Vector2(x,y),Vector2(x+width,y),Color(tint,0.3+power*0.5),1.3,true)
+   for electrode_x in [x,x+width]:
+    plate(Rect2(electrode_x-3,y-20,6,40),tint,Color("24354a"),2)
+    g.draw_line(Vector2(electrode_x,y-13),Vector2(electrode_x,y+13),Color(tint,0.8),2,true)
+   var badge_x=x+width*0.5
+   plate(Rect2(badge_x-36,y-23,72,46),tint,Color("101e31"),9)
+   g.draw_line(Vector2(badge_x-25,y+19),Vector2(badge_x+25,y+19),Color(tint,0.12+power*0.7),2,true)
+   text("×%d"%factor,Vector2(badge_x-25 if factor<10 else badge_x-30,y+10),28,tint)
+   # Bright traveling energy flecks, accelerated only while balls are in flight.
+   if factor>1:
+    var travel=fmod(g.clock*(65 if busy else 17)+row*43+side*20,maxf(1,width))
+    g.draw_line(Vector2(x+travel,y),Vector2(x+minf(width,travel+9),y),Color(tint,0.5),2,true)
+  g.draw_circle(Vector2(split,y),4,Color("24364e"))
+  g.draw_arc(Vector2(split,y),7,g.clock*2,g.clock*2+4.8,16,Color(BLUE,0.6),1,true)
  for ob in g.obstacles:
   if ob["broken"]:continue
   var p: Vector2=ob["pos"];var kind=String(ob["kind"]);var variant=int(ob["variant"])
@@ -251,25 +282,54 @@ func factory() -> void:
    g.draw_circle(p,23,Color(AMBER,0.07))
    g.draw_arc(p,18,0,TAU,24,Color(AMBER,0.7),1.5,true)
    text("+%d"%(5*(variant+1)),p+Vector2(-12,5),14,AMBER)
- # Armored injection head follows the actual aim position.
+ # Twin-clamp magnetic injector. Its light follows each real emitted ball.
  var at=Vector2(g.aim,480)
- g.draw_line(at-Vector2(0,23),at+Vector2(0,8),Color("3b536c"),11,true)
- plate(Rect2(at-Vector2(29,13),Vector2(58,30)),BLUE,Color("25364a"),6)
- g.draw_line(at+Vector2(-18,-7),at+Vector2(18,-7),MINT,2.5,true)
- g.draw_line(at+Vector2(-13,13),at+Vector2(13,13),PAPER,3,true)
- for x in [-24,24]:g.draw_circle(at+Vector2(x,5),2,BLUE)
- # Collector conduit and visible incoming-unit monitor.
- plate(Rect2(30,839,480,26),MINT,Color("112b36"),5)
- for n in range(13):
-  var x=41+n*36
-  var a=0.2+0.35*maxf(0,sin(g.clock*3-n*0.6))
-  g.draw_polyline(PackedVector2Array([Vector2(x,847),Vector2(x+5,852),Vector2(x+10,847)]),Color(MINT,a),2,true)
- text("REAKTOR / SAMMLER",Vector2(211,858),8,PAPER,true)
+ var recoil=g.reactor_fx.nozzle_charge
+ g.draw_line(at-Vector2(0,19),at+Vector2(0,7),Color("3b536c"),10,true)
+ plate(Rect2(at-Vector2(31,12),Vector2(62,29)),BLUE,Color("24364d"),7)
+ for offset in [-21,21]:
+  g.draw_line(at+Vector2(offset,4),at+Vector2(offset*0.7,18+recoil*3),Color("547087"),5,true)
+ g.draw_line(at+Vector2(-15,-6),at+Vector2(15,-6),MINT,2.5,true)
+ g.draw_line(at+Vector2(-10,14),at+Vector2(10,14),Color(BLUE,0.65+recoil*0.35),3,true)
+ # Real virtual mass, rather than the capped number of representative bodies.
  var units=0
  for ball in g.pool:
   if ball.live:units+=ball.weight
- if units>0 or not g.pending_balls.is_empty():
-  text("IM FLUSS  %s   /   INJEKTION %02d"%[g.compact(units),g.pending_balls.size()],Vector2(39,825),9,QUIET,true)
+ if busy:
+  plate(Rect2(35,786,116,41),BLUE,Color(0.035,0.07,0.12,0.92),5)
+  plate(Rect2(339,786,164,41),MINT,Color(0.035,0.07,0.12,0.92),5)
+  text("IM FLUSS",Vector2(40,801),9,QUIET,true)
+  text(g.compact(units),Vector2(40,821),18,MINT,true)
+  text("GUTGESCHRIEBEN",Vector2(346,801),9,QUIET,true)
+  text("+"+g.compact(g.drop_credited),Vector2(415,821),18,MINT,true)
+ else:
+  plate(Rect2(35,786,256,41),BLUE,Color(0.035,0.07,0.12,0.92),5)
+  plate(Rect2(339,786,164,41),MINT,Color(0.035,0.07,0.12,0.92),5)
+  text("%d KUGELN · GERADE ROUTE ×%d"%[int(g.stats["drop"]),g.route_factor()],Vector2(42,801),10,BLUE)
+  text("ABPRALLER ÄNDERN DEN WEG",Vector2(42,818),9,QUIET,true)
+  text("LAGER FREI",Vector2(347,801),9,QUIET,true)
+  text(g.compact(maxi(0,int(g.stats["capacity"])-g.ammo)),Vector2(430,820),18,MINT,true)
+ # Magnetic collection mouth. Rotor light responds to actual incoming units.
+ var charge=minf(1,g.reactor_fx.collector_charge)
+ g.draw_colored_polygon(PackedVector2Array([Vector2(34,831),Vector2(506,831),Vector2(477,869),Vector2(63,869)]),Color(0.045,0.09,0.16,0.6))
+ g.draw_polyline(PackedVector2Array([Vector2(34,831),Vector2(63,869),Vector2(477,869),Vector2(506,831)]),Color(BLUE,0.3),1,true)
+ g.draw_line(Vector2(47,836),Vector2(493,836),Color(MINT,0.1+charge*0.22),9,true)
+ g.draw_line(Vector2(47,836),Vector2(493,836),Color(MINT,0.5+charge*0.5),2,true)
+ for x in [85,455]:
+  var p=Vector2(x,852)
+  g.draw_circle(p,13,Color("091421"))
+  g.draw_arc(p,12,0,TAU,28,Color(BLUE,0.3),1,true)
+  for blade in range(3):
+   var angle=g.clock*(5 if busy else 1.5)+blade*TAU/3
+   g.draw_arc(p,8,angle,angle+1.1,8,Color(MINT,0.4+charge*0.6),2,true)
+  g.draw_circle(p,2,PAPER)
+ for n in range(5):
+  var x=133+n*66
+  var offset=fmod(g.clock*(25 if busy else 10)+n*5,17)
+  var alpha=0.15+charge*0.5
+  g.draw_polyline(PackedVector2Array([Vector2(x-6,838+offset),Vector2(x,843+offset),Vector2(x+6,838+offset)]),Color(MINT,alpha),1.5,true)
+ plate(Rect2(185,845,170,21),MINT,Color("0d202e"),4)
+ text("MUNITIONSSCHMIEDE",Vector2(202,860),10,MINT,true)
 
 func icon_key(id: int) -> String:
  var stat=String(Content.UPGRADES[id][2])

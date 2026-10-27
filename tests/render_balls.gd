@@ -23,6 +23,13 @@ func bright_pixels(image: Image,at: Vector2) -> int:
  return count
 func _initialize() -> void:
  call_deferred("run")
+func flare_energy(image: Image,at: Vector2) -> float:
+ var total=0.0
+ for y in range(-12,13):
+  for x in range(-42,43):
+   var color=image.get_pixel(roundi(at.x)+x,roundi(at.y)+y)
+   total+=color.r+color.g+color.b
+ return total
 func run() -> void:
  game=load("res://main.tscn").instantiate()
  root.add_child(game)
@@ -100,6 +107,21 @@ func run() -> void:
  image=await frame_image()
  check(not game.ball_visuals.visible,"ball foreground hides immediately when pausing")
  check(bright_pixels(image,Vector2(200,520))<20,"pause overlay contains no rendered ball pixels")
+ game.clear_balls();game.mode="play";game.build_hud();game.reactor_fx.reset()
+ await process_frame
+ image=await frame_image()
+ var before=flare_energy(image,Vector2(180,700))
+ game.reactor_fx.pulse(Vector2(180,700),Color.CYAN,"gate",1.5)
+ image=await frame_image()
+ check(flare_energy(image,Vector2(180,700))>before+50,"reactor flare produces visible additive light on the actual background")
+ game.pause_game();image=await frame_image()
+ check(not game.reactor_fx.visible,"the real rendered flare hides under the pause UI")
+ game.mode="play";game.build_hud()
+ var press=InputEventMouseButton.new();press.button_index=MOUSE_BUTTON_LEFT;press.pressed=true;press.position=Vector2(100,700)
+ root.push_input(press)
+ var release=press.duplicate();release.pressed=false;root.push_input(release)
+ await process_frame
+ check(absf(game.aim-100)<1 and absf(game.aim_slider.value-100)<1,"native viewport mouse input targets the large reactor aiming surface")
  print("RENDER RESULT: %d checks, %d failures"%[checks,failures])
  game.queue_free()
  await process_frame

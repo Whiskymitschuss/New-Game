@@ -17,6 +17,16 @@ var controls: Control
 var geometry: Node2D
 var pool: Array[AmmoBall] = []
 var ball_visuals: BallVisuals
+var reactor_fx: ReactorFX
+var aim_slider: HSlider
+var collection_remainder := 0.0
+var drop_credited := 0
+var drop_overflow := 0
+var drop_running := false
+var last_drop_message := ""
+var last_drop_time := 0.0
+var wave_banner := 0.0
+var collect_text_cooldown := 0.0
 var pending_balls: Array = []
 var drop_emit_timer := 0.0
 const DROP_INTERVAL := 0.065
@@ -88,7 +98,14 @@ func _ready() -> void:
  for i in range(MAX_BALLS):
   var ball=AmmoBall.new()
   add_child(ball)
+  ball.body_entered.connect(func(_body):
+   if ball.live and not ball.reset_pending and ball.impact_cooldown<=0 and mode=="play":
+    ball.impact_cooldown=0.18
+    reactor_fx.pulse(ball.position,CYAN,"impact",0.65))
   pool.append(ball)
+ reactor_fx=ReactorFX.new()
+ reactor_fx.game=self
+ add_child(reactor_fx)
  ball_visuals=BallVisuals.new()
  ball_visuals.balls=pool
  add_child(ball_visuals)
@@ -170,7 +187,7 @@ func show_menu() -> void:
  button("WELTKARTE",Rect2(30,722,232,55),show_map)
  button("HELD & ARSENAL",Rect2(278,722,232,55),show_armory)
  button("EINSTELLUNGEN",Rect2(30,793,480,48),show_settings)
- label("OFFLINE  •  KEINE WERBUNG  •  v0.2.2",Vector2(34,901),12,MUTED)
+ label("OFFLINE  •  KEINE WERBUNG  •  v0.2.3",Vector2(34,901),12,MUTED)
 
 func page_header(title: String,subtitle: String) -> void:
  clear_ui()
@@ -324,6 +341,10 @@ func start_level(number: int) -> void:
  run_coins=0
  run_kills=0
  collected=0
+ collection_remainder=0
+ drop_running=false
+ last_drop_message=""
+ reactor_fx.reset()
  produced=0
  dropped=0
  sparks.clear()
@@ -343,6 +364,8 @@ func build_hud() -> void:
  button("Ⅱ",Rect2(467,27,43,39),pause_game)
  drop_button=button("ABWERFEN",Rect2(24,888,310,54),drop_ammo,true)
  special_button=button("IMPULS",Rect2(350,888,166,54),special_attack)
+ special_button.tooltip_text="Kostet 50 Energie. Trifft die Horde und gibt einen Schild."
+ drop_button.tooltip_text="%d Startkugeln. Ein Versuch pro Abwurf. Wähle mit Ziehen den Weg."%int(stats["drop"])
  var slider=HSlider.new()
  slider.position=Vector2(45,438)
  slider.size=Vector2(450,28)
@@ -352,6 +375,46 @@ func build_hud() -> void:
  slider.value_changed.connect(func(value): aim=value)
  future.style_slider(slider)
  controls.add_child(slider)
+ aim_slider=slider
+ # Large touch surface; positioning never fires a drop accidentally.
+ var aim_surface=Control.new()
+ aim_surface.position=Vector2(30,496)
+ aim_surface.size=Vector2(480,332)
+ aim_surface.mouse_default_cursor_shape=Control.CURSOR_HSIZE
+ aim_surface.gui_input.connect(aim_input)
+ controls.add_child(aim_surface)
+
+func aim_input(event: InputEvent) -> void:
+ if mode!="play":return
+ if event is InputEventScreenTouch:
+  dragging=event.pressed
+  if dragging:set_aim(event.position.x+30)
+ elif event is InputEventScreenDrag:
+  set_aim(event.position.x+30)
+ elif event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT:
+  dragging=event.pressed
+  if dragging:set_aim(event.position.x+30)
+ elif event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_MASK_LEFT:
+  set_aim(event.position.x+30)
+
+func set_aim(value: float) -> void:
+ aim=clampf(value,50,490)
+ if is_instance_valid(aim_slider):aim_slider.set_value_no_signal(aim)
+
+func route_factor() -> int:
+ var factor=1
+ for row in range(3):
+  factor*=int(layout["gates"][row]["left"] if aim<gate_split(row) else layout["gates"][row]["right"])
+ return factor
+
+func reactor_hint() -> String:
+ if not pending_balls.is_empty():return "INJEKTION LÄUFT · KUGELN SIND UNTERWEGS"
+ if active_balls()>0:return "REAKTOR AKTIV · SAMMLER FÜLLT DEIN LAGER"
+ if clock-last_drop_time<3 and not last_drop_message.is_empty():return last_drop_message
+ if ammo>=int(stats["capacity"]):return "LAGER VOLL · ABWURF WIEDER NACH VERBRAUCH"
+ if attempts<=0:return "KEIN ABWURF · NÄCHSTE WELLE GIBT +1" if wave<wave_count else "LETZTE HORDE · IMPULS ZUR UNTERSTÜTZUNG"
+ if ammo<=30:return "MUNITION KNAPP · JETZT KUGELN ABWERFEN"
+ return "IM REAKTOR ZIEHEN · WEG WÄHLEN · ABWERFEN"
 
 func clear_geometry() -> void:
  for child in geometry.get_children():
@@ -424,13 +487,16 @@ func emit_ball(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> bool:
  return false
 
 func drop_ammo() -> void:
- if mode!="play" or attempts<=0 or not pending_balls.is_empty() or ammo>=int(stats["capacity"]):
+ if mode!="play" or attempts<=0 or not pending_balls.is_empty() or active_balls()>0 or ammo>=int(stats["capacity"]):
   return
  var count=int(stats["drop"])
  if active_balls()+pending_balls.size()+count>(MAX_BALLS if quality==1 else 64):
   status_text="Kugeln unterwegs – gleich ist wieder Platz."
   return
  attempts-=1
+ drop_credited=0
+ drop_overflow=0
+ drop_running=true
  dropped+=count
  profile.data["stats"]["drops"]+=1
  for i in range(count):
@@ -448,6 +514,7 @@ func emit_pending_balls(delta: float) -> void:
   if not emit_ball(next["at"],next["velocity"]):
    return # Preserve queued units when representative splits occupy the pool.
   pending_balls.pop_front()
+  reactor_fx.pulse(next["at"],CYAN,"inject",0.6)
   drop_emit_timer+=DROP_INTERVAL
 
 func gate_split(row: int) -> float:
@@ -460,6 +527,8 @@ func multiply_ball(ball: AmmoBall,row: int) -> void:
  ball.gates |= bit
  var gate=layout["gates"][row]
  var factor=int(gate["left"] if ball.position.x<gate_split(row) else gate["right"])
+ reactor_fx.gate_hit(ball.position,row,0 if ball.position.x<gate_split(row) else 1,factor)
+ ball.glow=0.35
  ball.weight*=factor
  ball.queue_redraw()
  # Split representative weights exactly, never instantiate factor-many bodies.
@@ -467,21 +536,27 @@ func multiply_ball(ball: AmmoBall,row: int) -> void:
   var portion=int(ball.weight/2)
   if emit_ball(ball.position+Vector2(8,8),ball.linear_velocity+Vector2(45,0),portion,ball.gates):
    ball.weight-=portion
- if floats.size()<16:
-  floating("×%d"%factor,ball.position,LIME)
  audio.play_effect("multiply",0.9+row*0.15)
 
 func collect_ball(ball: AmmoBall) -> void:
  var amount=ball.weight
  collected+=amount
- var credited=int(amount*float(stats["collection"]))
+ # Preserve fractional collection upgrades across pooled representatives.
+ var exact=amount*float(stats["collection"])+collection_remainder
+ var credited=floori(exact+0.000001)
+ collection_remainder=maxf(0,exact-credited)
  var accepted=mini(credited,maxi(0,int(stats["capacity"])-ammo))
  ammo+=accepted
  produced+=accepted
+ drop_credited+=accepted
+ drop_overflow+=credited-accepted
  energy=minf(100,energy+0.15)
+ var at=Vector2(clampf(ball.position.x,38,502),852)
+ reactor_fx.pulse(at,LIME if accepted>0 else FutureArt.AMBER,"collect" if accepted>0 else "overflow",1.2)
  ball.deactivate()
- if floats.size()<14:
-  floating("+%s"%compact(amount),Vector2(rng.randf_range(80,460),850),CYAN)
+ if floats.size()<14 and collect_text_cooldown<=0:
+  floating("+%s"%compact(accepted) if accepted>0 else "VOLL",at-Vector2(10,22),LIME if accepted>0 else FutureArt.AMBER)
+  collect_text_cooldown=0.15
  audio.play_effect("collect",rng.randf_range(0.85,1.2))
 
 func physics_balls(delta: float) -> void:
@@ -495,6 +570,8 @@ func physics_balls(delta: float) -> void:
   if not ball.live or ball.reset_pending:
    continue
   ball.age+=delta
+  ball.glow=maxf(0,ball.glow-delta)
+  ball.impact_cooldown=maxf(0,ball.impact_cooldown-delta)
   for row in range(3):
    var y=float(layout["gates"][row]["y"])
    if ball.previous.y<y and ball.position.y>=y:
@@ -533,6 +610,11 @@ func physics_balls(delta: float) -> void:
   elif ball.position.x<28 or ball.position.x>512:
    ball.teleport_to(Vector2(clampf(ball.position.x,30,510),ball.position.y),Vector2(-ball.linear_velocity.x*0.5,ball.linear_velocity.y))
   ball.previous=ball.position
+ if drop_running and active_balls()==0 and pending_balls.is_empty():
+  drop_running=false
+  last_drop_message="+%s MUNITION EINGELAGERT"%compact(drop_credited)
+  if drop_overflow>0:last_drop_message+=" · %s ÜBERLAUF"%compact(drop_overflow)
+  last_drop_time=clock
 
 func begin_wave() -> void:
  remaining=Content.wave_enemy_count(level,wave)
@@ -543,6 +625,7 @@ func begin_wave() -> void:
  reload_timer=0
  boss_spawned=false
  wave_delay=0
+ wave_banner=2.8
  status_text="Welle %d / %d"%[wave,wave_count]
 
 func weapon() -> Array:
@@ -806,9 +889,9 @@ func choose_upgrade() -> void:
 
 func build_upgrade_picker() -> void:
  clear_ui()
- label("WELLE %02d GESICHERT   /   EVOLUTION BEREIT"%wave,Vector2(30,414),10,CYAN)
- label("Wähle deine Evolution.",Vector2(28,446),31,INK)
- label("Ein Upgrade. Neue Möglichkeiten. Kostenlos.",Vector2(30,492),13,MUTED)
+ label("WELLE %02d GESICHERT   /   EVOLUTION BEREIT"%wave,Vector2(30,431),10,CYAN)
+ label("Wähle deine Evolution.",Vector2(28,457),29,INK)
+ label("Als Nächstes: %d Feinde  ·  +1 Abwurf  ·  freie Wahl"%Content.wave_enemy_count(level,wave+1),Vector2(30,501),13,MUTED)
  for i in range(3):
   var card=Content.UPGRADES[cards[i]]
   var x=24+i*168
@@ -842,15 +925,16 @@ func build_upgrade_picker() -> void:
   icon.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
   icon.mouse_filter=Control.MOUSE_FILTER_IGNORE
   controls.add_child(icon)
-  var title=label(card[0],Vector2(x+13,697),17,INK,130,true)
+  var title=label(card[0],Vector2(x+13,691),16,INK,130,true)
   title.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
   title.size=Vector2(130,51)
   title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-  var description=label(card[1],Vector2(x+12,751),11,MUTED,132,true)
+  var description=label(card[1],Vector2(x+12,741),12,MUTED,132,true)
   description.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
   description.size=Vector2(132,46)
   description.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
- label("DEINE WAHL GILT FÜR DIESEN EINSATZ",Vector2(105,835),10,MUTED)
+  label("WÄHLEN  →",Vector2(x+39,785),10,tint,108)
+ label("%d HP   /   %d MUNITION   ·   UPGRADE GILT FÜR DIESEN EINSATZ"%[int(hp),ammo],Vector2(37,832),10,MUTED)
  audio.play_effect("upgrade")
 
 func apply_upgrade(id: int) -> void:
@@ -944,6 +1028,8 @@ func _process(delta: float) -> void:
   clock+=delta
   damage_flash=maxf(0,damage_flash-delta)
   shoot_flash=maxf(0,shoot_flash-delta)
+  collect_text_cooldown=maxf(0,collect_text_cooldown-delta)
+  wave_banner=maxf(0,wave_banner-delta)
   for i in range(sparks.size()-1,-1,-1):
    sparks[i]["life"]-=delta
    sparks[i]["pos"]+=sparks[i]["vel"]*delta
@@ -960,11 +1046,13 @@ func _process(delta: float) -> void:
    if floats[i]["life"]<=0:
     floats.remove_at(i)
  if is_instance_valid(drop_button):
-  drop_button.text="ABWURF LÄUFT …" if not pending_balls.is_empty() else "ABWERFEN  ·  %d ÜBRIG"%attempts
-  drop_button.disabled=attempts<=0 or not pending_balls.is_empty() or ammo>=int(stats["capacity"])
-  if ammo>=int(stats["capacity"]) and pending_balls.is_empty():drop_button.text="MUNITIONSLAGER VOLL"
+  var in_flight=not pending_balls.is_empty() or active_balls()>0
+  drop_button.text="REAKTOR AKTIV …" if in_flight else "ABWERFEN  ·  %d ÜBRIG"%attempts
+  drop_button.disabled=attempts<=0 or in_flight or ammo>=int(stats["capacity"])
+  if ammo>=int(stats["capacity"]) and not in_flight:drop_button.text="MUNITIONSLAGER VOLL"
+  elif attempts<=0 and not in_flight:drop_button.text="NÄCHSTE WELLE: +1 ABWURF" if wave<wave_count else "ABWÜRFE AUFGEBRAUCHT"
  if is_instance_valid(special_button):
-  special_button.text="IMPULS %d%%"%int(energy)
+  special_button.text="IMPULS BEREIT" if energy>=50 else "IMPULS %d / 50"%int(energy)
   special_button.disabled=energy<50
  queue_redraw()
 
@@ -1146,14 +1234,14 @@ func _draw() -> void:
   line(t["from"],t["to"],Color(t["color"],clampf(t["life"]*3,0,0.25)),7)
   line(t["from"],t["to"],Color(t["color"],clampf(t["life"]*7,0,1)),2)
  future.hud()
+ future.wave_cue()
  future.factory()
- future.text("INJECTION CONTROL",Vector2(26,432),9,CYAN,true)
- future.text("POSITION WÄHLEN  /  ABWERFEN",Vector2(278,432),9,MUTED,true)
+ future.text(reactor_hint(),Vector2(26,431),10,CYAN if ammo>30 else FutureArt.AMBER)
  for particle in sparks:
   draw_circle(particle["pos"],3,Color(particle["color"],clampf(particle["life"]*0.9,0,0.3)))
   draw_circle(particle["pos"],1.4,Color(particle["color"],clampf(particle["life"]*3,0,1)))
  for f in floats:text_at(f["text"],f["pos"],14,Color(f["color"],minf(1,f["life"]*2)))
  if mode in ["upgrade","pause","victory","defeat"]:
-  draw_rect(Rect2(0,387,540,573),Color(BG,0.98))
-  future.plate(Rect2(16,398,508,474),CYAN,Color("0b1426"),12)
+  draw_rect(Rect2(0,413,540,547),Color(BG,0.98))
+  future.plate(Rect2(16,415,508,459),CYAN,Color("0b1426"),12)
  if damage_flash>0:draw_rect(Rect2(0,0,540,960),Color(CORAL,damage_flash*0.25))

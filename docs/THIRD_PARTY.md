@@ -6,5 +6,5 @@
 - Keine Assets aus den Referenzscreenshots wurden kopiert. Originale Grafikbefehle und mathematisch synthetisierte Musik/Sounds liegen im Projekt.
 
 - Space Grotesk und JetBrains Mono: SIL Open Font License, vollständige Texte unter `assets/licenses/SpaceGrotesk.txt` und `assets/licenses/JetBrainsMono.txt`.
-- Die neuen Stadt-/Helden-/Gegnerillustrationen wurden für dieses Projekt mit Bildgenerierung erstellt und lokal eingebunden. SVG-Interfaceglyphen und Panels sind eigens implementiert. Es wurden keine Grafikbestandteile aus dem Nutzerreferenzspiel übernommen.
+- Die neuen Stadt-/Helden-/Gegnerillustrationen und die Reaktorschmiede wurden für dieses Projekt mit Bildgenerierung erstellt und lokal eingebunden. SVG-Interfaceglyphen und Panels sind eigens implementiert. Es wurden keine Grafikbestandteile aus dem Nutzerreferenzspiel übernommen.
 - „Endless Survival.mp3“: vom Nutzer für die Hintergrundmusik bereitgestellte Aufnahme, unverändert lokal eingebunden. Keine Behauptung, dass diese Aufnahme aus dem synthetischen Audio-Generator des Projekts stammt.
