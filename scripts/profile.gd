@@ -7,7 +7,7 @@ func _init() -> void:
  reset()
 
 func reset() -> void:
- data={"version":1,"level":1,"xp":0,"coins":0,"class":0,"weapon":0,"unlocked":1,"stars":{},"seeds":{},"layouts":{},"weapon_levels":{},"stats":{"kills":0,"wins":0,"drops":0},"settings":{"music":0.45,"sfx":0.65,"quality":1},"outfit":0,"abilities":[],"equipment":{}}
+ data={"version":1,"level":1,"xp":0,"coins":0,"class":0,"weapon":0,"unlocked":1,"stars":{},"seeds":{},"layouts":{},"weapon_levels":{},"seen_weapons":[0],"stats":{"kills":0,"wins":0,"drops":0},"settings":{"music":0.45,"sfx":0.65,"quality":1},"outfit":0,"abilities":[],"equipment":{}}
 
 func load_game() -> bool:
  for path in [PATH,PATH+".bak"]:
@@ -27,6 +27,13 @@ func load_game() -> bool:
     elif value.has(key) and value[key] is float and data[key] is int:
      data[key]=int(value[key])
    data["unlocked"]=clampi(int(data["unlocked"]),1,100)
+   # JSON stores array numbers as floats; acknowledgement IDs are discrete IDs.
+   var seen: Array[int]=[]
+   for value_id in data["seen_weapons"]:
+    var id=int(value_id)
+    if Progression.valid_weapon(id) and not id in seen:seen.append(id)
+   data["seen_weapons"]=seen
+   Progression.sanitize_loadout(data)
    return true
  return false
 

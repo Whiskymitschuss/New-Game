@@ -80,6 +80,9 @@ func run() -> void:
   game.emit_ball(Vector2(100,500),Vector2.ZERO,1000000)
  check(game.active_balls()==128,"pool hard limit survives 1000 emission attempts")
  game.clear_balls()
+ # Valid campaign proof is required even in direct combat tests.
+ game.profile.data["unlocked"]=100
+ for sector in range(1,101):game.profile.data["stars"][str(sector)]=3
  # All weapons fire a real hit, consume reserve, initiate reload and differ in timing.
  for id in range(12):
   game.start_level(1)

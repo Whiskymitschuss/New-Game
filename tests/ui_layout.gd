@@ -31,9 +31,15 @@ func run() -> void:
  game.show_armory();await process_frame
  var portraits=0
  for control in game.controls.get_children():
-  if control is TextureRect:
+  if control is TextureRect and control.has_meta("hero_portrait"):
    portraits+=1
    check(control.size.x<=128 and control.size.y<=128,"hero portrait stays inside its class card")
  check(portraits==3,"three textured class portraits")
+ var names=0
+ for control in game.controls.get_children():
+  if control is Label and control.has_meta("weapon_name"):
+   names+=1
+   check(control.get_theme_font("font").get_string_size(control.text,HORIZONTAL_ALIGNMENT_LEFT,-1,control.get_theme_font_size("font_size")).x<=control.size.x,"entire weapon name fits its collection tile: "+control.text)
+ check(names==12,"all twelve weapon names are readable")
  print("UI RESULT: %d checks, %d failures"%[checks,failures])
  game.queue_free();await process_frame;OS.delay_msec(150);await process_frame;quit(0 if failures==0 else 1)

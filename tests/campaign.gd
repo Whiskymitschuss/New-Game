@@ -12,6 +12,11 @@ func run() -> void:
   # Fresh permanent stats: wins must not depend on earlier test rewards.
   game.profile.reset()
   game.profile.data["class"]=cls
+  if n==10:
+   game.profile.data["unlocked"]=10
+   for sector in range(1,10):game.profile.data["stars"][str(sector)]=1
+   game.profile.data["weapon"]=3
+   game.profile.data["weapon_levels"]["3"]=1
   game.start_level(n)
   game.aim=413
   var elapsed=0.0
@@ -22,6 +27,10 @@ func run() -> void:
   while game.mode not in ["victory","defeat"] and elapsed<600:
    if game.mode=="play":
     if game.ammo<45 and game.active_balls()==0 and game.attempts>0:
+     var left=1;var right=1
+     for gate in game.layout["gates"]:
+      left*=int(gate["left"]);right*=int(gate["right"])
+     game.set_aim(125 if left>right else 415)
      game.drop_ammo()
     if game.energy>=70 and game.enemies.size()>2:
      game.special_attack()
@@ -33,7 +42,11 @@ func run() -> void:
     for control in game.controls.get_children():
      if control is Button:
       buttons.append(control)
-    buttons[1].pressed.emit()
+    var choice=1
+    if game.ammo<70:
+     for i in range(game.cards.size()):
+      if Content.UPGRADES[game.cards[i]][2] in ["ammo","drop","collection","attempt"]:choice=i;break
+    buttons[choice].pressed.emit()
    var before_ammo=game.ammo
    peak_ammo=maxi(peak_ammo,game.ammo)
    peak_enemies=maxi(peak_enemies,game.enemies.size())

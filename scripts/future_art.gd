@@ -356,6 +356,7 @@ func menu() -> void:
  hero(Vector2(266,587),2.38,"idle")
  plate(Rect2(30,268,145,26),BLUE,Color("0d2032"),5)
  text("DIE WELT NACH NULL",Vector2(40,285),9,BLUE,true)
+ plate(Rect2(30,596,480,36),BLUE,Color("0d2032"),6)
  plate(Rect2(353,547,157,35),MINT,Color("0d2032"),6)
  text("OFFLINE / BEREIT",Vector2(366,569),10,MINT,true)
 

@@ -11,6 +11,12 @@ const MAX_BALLS = 128
 var font = preload("res://assets/fonts/SpaceGrotesk.ttf")
 var future: FutureArt
 var profile = Profile.new()
+var arsenal: ArsenalView
+var run_xp := 0
+var run_start_hero_level := 1
+var result_unlocks: Array = []
+var result_stars := 0
+var result_reward := 0
 var audio: GameAudio
 var ui: CanvasLayer
 var controls: Control
@@ -162,11 +168,18 @@ func button(text: String,rect: Rect2,callback: Callable,accent: bool=false) -> B
  disabled.bg_color=Color("0c1727")
  disabled.border_color=Color("1d2e46")
  item.add_theme_stylebox_override("disabled",disabled)
+ var focus=normal.duplicate()
+ focus.bg_color=Color(0,0,0,0)
+ focus.border_color=CYAN
+ focus.set_border_width_all(2)
+ item.add_theme_stylebox_override("focus",focus)
  item.add_theme_color_override("font_disabled_color",Color("59708b"))
  item.add_theme_color_override("font_color",BG if accent else INK)
  item.add_theme_color_override("font_hover_color",BG if accent else LIME)
  item.add_theme_color_override("font_pressed_color",BG if accent else LIME)
- item.pressed.connect(func(): audio.play_effect("click"); callback.call())
+ item.pressed.connect(func():
+  if not item.is_inside_tree() or item.disabled:return
+  audio.play_effect("click");callback.call())
  controls.add_child(item)
  return item
 
@@ -181,13 +194,13 @@ func show_menu() -> void:
  label("DEADWAVE",Vector2(28,77),55)
  label("HEROES",Vector2(28,133),73,INK)
  label("DEIN REAKTOR. DEINE MUNITION. DEIN ÜBERLEBEN.",Vector2(31,224),10,MUTED)
- label("01 / ERZEUGEN    →    02 / ÜBERLEBEN",Vector2(32,602),11,CYAN)
+ label(next_goal(),Vector2(42,604),12,CYAN,460)
  var unlocked=int(profile.data["unlocked"])
- button("EINSATZ STARTEN  →  LEVEL %02d"%unlocked,Rect2(30,642,480,64),func(): start_level(unlocked),true)
+ button("EINSATZ STARTEN  →  SEKTOR %02d"%unlocked,Rect2(30,642,480,64),func(): start_level(unlocked),true)
  button("WELTKARTE",Rect2(30,722,232,55),show_map)
  button("HELD & ARSENAL",Rect2(278,722,232,55),show_armory)
  button("EINSTELLUNGEN",Rect2(30,793,480,48),show_settings)
- label("OFFLINE  •  KEINE WERBUNG  •  v0.2.3",Vector2(34,901),12,MUTED)
+ label("OFFLINE  •  KEINE WERBUNG  •  v0.2.4",Vector2(34,901),12,MUTED)
 
 func page_header(title: String,subtitle: String) -> void:
  clear_ui()
@@ -210,67 +223,19 @@ func show_map() -> void:
  button("← WELT",Rect2(30,802,232,52),func(): menu_page=posmod(menu_page-1,10); show_map())
  button("WELT →",Rect2(278,802,232,52),func(): menu_page=(menu_page+1)%10; show_map())
 
-func show_armory() -> void:
- mode="armory"
- page_header("HELD & ARSENAL","Level %d · %d XP · %d Münzen"%[profile.data["level"],profile.data["xp"],profile.data["coins"]])
- for i in range(3):
-  var c=Content.CLASSES[i]
-  var x=30+i*164
-  var selected=int(profile.data["class"])==i
-  var item=button("",Rect2(x,171,152,213),func(): profile.data["class"]=i; profile.save_game(); show_armory())
-  var box=StyleBoxFlat.new()
-  box.bg_color=Color("172d40") if selected else Color("111c31")
-  box.border_color=CYAN if selected else Color("2c405a")
-  box.set_border_width_all(2 if selected else 1)
-  box.set_corner_radius_all(9)
-  item.add_theme_stylebox_override("normal",box)
-  var portrait=TextureRect.new()
-  portrait.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
-  var image=AtlasTexture.new()
-  image.atlas=future.heroes
-  image.region=future.frame_region("heroes",i,future.heroes,3,1)
-  portrait.texture=image
-  portrait.position=Vector2(x+13,190)
-  portrait.size=Vector2(126,126)
-  portrait.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-  portrait.mouse_filter=Control.MOUSE_FILTER_IGNORE
-  controls.add_child(portrait)
-  var title=label(c["name"],Vector2(x+8,322),16,INK,136)
-  title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-  var detail=label(["PRÄZISION / SCHADEN","DROHNEN / ENERGIE","VITALITÄT / REGEN"][i],Vector2(x+7,350),8,CYAN if selected else MUTED,138)
-  detail.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
- label("WAFFE AUSWÄHLEN",Vector2(30,405),13,CYAN)
- button("ATTRIBUTE →",Rect2(349,399,161,34),show_character)
- for i in range(12):
-  var weapon=Content.WEAPONS[i]
-  var rank=int(profile.data["weapon_levels"].get(str(i),0))
-  var text=weapon[0]+" +%d"%rank if int(profile.data["unlocked"])>=weapon[7] else "Ab Level %d"%weapon[7]
-  var item=button(text,Rect2(30+(i%2)*248,450+(i/2)*50,232,42),func(): profile.data["weapon"]=i; profile.save_game(); show_armory(),int(profile.data["weapon"])==i)
-  item.add_theme_font_size_override("font_size",13)
-  item.disabled=not weapon_available(i)
- var rank=int(profile.data["weapon_levels"].get(str(profile.data["weapon"]),0))
- var cost=60*(rank+1)
- label("%s · %s"%[Content.WEAPONS[int(profile.data["weapon"])][0],Content.RARITIES[mini(rank/3,5)]],Vector2(30,764),14,LIME)
- var buy=button("AUFWERTEN +10%%  /  %d MÜNZEN"%cost,Rect2(30,807,480,53),func():
-  profile.data["coins"]-=cost
-  profile.data["weapon_levels"][str(profile.data["weapon"])]=rank+1
-  profile.save_game()
-  audio.play_effect("upgrade")
-  show_armory())
- buy.disabled=int(profile.data["coins"])<cost
+func show_armory(id: int=-1) -> void:
+ if arsenal==null:arsenal=ArsenalView.new(self)
+ arsenal.build(int(profile.data["weapon"]) if id<0 else id)
 
 func weapon_available(id: int) -> bool:
- var requirement=int(Content.WEAPONS[id][7])
- if int(profile.data["unlocked"])<requirement:
-  return false
- return requirement%10!=0 or int(profile.data["stars"].get(str(requirement),0))>0
+ return Progression.available(profile.data,id)
 
 func show_character() -> void:
  mode="character"
  page_header("CHARAKTERPROFIL","Dauerhafte Entwicklung · drei unterschiedliche Klassen")
  var cls=Content.CLASSES[int(profile.data["class"])]
  var w=weapon()
- var rank=int(profile.data["weapon_levels"].get(str(profile.data["weapon"]),0))
+ var rank=Progression.effective_rank(profile.data,int(profile.data["weapon"]))
  label(cls["name"].to_upper()+" / LEVEL %d"%int(profile.data["level"]),Vector2(30,188),24,LIME)
  var values=["Erfahrung|%d / %d"%[profile.data["xp"],int(profile.data["level"])*100],"Maximalleben|%d"%int(float(cls["hp"])+(int(profile.data["level"])-1)*4),"Angriffsschaden|%.1f"%(float(w[1])*float(cls["damage"])*(1+rank*0.1)),"Schüsse / Sekunde|%.2f"%(1.0/float(w[2])),"Kritische Chance|5%", "Kritischer Schaden|175%", "Rüstung|0 + Run-Upgrades", "Ausweichchance|0% + Run-Upgrades", "Regeneration|%.1f HP / s"%cls["regen"], "Munitionskapazität|%d"%Content.ammo_capacity(int(profile.data["unlocked"])), "Spezialenergie|100 / Impuls kostet 50", "Entdeckte Fähigkeiten|%d / %d"%[profile.data["abilities"].size(),Content.UPGRADES.size()]]
  for i in range(values.size()):
@@ -323,6 +288,10 @@ func show_licenses() -> void:
  scroll.add_child(copy)
 
 func start_level(number: int) -> void:
+ Progression.sanitize_loadout(profile.data)
+ run_start_hero_level=int(profile.data["level"])
+ run_xp=0
+ result_unlocks.clear()
  level=clampi(number,1,100)
  layout=profile.get_level(level)
  profile.save_game()
@@ -629,6 +598,7 @@ func begin_wave() -> void:
  status_text="Welle %d / %d"%[wave,wave_count]
 
 func weapon() -> Array:
+ Progression.sanitize_loadout(profile.data)
  return Content.WEAPONS[int(profile.data["weapon"])]
 
 func spawn_enemy(boss: bool=false) -> Dictionary:
@@ -787,7 +757,7 @@ func shoot() -> void:
   magazine=int(w[4])+int(stats["magazine"])
   status_text="NACHLADEN …"
   return
- var rank=int(profile.data["weapon_levels"].get(str(profile.data["weapon"]),0))
+ var rank=Progression.effective_rank(profile.data,int(profile.data["weapon"]))
  var damage=float(w[1])*float(stats["damage"])*(1+rank*0.1)
  var critical=rng.randf()<minf(0.85,float(stats["crit"]))
  if critical:
@@ -808,16 +778,18 @@ func shoot() -> void:
  var impact=Vector2(target["x"],target["y"]-28)
  tracers.append({"from":Vector2(146,263),"to":impact,"life":0.12 if effect!="laser" else 0.2,"color":CYAN if effect in ["laser","plasma"] else LIME})
  var count=1
+ var splash_hits=0
  for e in enemies:
-  if e==target or e["dead"]:
+  if e==target or e["dead"] or float(e["x"])-95>float(w[5])+float(stats["range"]):
    continue
   if count<hits:
    hit_enemy(e,damage*0.7)
    count+=1
-  elif absf(float(e["x"])-float(target["x"]))<85:
+  elif splash_hits<5 and absf(float(e["x"])-float(target["x"]))<85 and absf(float(e["y"])-float(target["y"]))<60:
    var area=float(stats["splash"])+(damage*0.6 if effect in ["blast","spread","plasma","fire"] else 0)
    if area>0:
     hit_enemy(e,area)
+    splash_hits+=1
  if effect in ["blast","plasma"]:
   burst(impact,CORAL,12)
  audio.play_effect("gun%d"%int(profile.data["weapon"]),rng.randf_range(0.94,1.06))
@@ -842,7 +814,9 @@ func hit_enemy(e: Dictionary,amount: float,visual: bool=true,critical: bool=fals
   run_coins+=coins
   profile.data["coins"]+=coins
   profile.data["stats"]["kills"]+=1
-  profile.add_xp(int((6+level)*float(stats["wisdom"])))
+  var earned_xp=int((6+level)*float(stats["wisdom"]))
+  profile.add_xp(earned_xp)
+  run_xp+=earned_xp
   hp=minf(float(stats["max_hp"]),hp+float(stats["leech"]))
   energy=minf(100,energy+0.65)
   burst(Vector2(e["x"],e["y"]-15),Color("7f9a80"),8)
@@ -866,25 +840,44 @@ func special_attack() -> void:
  if mode!="play" or energy<50:
   return
  energy-=50
- shield+=28*float(stats["special"])
+ shield=maxf(shield,minf(float(stats["max_hp"])*0.75,shield+28*float(stats["special"])))
  for e in enemies:
-  hit_enemy(e,55*float(stats["special"])*(1+level*0.025))
-  e["slow"]=0.3
+  if float(e["x"])-94<=360:
+   hit_enemy(e,55*float(stats["special"])*(1+level*0.025))
+   e["slow"]=0.3
  burst(Vector2(95,300),CYAN,28)
  hero_pose="special"
  shoot_flash=0.35
  audio.play_effect("special")
+
+func can_offer_upgrade(id: int) -> bool:
+ var card=Content.UPGRADES[id]
+ if card.size()>4 and int(card[4])!=int(profile.data["class"]):return false
+ var key=String(card[2])
+ if key=="heal" and hp>=float(stats["max_hp"])*0.85:return false
+ if key=="ammo" and ammo>=int(stats["capacity"])*0.75:return false
+ if key=="energy" and energy>=70:return false
+ var ceilings={"crit":0.7,"dodge":0.6,"reload":0.7,"recycle":0.7,"slow":0.6}
+ return not ceilings.has(key) or float(stats[key])<float(ceilings[key])
 
 func choose_upgrade() -> void:
  mode="upgrade"
  ball_visuals.hide()
  clear_ui()
  cards.clear()
- while cards.size()<3:
-  var id=rng.randi_range(0,Content.UPGRADES.size()-1)
-  var card=Content.UPGRADES[id]
-  if card.size()>4 and int(card[4])!=int(profile.data["class"]):continue
-  if not id in cards:cards.append(id)
+ var pool=[]
+ var supply=[]
+ for id in range(Content.UPGRADES.size()):
+  if not can_offer_upgrade(id):continue
+  pool.append(id)
+  if String(Content.UPGRADES[id][2]) in ["ammo","drop","attempt","collection"]:supply.append(id)
+ # Offer one useful production route when reserve is low; all cards stay free.
+ if ammo<45 and not supply.is_empty():
+  var id=supply[rng.randi_range(0,supply.size()-1)]
+  cards.append(id);pool.erase(id)
+ while cards.size()<3 and not pool.is_empty():
+  var index=rng.randi_range(0,pool.size()-1)
+  cards.append(pool[index]);pool.remove_at(index)
  build_upgrade_picker()
 
 func build_upgrade_picker() -> void:
@@ -897,6 +890,7 @@ func build_upgrade_picker() -> void:
   var x=24+i*168
   var tint=[CYAN,Color("ad8cff"),Color("ffc880")][i]
   var pick=button("",Rect2(x,544,156,261),func():
+   if mode!="upgrade":return
    apply_upgrade(cards[i])
    mode="play"
    wave+=1
@@ -933,8 +927,10 @@ func build_upgrade_picker() -> void:
   description.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
   description.size=Vector2(132,46)
   description.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-  label("WÄHLEN  →",Vector2(x+39,785),10,tint,108)
+  var preview=label(upgrade_preview(cards[i]),Vector2(x+9,785),9,tint,138)
+  preview.size=Vector2(138,16)
  label("%d HP   /   %d MUNITION   ·   UPGRADE GILT FÜR DIESEN EINSATZ"%[int(hp),ammo],Vector2(37,832),10,MUTED)
+ reveal_ui(540)
  audio.play_effect("upgrade")
 
 func apply_upgrade(id: int) -> void:
@@ -951,32 +947,89 @@ func apply_upgrade(id: int) -> void:
   "energy": energy=minf(100,energy+value)
   "attempt": attempts+=int(value)
   "vitality": stats["max_hp"]+=value; hp+=value
-  "salvage": ammo=mini(int(stats["capacity"]),ammo+int(value)); profile.data["coins"]+=int(value)
+  "salvage": ammo=mini(int(stats["capacity"]),ammo+int(value)); profile.data["coins"]+=int(value); run_coins+=int(value)
   "field": shield+=value; stats["regen"]+=0.5
   _: stats[key]+=value
  if not id in profile.data["abilities"]:
   profile.data["abilities"].append(id)
 
+func next_goal() -> String:
+ var next=Progression.next_unlock(profile.data)
+ if next.is_empty():return "ARSENAL VOLLSTÄNDIG · 100 EINSÄTZE EROBERN"
+ return next["name"]+"  /  "+next["requirement"]
+
+func upgrade_preview(id: int) -> String:
+ var card=Content.UPGRADES[id]
+ var key=String(card[2]);var value=float(card[3])
+ match key:
+  "damage":return "SCHADEN  %.0f → %.0f%%"%[float(stats["damage"])*100,(float(stats["damage"])+value)*100]
+  "speed":return "FEUERRATE  %.0f → %.0f%%"%[float(stats["speed"])*100,(float(stats["speed"])+value)*100]
+  "max_hp":return "LEBEN  %d → %d"%[int(stats["max_hp"]),int(float(stats["max_hp"])*(1+value))]
+  "heal":return "LEBEN  %d → %d"%[int(hp),mini(int(stats["max_hp"]),int(hp+value))]
+  "ammo":return "MUNITION  %d → %d"%[ammo,mini(int(stats["capacity"]),ammo+int(value))]
+  "drop":return "KUGELN  %d → %d"%[int(stats["drop"]),int(stats["drop"]+value)]
+  "collection":return "SAMMLUNG  %.0f → %.0f%%"%[float(stats["collection"])*100,(float(stats["collection"])+value)*100]
+  "energy":return "ENERGIE  %d → %d"%[int(energy),mini(100,int(energy+value))]
+  "shield":return "SCHILD  %d → %d"%[int(shield),int(shield+value)]
+  "capacity":return "LAGER  %d → %d"%[int(stats["capacity"]),int(stats["capacity"]+value)]
+  _:return "WIRKT SOFORT · DIESER EINSATZ"
+
 func finish_level(win: bool) -> void:
+ # Rewards and unlock events are granted exactly once, even on duplicate callbacks.
+ if mode in ["victory","defeat"]:return
+ var before=profile.data.duplicate(true)
  mode="victory" if win else "defeat"
  ball_visuals.hide()
  hero_pose="victory" if win else "defeat"
  clear_ui()
- var stars=clampi(ceili(hp/float(stats["max_hp"])*3),1,3) if win else 0
+ result_stars=clampi(ceili(hp/float(stats["max_hp"])*3),1,3) if win else 0
+ result_reward=40+level*8 if win else 0
  if win:
-  profile.data["stars"][str(level)]=maxi(stars,int(profile.data["stars"].get(str(level),0)))
+  profile.data["stars"][str(level)]=maxi(result_stars,int(profile.data["stars"].get(str(level),0)))
   profile.data["unlocked"]=maxi(int(profile.data["unlocked"]),mini(100,level+1))
   profile.data["stats"]["wins"]+=1
-  profile.data["coins"]+=40+level*8
-  profile.add_xp(40+level*5)
+  profile.data["coins"]+=result_reward
+  var bonus_xp=40+level*5
+  profile.add_xp(bonus_xp)
+  run_xp+=bonus_xp
+ result_unlocks=Progression.newly_unlocked(before,profile.data)
  profile.save_game()
- label("EINSATZ %02d / %s"%[level,Content.WORLDS[int(layout["world"])]],Vector2(30,420),13,CYAN)
- label("SEKTOR GESICHERT" if win else "SIGNAL VERLOREN",Vector2(30,465),32,LIME if win else CORAL)
- label("★ ".repeat(stars) if win else "Deine erbeuteten Münzen bleiben erhalten.",Vector2(30,526),30 if win else 15,INK)
- label("%d Abschüsse    ·    %d Münzen\n%s Munition produziert"%[run_kills,run_coins+(40+level*8 if win else 0),compact(produced)],Vector2(30,604),17,MUTED)
- button("WEITER →" if win and level<100 else "NOCH EINMAL",Rect2(30,741,480,62),func(): start_level(mini(100,level+1) if win else level),true)
- button("ZUM HAUPTMENÜ",Rect2(30,821,480,54),show_menu)
+ build_result(win)
  audio.play_music("victory" if win else "defeat")
+
+func build_result(win: bool) -> void:
+ label("EINSATZ %02d / %s"%[level,Content.WORLDS[int(layout["world"])]],Vector2(30,430),11,CYAN)
+ label("SEKTOR GESICHERT" if win else "NEUER ANLAUF",Vector2(29,462),30,LIME if win else CORAL)
+ label("★ ".repeat(result_stars) if win else "Münzen und Erfahrung bleiben erhalten.",Vector2(30,506),27 if win else 13,INK)
+ for i in range(3):
+  var x=35+i*167
+  label(["CREDITS","ERFAHRUNG","ABSCHÜSSE"][i],Vector2(x,552),10,MUTED,150)
+  label(["+"+compact(run_coins+result_reward),"+"+compact(run_xp),str(run_kills)][i],Vector2(x,571),24,INK,145)
+ if not result_unlocks.is_empty():
+  var id=int(result_unlocks[0])
+  label("NEU FREIGESCHALTET",Vector2(42,626),11,CYAN)
+  label(Content.WEAPONS[id][0],Vector2(41,647),25,LIME,345)
+  label("DAUERHAFT IM ARSENAL VERFÜGBAR",Vector2(43,689),10,MUTED,430)
+ else:
+  label("NÄCHSTES WAFFENZIEL",Vector2(42,626),10,CYAN)
+  label(next_goal(),Vector2(42,649),16,INK,450,true).size=Vector2(450,48)
+ label("HELD LV %d%s"%[int(profile.data["level"]),"  ↑  VON LV %d"%run_start_hero_level if int(profile.data["level"])>run_start_hero_level else ""],Vector2(37,714),10,CYAN,450)
+ var next_level=mini(100,level+1) if win else level
+ if not result_unlocks.is_empty():
+  button("NEUE WAFFE ANSEHEN →",Rect2(30,747,480,54),func(): show_armory(int(result_unlocks[0])),true)
+  button("WEITER · %02d"%next_level,Rect2(30,817,232,48),func(): start_level(next_level))
+ else:
+  button(("WEITER · EINSATZ %02d"%next_level if level<100 else "EINSATZ 100 WIEDERHOLEN") if win else "NOCH EINMAL",Rect2(30,747,480,54),func(): start_level(next_level),true)
+  button("ARSENAL",Rect2(30,817,232,48),show_armory)
+ button("HAUPTMENÜ",Rect2(278,817,232,48),show_menu)
+ reveal_ui(415)
+
+func reveal_ui(top: float) -> void:
+ for item in controls.get_children():
+  if item is Control and item.position.y>=top:
+   item.modulate.a=0
+   var tween=item.create_tween()
+   tween.tween_property(item,"modulate:a",1.0,0.22)
 
 func pause_game() -> void:
  if mode!="play":
@@ -1218,6 +1271,7 @@ func _draw() -> void:
  if mode in ["map","armory","settings","character","licenses"]:
   future.page_background()
   future.plate(Rect2(16,15,508,138),CYAN,Color(0.04,0.07,0.13,0.85),10)
+  if mode=="armory":future.plate(Rect2(22,670,496,204),CYAN,Color("0c1729"),10)
   return
  if layout.is_empty():return
  backdrop(int(layout["world"]),121,380)
@@ -1244,4 +1298,7 @@ func _draw() -> void:
  if mode in ["upgrade","pause","victory","defeat"]:
   draw_rect(Rect2(0,413,540,547),Color(BG,0.98))
   future.plate(Rect2(16,415,508,459),CYAN,Color("0b1426"),12)
+  if mode in ["victory","defeat"]:
+   future.plate(Rect2(30,616,480,94),CYAN,Color("10243a"),8)
+   bar(Rect2(36,733,468,3),float(profile.data["xp"])/maxf(1,float(profile.data["level"])*100),CYAN)
  if damage_flash>0:draw_rect(Rect2(0,0,540,960),Color(CORAL,damage_flash*0.25))

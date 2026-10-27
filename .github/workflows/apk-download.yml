@@ -20,21 +20,21 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SOURCE_RUN_ID: ${{ inputs.source_run_id || github.event.workflow_run.id }}
-      RELEASE_TAG: v0.2.3-debug
+      RELEASE_TAG: v0.2.4-debug
       SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Download the already tested APK
-        run: gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name DeadwaveHeroes-v0.2.3-debug --dir release-assets
+        run: gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name DeadwaveHeroes-v0.2.4-debug --dir release-assets
       - name: Verify APK matches the successful build manifest
         run: |
           python3 - <<'PY'
           import hashlib,json
           from pathlib import Path
           root=Path('release-assets')
-          name='DeadwaveHeroes-v0.2.3-debug.apk'
+          name='DeadwaveHeroes-v0.2.4-debug.apk'
           info=json.loads((root/'manifest.json').read_text())[name]
           apk=root/name
           assert apk.stat().st_size==info['bytes'], 'APK size mismatch'
@@ -45,9 +45,9 @@ jobs:
       - name: Publish direct download as an explicitly marked debug prerelease
         run: |
           cat > /tmp/deadwave-release-notes.md <<'NOTES'
-          Spielbarer Prototyp v0.2.3 von RF Worlds. Die APK unten direkt herunterladen und auf Android installieren. Android 7 oder neuer, ARMv7/ARM64. Die Datei stammt unverändert aus dem zugehörigen erfolgreich geprüften GitHub-Build.
+          Spielbarer Prototyp v0.2.4 von RF Worlds. Die APK unten direkt herunterladen und auf Android installieren. Android 7 oder neuer, ARMv7/ARM64. Die Datei stammt unverändert aus dem zugehörigen erfolgreich geprüften GitHub-Build.
 
-          Reaktorschmiede: neue detaillierte Kulisse, leuchtende Tore, Aufprallfunken, Kugelschweife und Light Flares. Direkt im Reaktor ziehen, Abwurfstatus und Lagerfüllstand klar erkennen. Korrekte Sammelboni unabhängig von virtueller Kugelgruppierung. Horden, wechselnde Multiplikatoren und Endless Survival bleiben integriert.
+          Arsenal-Update: zwölf eigene Waffenillustrationen, gesperrte Waffen mit klaren Einsatz-/Bossvoraussetzungen, neue Freischaltungs- und Ergebnisansichten. Maschinenpistole nach Einsatz 3, Sturmgewehr nach Einsatz 6, Bosswaffen nach Bosssieg. Fünf Aufwertungsränge mit begrenzter Wirkung und angepassten Kosten. Überarbeitete Waffenbalance, örtlich begrenzter Flächenschaden und sinnvollere Upgrade-Angebote bei Munitionsknappheit.
 
           Das Savegame-Format bleibt kompatibel. Der Debug-Schlüssel wird aus dem Buildcache wiederverwendet.
 
@@ -57,4 +57,4 @@ jobs:
             echo "This version already has a direct download; keeping its existing APK."
             exit 0
           fi
-          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --prerelease --title 'DEADWAVE HEROES v0.2.3 · Android Debug' --notes-file /tmp/deadwave-release-notes.md release-assets/DeadwaveHeroes-v0.2.3-debug.apk release-assets/SHA256SUMS.txt docs/screenshots/reactor-v0.2.3.png docs/screenshots/reactor-upgrades-v0.2.3.png docs/screenshots/reactor-v0.2.3-4k.png docs/screenshots/reactor-upgrades-v0.2.3-4k.png
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --prerelease --title 'DEADWAVE HEROES v0.2.4 · Android Debug' --notes-file /tmp/deadwave-release-notes.md release-assets/DeadwaveHeroes-v0.2.4-debug.apk release-assets/SHA256SUMS.txt docs/screenshots/progression-arsenal-v0.2.4.png docs/screenshots/progression-locked-v0.2.4.png docs/screenshots/progression-unlock-v0.2.4.png

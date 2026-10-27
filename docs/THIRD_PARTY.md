@@ -8,3 +8,5 @@
 - Space Grotesk und JetBrains Mono: SIL Open Font License, vollständige Texte unter `assets/licenses/SpaceGrotesk.txt` und `assets/licenses/JetBrainsMono.txt`.
 - Die neuen Stadt-/Helden-/Gegnerillustrationen und die Reaktorschmiede wurden für dieses Projekt mit Bildgenerierung erstellt und lokal eingebunden. SVG-Interfaceglyphen und Panels sind eigens implementiert. Es wurden keine Grafikbestandteile aus dem Nutzerreferenzspiel übernommen.
 - „Endless Survival.mp3“: vom Nutzer für die Hintergrundmusik bereitgestellte Aufnahme, unverändert lokal eingebunden. Keine Behauptung, dass diese Aufnahme aus dem synthetischen Audio-Generator des Projekts stammt.
+
+- Die zwölf Waffenillustrationen und das Schlosssymbol unter `assets/ui/weapons/` sind eigens erstellte SVG-Vektoren; Generator `scripts/generate_weapon_art.py`.

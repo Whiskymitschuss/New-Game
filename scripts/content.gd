@@ -13,11 +13,11 @@ const CLASSES = [
 # damage, interval, reload, magazine, range, effect, unlock level
 const WEAPONS = [
  ["Pistole",12.0,0.52,1.0,12,310.0,"bullet",1],
- ["Revolver",30.0,0.85,1.4,6,480.0,"pierce",2],
- ["Maschinenpistole",7.0,0.15,1.5,28,350.0,"bullet",4],
+ ["Revolver",30.0,0.85,1.4,6,480.0,"bullet",2],
+ ["Maschinenpistole",9.0,0.18,1.5,28,350.0,"bullet",4],
  ["Sturmgewehr",16.0,0.25,1.6,24,480.0,"bullet",7],
  ["Schrotflinte",42.0,1.0,1.8,6,260.0,"spread",10],
- ["Maschinengewehr",11.0,0.12,2.6,60,450.0,"bullet",15],
+ ["Maschinengewehr",13.0,0.12,2.6,60,450.0,"bullet",15],
  ["Scharfschützengewehr",95.0,1.7,2.0,5,600.0,"pierce",20],
  ["Flammenwerfer",9.0,0.16,2.0,35,200.0,"fire",30],
  ["Granatwerfer",65.0,1.2,2.1,5,450.0,"blast",40],

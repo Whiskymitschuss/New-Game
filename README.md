@@ -1,6 +1,18 @@
 # DEADWAVE HEROES · RF Worlds
 
-Spielbarer Godot-4.6.3-Prototyp **v0.2.3**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+Spielbarer Godot-4.6.3-Prototyp **v0.2.4**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+
+## Arsenal und Fortschritt 0.2.4
+
+Die Maschinenpistole wird nach Einsatz 3 freigeschaltet, das Sturmgewehr nach Einsatz 6. Bosswaffen verlangen den jeweiligen Bosssieg. Helden-XP umgeht diese Bedingungen nicht. Das Arsenal zeigt alle zwölf Waffen mit eigenen SVG-Illustrationen, Rollen, Werten und konkreten Voraussetzungen. Gesperrte Waffen lassen sich ansehen; Ausrüsten und Aufwerten sind zusätzlich in der Spiellogik gesperrt. Neue Freischaltungen erscheinen auf dem Siegbildschirm und im Arsenal.
+
+Fünf Aufwertungsränge pro Waffe, jeweils +10 % Basisschaden. Kosten: 120, 480, 1.080, 1.920 und 3.000 Credits. Gespeicherte Altränge bleiben erhalten; ihre aktive Wirkung ist auf Rang 5 begrenzt. Bestehende Währung, Sterne, Einstellungen und Layouts bleiben erhalten.
+
+Upgrade-Karten zeigen vorher/nachher-Werte für zentrale Attribute. Bei niedrigem Munitionsvorrat ist mindestens eine Produktions-/Nachschubkarte im Angebot; volle Heilung, volle Energiebatterien und bereits ausgeschöpfte Chancen werden vermieden. Ergebnisse zeigen Credits, XP, Abschüsse, Heldenaufstieg und das nächste Waffenziel. Doppelte Abschluss-Callbacks geben keine doppelten Belohnungen.
+
+Balance: Der Revolver trifft ein einzelnes Ziel; die Maschinenpistole und das Maschinengewehr sind munitionseffizienter. Sekundärtreffer beachten die Waffenreichweite. Flächenschaden trifft bis zu fünf zusätzliche nahe Gegner; der Impuls hat eine Reichweite von 360 und kann seinen eigenen Schildvorrat bis auf 75 % des Maximallebens aufbauen. Größere Ausrüstungsschilde bleiben erhalten. Die frühen Einsätze behalten ihre 105 Gegner.
+
+[Neues Arsenal](docs/screenshots/progression-arsenal-v0.2.4.png) · [Gesperrte Waffe](docs/screenshots/progression-locked-v0.2.4.png) · [Freischaltung](docs/screenshots/progression-unlock-v0.2.4.png)
 
 ## Reaktorschmiede 0.2.3
 
@@ -32,15 +44,15 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.3-debug/DeadwaveHeroes-v0.2.3-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.3-debug). Dieser öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
+**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.4-debug/DeadwaveHeroes-v0.2.4-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.4-debug). Dieser öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
 
-Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.3-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut. Geht dieser Cache verloren, kann ein späterer Testbuild eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
+Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.4-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut. Geht dieser Cache verloren, kann ein späterer Testbuild eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
 
 **Neon Update 0.2.0:** Der wiederholte Abwurf wird im Physikserver korrekt zurückgesetzt; 24 Abwürfe mit denselben Poolkörpern werden in beiden Qualitätsstufen geprüft. Neue detaillierte Helden-/Gegnergrafiken, eigene Sci-Fi-Stadt, futuristisches HUD, Reaktor-Labyrinth, Klassenporträts und dreispaltige Upgrade-Karten sind integriert. Die Oberfläche skaliert als Vektor-/Canvas-UI; echte Vorschauen mit 2160 × 3840 Pixeln stehen unter `docs/screenshots/neon-*-4k.png`. Das ist ein Nachweis der hochauflösenden Darstellung, keine Zusage von 4K/60 FPS auf einem Smartphone.
 
 Das Savegame-Format ist unverändert. Debug-Schlüssel werden seit v0.1.1 im Buildcache wiederverwendet; der Zertifikatsvergleich der veröffentlichten APKs bestätigt für v0.2.0 dieselbe Signieridentität wie v0.1.1. Das neue APK kann als Update installiert werden; nicht vorher deinstallieren.
 
-Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.3-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
+Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.4-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
 
 ## Entwicklung und Builds (Linux)
 

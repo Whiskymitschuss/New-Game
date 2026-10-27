@@ -21,3 +21,10 @@ Die neue Originalkulisse `assets/art/reactor_forge.png` (1402 × 1122) zeigt ein
 UX: Die große Reaktor-Touchfläche und der Positionsregler sind synchronisiert. Ein laufender Abwurf blockiert weitere Abwürfe bis zur Sammlung. Lagerfüllstand, knappe Munition, fließende Einheiten, tatsächlicher Ertrag und Überlauf sind verschiedene sichtbare Zustände. Die gerade Route wird als Orientierung mit ausdrücklichem Hinweis auf Abpraller dargestellt. Die Impulsanzeige benennt die tatsächliche Aktivierungsschwelle von 50 Energie. Upgrade-Karten nennen die nächste Horde und den neuen Abwurf; der Ressourcenstreifen bleibt vollständig sichtbar.
 
 `tests/capture_reactor.gd` erzeugt neue Ansichten aus einem normalen Level-3-Lauf mit echten Eingaben, Kampf und Physik, ohne Gegner zu platzieren oder Kampfwerte zu ändern. `-- --4k` rendert optional nativ 2160 × 3840. Die alten `neon-*-4k`-Ansichten bleiben als historische Layout-Fixtures erhalten.
+
+
+## Arsenal 0.2.4
+
+Alle zwölf Waffen besitzen eigene SVG-Silhouetten mit Stahlbevels und Cyan-Akzenten. Sammlung, aktuelle Auswahl und tatsächlich ausgerüstete Waffe sind visuell getrennt; gesperrte Waffen bleiben als Vorschau anklickbar, während Equip/Upgrade gesperrt sind. Klassenkarten sind kompakter, sodass die ganze Sammlung ohne Scrollen erreichbar ist. Der Detailbereich erklärt Rolle, Schaden, Feuerrate, Magazin, Nachladezeit und die konkrete Freischaltung. Lange Waffennamen werden vollständig angezeigt und automatisch geprüft. Alle Ziele sprechen von Einsätzen/Sektoren; Heldenlevel wird ausdrücklich als HELD LV bezeichnet.
+
+Ergebnis- und Kartenoberflächen blenden kurz ein; Eingaben werden nicht künstlich verzögert. Keine Kaufzwänge, Serienverluste, zeitlich begrenzten Angebote oder Zufallskäufe. Die Bindung entsteht aus sichtbaren Zielen, dauerhaften Freischaltungen, sinnvollen Entscheidungen und klarer Rückmeldung. Screenshots aus Godot unter `docs/screenshots/progression-*-v0.2.4.png`, jeweils 2160 × 3840.
