@@ -1,8 +1,8 @@
 extends Node2D
 # RF Worlds · original vector art, physics production and automatic combat.
-const BG = Color("070c18")
-const PANEL = Color("111d32")
-const INK = Color("eef4ff")
+const BG = Color("0b0b15")
+const PANEL = Color("1c1e32")
+const INK = Color("fff8f0")
 const MUTED = Color("8a9dbb")
 const LIME = Color("5af5c5")
 const CORAL = Color("ff7286")
@@ -10,6 +10,8 @@ const CYAN = Color("55d8ff")
 const MAX_BALLS = 128
 var font = preload("res://assets/fonts/SpaceGrotesk.ttf")
 var future: FutureArt
+var screen_age := 0.0
+var combat_motion: CombatMotion
 var profile = Profile.new()
 var arsenal: ArsenalView
 var run_xp := 0
@@ -109,6 +111,9 @@ func _ready() -> void:
     ball.impact_cooldown=0.18
     reactor_fx.pulse(ball.position,CYAN,"impact",0.65))
   pool.append(ball)
+ combat_motion=CombatMotion.new()
+ combat_motion.game=self
+ add_child(combat_motion)
  reactor_fx=ReactorFX.new()
  reactor_fx.game=self
  add_child(reactor_fx)
@@ -121,6 +126,8 @@ func _ready() -> void:
   start_level(1)
 
 func clear_ui() -> void:
+ screen_age=0
+ InterfaceMotion.cancel(controls)
  for child in controls.get_children():
   controls.remove_child(child)
   child.queue_free()
@@ -130,7 +137,7 @@ func clear_ui() -> void:
 
 func label(text: String,at: Vector2,size: int=18,color: Color=INK,width: float=460,wrap: bool=false) -> Label:
  var item=Label.new()
- item.add_theme_font_override("font",font)
+ item.add_theme_font_override("font",future.display_font if size>=28 else font)
  item.add_theme_font_size_override("font_size",size)
  item.add_theme_color_override("font_color",color)
  if wrap:
@@ -151,17 +158,17 @@ func button(text: String,rect: Rect2,callback: Callable,accent: bool=false) -> B
  item.add_theme_font_override("font",font)
  item.add_theme_font_size_override("font_size",16)
  var normal=StyleBoxFlat.new()
- normal.bg_color=LIME if accent else PANEL
- normal.set_corner_radius_all(9)
+ normal.bg_color=Color("ff886e") if accent else PANEL
+ normal.set_corner_radius_all(22)
  normal.content_margin_left=12
  normal.content_margin_right=12
- normal.border_color=Color("294261")
+ normal.border_color=Color(0.8,0.85,1,0.08)
  normal.set_border_width_all(1)
- normal.shadow_color=Color(CYAN,0.08)
- normal.shadow_size=4 if accent else 0
+ normal.shadow_color=Color(0.01,0.01,0.025,0.3)
+ normal.shadow_size=10 if accent else 5
  item.add_theme_stylebox_override("normal",normal)
  var hover=normal.duplicate()
- hover.bg_color=Color("a1ffe5") if accent else Color("223854")
+ hover.bg_color=Color("ffa68f") if accent else Color("292e46")
  item.add_theme_stylebox_override("hover",hover)
  item.add_theme_stylebox_override("pressed",hover)
  var disabled=normal.duplicate()
@@ -181,6 +188,7 @@ func button(text: String,rect: Rect2,callback: Callable,accent: bool=false) -> B
   if not item.is_inside_tree() or item.disabled:return
   audio.play_effect("click");callback.call())
  controls.add_child(item)
+ InterfaceMotion.bind_button(item,accent,self)
  return item
 
 func show_menu() -> void:
@@ -190,28 +198,32 @@ func show_menu() -> void:
  enemies.clear()
  clear_ui()
  audio.play_music("menu")
- label("RF  /  WORLDS                 PROTOCOL 02",Vector2(32,26),11,CYAN)
- label("DEADWAVE",Vector2(28,77),55)
- label("HEROES",Vector2(28,133),73,INK)
- label("DEIN REAKTOR. DEINE MUNITION. DEIN ÜBERLEBEN.",Vector2(31,224),10,MUTED)
- label(next_goal(),Vector2(42,604),12,CYAN,460)
+ label("RF WORLDS",Vector2(61,29),12,INK)
+ label("DEADWAVE",Vector2(28,84),53,INK)
+ label("HEROES",Vector2(27,139),73,INK)
+ label("Jede Kugel zählt.",Vector2(32,231),18,Color("d6c8cf"))
+ label("DEIN NÄCHSTES ZIEL",Vector2(46,621),9,MUTED,445)
+ label(next_goal(),Vector2(46,641),12,INK,445)
  var unlocked=int(profile.data["unlocked"])
- button("EINSATZ STARTEN  →  SEKTOR %02d"%unlocked,Rect2(30,642,480,64),func(): start_level(unlocked),true)
- button("WELTKARTE",Rect2(30,722,232,55),show_map)
- button("HELD & ARSENAL",Rect2(278,722,232,55),show_armory)
- button("EINSTELLUNGEN",Rect2(30,793,480,48),show_settings)
- label("OFFLINE  •  KEINE WERBUNG  •  v0.2.4",Vector2(34,901),12,MUTED)
+ var start=button("SPIELEN  ·  EINSATZ %02d"%unlocked,Rect2(30,692,480,67),func(): start_level(unlocked),true)
+ start.add_theme_font_size_override("font_size",20)
+ button("ARSENAL",Rect2(30,783,151,63),show_armory)
+ button("WELTKARTE",Rect2(194,783,151,63),show_map)
+ var settings=button("OPTIONEN",Rect2(358,783,152,63),show_settings)
+ label("HELD LV %d   ·   %s CR"%[profile.data["level"],compact(profile.data["coins"])],Vector2(32,873),12,MUTED,470)
+ label("OFFLINE BEREIT                                 v0.2.5",Vector2(32,920),10,MUTED)
+ reveal_ui(0)
 
 func page_header(title: String,subtitle: String) -> void:
  clear_ui()
- label("RF / WORLDS     •     DEADWAVE SYSTEMS",Vector2(28,26),11,CYAN)
+ label("DEADWAVE HEROES",Vector2(28,26),11,CYAN)
  label(title,Vector2(28,70),32)
  label(subtitle,Vector2(30,122),13,MUTED)
  button("← ZURÜCK",Rect2(30,888,480,48),show_menu)
 
 func show_map() -> void:
  mode="map"
- page_header("EINSATZGEBIETE","100 Einsätze · feste Seeds · 10 Bossbegegnungen")
+ page_header("EINSATZGEBIETE","10 Welten · 100 Einsätze · 10 Bossbegegnungen")
  var world=menu_page
  label("%02d / %s"%[world+1,Content.WORLDS[world]],Vector2(30,177),22,CYAN)
  for i in range(10):
@@ -222,10 +234,13 @@ func show_map() -> void:
   item.disabled=n>int(profile.data["unlocked"])
  button("← WELT",Rect2(30,802,232,52),func(): menu_page=posmod(menu_page-1,10); show_map())
  button("WELT →",Rect2(278,802,232,52),func(): menu_page=(menu_page+1)%10; show_map())
+ reveal_ui(170)
 
 func show_armory(id: int=-1) -> void:
+ var entering=mode!="armory"
  if arsenal==null:arsenal=ArsenalView.new(self)
  arsenal.build(int(profile.data["weapon"]) if id<0 else id)
+ if entering:reveal_ui(160)
 
 func weapon_available(id: int) -> bool:
  return Progression.available(profile.data,id)
@@ -246,7 +261,7 @@ func show_character() -> void:
 
 func show_settings() -> void:
  mode="settings"
- page_header("EINSTELLUNGEN","Lokaler Speicherstand mit Backup · vollständig offline")
+ page_header("EINSTELLUNGEN","Musik, Darstellung und Bedienung")
  for i in range(2):
   var key="music" if i==0 else "sfx"
   label("MUSIK" if i==0 else "EFFEKTE",Vector2(30,230+i*130),16,CYAN)
@@ -268,7 +283,8 @@ func show_settings() -> void:
  button("QUALITÄT: "+("STANDARD" if quality==1 else "SPARSAM"),Rect2(30,560,480,60),func(): quality=1-quality; profile.data["settings"]["quality"]=quality; profile.save_game(); show_settings())
  button("OUTFIT: "+["PATROUILLE","NACHTWACHE","RETTUNG"][int(profile.data["outfit"])],Rect2(30,650,480,60),func(): profile.data["outfit"]=(int(profile.data["outfit"])+1)%3; profile.save_game(); show_settings())
  button("LIZENZEN & CREDITS",Rect2(30,815,480,48),show_licenses)
- label("Fortschritt: %d Siege · %d Abschüsse"%[profile.data["stats"]["wins"],profile.data["stats"]["kills"]],Vector2(30,756),16,MUTED)
+ button("BEWEGUNG: "+("REDUZIERT" if bool(profile.data["settings"].get("reduced_motion",false)) else "VOLLE DYNAMIK"),Rect2(30,718,480,44),func(): profile.data["settings"]["reduced_motion"]=not bool(profile.data["settings"].get("reduced_motion",false));profile.save_game();show_settings())
+ label("Fortschritt: %d Siege · %d Abschüsse"%[profile.data["stats"]["wins"],profile.data["stats"]["kills"]],Vector2(30,783),12,MUTED)
 
 func show_licenses() -> void:
  mode="licenses"
@@ -289,6 +305,9 @@ func show_licenses() -> void:
 
 func start_level(number: int) -> void:
  Progression.sanitize_loadout(profile.data)
+ hero_pose="idle"
+ shoot_flash=0
+ damage_flash=0
  run_start_hero_level=int(profile.data["level"])
  run_xp=0
  result_unlocks.clear()
@@ -314,6 +333,7 @@ func start_level(number: int) -> void:
  drop_running=false
  last_drop_message=""
  reactor_fx.reset()
+ combat_motion.reset()
  produced=0
  dropped=0
  sparks.clear()
@@ -588,7 +608,7 @@ func physics_balls(delta: float) -> void:
 func begin_wave() -> void:
  remaining=Content.wave_enemy_count(level,wave)
  layout["gates"]=Content.wave_gates(level,wave,profile.get_level(level)["gates"])
- spawn_timer=0.8
+ spawn_timer=0.35 if wave==1 and level<=3 else 0.8
  fire_timer=0
  magazine=int(weapon()[4])+int(stats["magazine"])
  reload_timer=0
@@ -629,7 +649,9 @@ func update_combat(delta: float) -> void:
  if remaining>0 and spawn_timer<=0 and enemies.size()<40:
   var batch=1 if wave==1 and level<=3 else (3 if level>=30 else 2)
   for i in range(mini(batch,mini(remaining,40-enemies.size()))):
-   spawn_enemy()
+   var arriving=spawn_enemy()
+   var opening_index=Content.wave_enemy_count(level,wave)-remaining
+   if wave==1 and level<=3 and opening_index<3:arriving["x"]=390.0+opening_index*20
    remaining-=1
   spawn_timer=maxf(0.45,0.95-level*0.003-wave*0.025)
  if remaining==0 and wave==wave_count and bool(layout["boss"]) and not boss_spawned:
@@ -772,6 +794,7 @@ func shoot() -> void:
  fire_timer=float(w[2])/maxf(0.2,float(stats["speed"]))* (1.7 if boss_slow>0 else 1.0)
  shoot_flash=0.1
  hero_pose="attack"
+ combat_motion.on_shot(Vector2(target["x"],target["y"]-28),int(profile.data["weapon"]),critical)
  hit_enemy(target,damage,true,critical)
  target["poison"]=float(stats["poison"])
  target["burn"]=float(stats["burn"])+(8 if effect=="fire" else 0)
@@ -803,12 +826,14 @@ func hit_enemy(e: Dictionary,amount: float,visual: bool=true,critical: bool=fals
   amount*=0.8
  e["hp"]-=amount
  if visual:
+  combat_motion.on_hit(Vector2(e["x"],e["y"]-30),critical)
   e["flash"]=0.12
   burst(Vector2(e["x"],e["y"]-24),LIME,3)
   if floats.size()<20:
    floating(str(int(amount))+("!" if critical else ""),Vector2(e["x"],e["y"]-50),LIME if critical else INK)
  if e["hp"]<=0:
   e["dead"]=true
+  combat_motion.on_death(e)
   run_kills+=1
   var coins=int(int(e["reward"])*float(stats["bounty"]))*(5 if e["boss"] else 1)
   run_coins+=coins
@@ -833,6 +858,7 @@ func hurt_hero(amount: float) -> void:
  shield-=absorbed
  hp-=damage-absorbed
  damage_flash=0.25
+ combat_motion.on_hurt()
  hero_pose="hit"
  audio.play_effect("hit")
 
@@ -840,6 +866,7 @@ func special_attack() -> void:
  if mode!="play" or energy<50:
   return
  energy-=50
+ combat_motion.on_special()
  shield=maxf(shield,minf(float(stats["max_hp"])*0.75,shield+28*float(stats["special"])))
  for e in enemies:
   if float(e["x"])-94<=360:
@@ -1025,11 +1052,7 @@ func build_result(win: bool) -> void:
  reveal_ui(415)
 
 func reveal_ui(top: float) -> void:
- for item in controls.get_children():
-  if item is Control and item.position.y>=top:
-   item.modulate.a=0
-   var tween=item.create_tween()
-   tween.tween_property(item,"modulate:a",1.0,0.22)
+ InterfaceMotion.reveal(controls,top,bool(profile.data["settings"].get("reduced_motion",false)))
 
 func pause_game() -> void:
  if mode!="play":
@@ -1075,6 +1098,7 @@ func _physics_process(delta: float) -> void:
   begin_wave()
 
 func _process(delta: float) -> void:
+ screen_age+=delta
  if is_instance_valid(ball_visuals):
   ball_visuals.visible=mode=="play"
  if mode!="pause" and mode!="upgrade":

@@ -10,3 +10,5 @@
 - „Endless Survival.mp3“: vom Nutzer für die Hintergrundmusik bereitgestellte Aufnahme, unverändert lokal eingebunden. Keine Behauptung, dass diese Aufnahme aus dem synthetischen Audio-Generator des Projekts stammt.
 
 - Die zwölf Waffenillustrationen und das Schlosssymbol unter `assets/ui/weapons/` sind eigens erstellte SVG-Vektoren; Generator `scripts/generate_weapon_art.py`.
+
+- `assets/art/first_light.png`: neue Original-Startillustration für dieses Projekt per Bildgenerierung erstellt. Die bewegte Vorschau ist eine echte Godot-Aufzeichnung mit der integrierten, vom Nutzer gelieferten Hintergrundmusik.

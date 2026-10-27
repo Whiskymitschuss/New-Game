@@ -37,6 +37,10 @@ func build(id: int) -> void:
   portrait.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
   portrait.mouse_filter=Control.MOUSE_FILTER_IGNORE
   g.controls.add_child(portrait)
+  if chosen and not bool(g.profile.data["settings"].get("reduced_motion",false)):
+   var breath=portrait.create_tween().set_loops()
+   breath.tween_property(portrait,"position:y",170.5,1.3).set_trans(Tween.TRANS_SINE)
+   breath.tween_property(portrait,"position:y",172.0,1.3).set_trans(Tween.TRANS_SINE)
   var title=note(Content.CLASSES[i]["name"],Vector2(x+7,261),14,g.INK,138)
   title.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
   var state=note("AKTIV" if chosen else ["SCHADEN +25%","DROHNEN-SUPPORT","REGENERATION"][i],Vector2(x+7,286),9,FutureArt.MINT if chosen else g.MUTED,138)
@@ -85,12 +89,12 @@ func build(id: int) -> void:
   note("NOCH %s CR"%g.compact(price-int(g.profile.data["coins"])),Vector2(338,864),9,g.MUTED,172)
 func skin(button: Button,color: Color,selected: bool) -> void:
  var box=StyleBoxFlat.new()
- box.bg_color=Color("172f40") if selected else Color("101b2d")
- box.border_color=Color(color,0.9 if selected else 0.23)
- box.set_border_width_all(2 if selected else 1)
- box.set_corner_radius_all(9)
+ box.bg_color=Color("303044") if selected else Color("181b2d")
+ box.border_color=Color(color,0.65 if selected else 0.08)
+ box.set_border_width_all(1)
+ box.set_corner_radius_all(19)
  box.shadow_color=Color(color,0.08 if selected else 0.0);box.shadow_size=5
  button.add_theme_stylebox_override("normal",box)
- var hover=box.duplicate();hover.bg_color=Color("23394c");hover.border_color=color
+ var hover=box.duplicate();hover.bg_color=Color("383a50");hover.border_color=color
  button.add_theme_stylebox_override("hover",hover)
  button.add_theme_stylebox_override("pressed",hover)

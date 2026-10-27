@@ -3,6 +3,9 @@ extends RefCounted
 # Resolution-independent UI drawing plus original high-resolution production art.
 var g: Node2D
 var city: Texture2D
+var key_art: Texture2D
+var display_font: Font
+var surfaces: Dictionary = {}
 var forge: Texture2D
 var heroes: Texture2D
 var enemies: Texture2D
@@ -22,6 +25,7 @@ const QUIET = Color("8a9dbb")
 func _init(game: Node2D) -> void:
  g=game
  city=load("res://assets/art/neon_city.png")
+ if ResourceLoader.exists("res://assets/art/first_light.png"):key_art=load("res://assets/art/first_light.png")
  forge=load("res://assets/art/reactor_forge.png")
  heroes=load("res://assets/art/heroes.png")
  if ResourceLoader.exists("res://assets/art/enemies.png"):
@@ -30,6 +34,8 @@ func _init(game: Node2D) -> void:
   regions=JSON.parse_string(FileAccess.get_file_as_string("res://assets/art/regions.json"))
  title_font=load("res://assets/fonts/SpaceGrotesk.ttf")
  mono_font=load("res://assets/fonts/JetBrainsMono.ttf")
+ var bold=FontVariation.new();bold.base_font=title_font;bold.variation_embolden=0.5
+ display_font=bold
  shade_top=gradient(Color("070c18"),Color(0.025,0.04,0.08,0))
  shade_bottom=gradient(Color(0.025,0.04,0.08,0),Color("070c18"))
  for kind in ["damage","health","speed","shield","energy","drone","ammo","crit","poison","fire","economy","physics"]:
@@ -47,16 +53,36 @@ func gradient(a: Color,b: Color) -> GradientTexture2D:
  return result
 
 func text(s: String,p: Vector2,size: int=16,color: Color=PAPER,mono: bool=false) -> void:
- g.draw_string(mono_font if mono else title_font,p,s,HORIZONTAL_ALIGNMENT_LEFT,-1,size,color)
+ g.draw_string(mono_font if mono else (display_font if size>=22 else title_font),p,s,HORIZONTAL_ALIGNMENT_LEFT,-1,size,color)
 
 func plate(rect: Rect2,color: Color=BLUE,fill: Color=Color("0f192b"),cut: float=9.0) -> void:
- var p=rect.position;var e=rect.end
- var shape=PackedVector2Array([p+Vector2(cut,0),Vector2(e.x-cut,p.y),Vector2(e.x,p.y+cut),e-Vector2(0,cut),e-Vector2(cut,0),Vector2(p.x+cut,e.y),Vector2(p.x,e.y-cut),p+Vector2(0,cut)])
- g.draw_colored_polygon(shape,fill)
- var edge=shape.duplicate();edge.append(shape[0])
- g.draw_polyline(edge,Color(color,0.25),1,true)
- g.draw_line(p+Vector2(cut,0),p+Vector2(minf(52,rect.size.x-cut),0),Color(color,0.9),2,true)
- g.draw_line(e-Vector2(minf(30,rect.size.x-cut),0),e-Vector2(cut,0),Color(color,0.7),2,true)
+ # Soft, layered surfaces instead of cut-corner wire frames.
+ var radius=maxf(2,minf(cut*2.2,minf(rect.size.x,rect.size.y)*0.5))
+ var key=color.to_html()+fill.to_html()+str(int(radius))
+ if not surfaces.has(key):
+  if surfaces.size()>=128:surfaces.clear()
+  var box=StyleBoxFlat.new()
+  box.bg_color=fill
+  box.set_corner_radius_all(int(radius))
+  box.corner_detail=10
+  box.border_color=Color(color,0.1)
+  box.set_border_width_all(1)
+  box.shadow_color=Color(0.01,0.01,0.025,0.28)
+  box.shadow_size=8
+  box.shadow_offset=Vector2(0,4)
+  surfaces[key]=box
+ g.draw_style_box(surfaces[key],rect)
+
+func rounded_texture(texture: Texture2D,rect: Rect2,radius: float,tint: Color=Color.WHITE) -> void:
+ var points=PackedVector2Array()
+ var uv=PackedVector2Array()
+ var corners=[Vector2(rect.end.x-radius,rect.position.y+radius),rect.end-Vector2(radius,radius),Vector2(rect.position.x+radius,rect.end.y-radius),rect.position+Vector2(radius,radius)]
+ for corner in range(4):
+  for step in range(7):
+   var angle=-PI/2+corner*PI/2+step*PI/12
+   var p: Vector2=corners[corner]+Vector2.from_angle(angle)*radius
+   points.append(p);uv.append((p-rect.position)/rect.size)
+ g.draw_polygon(points,PackedColorArray([tint]),uv,texture)
 
 func cover(texture: Texture2D,rect: Rect2,tint: Color=Color.WHITE) -> void:
  var source=Rect2(Vector2.ZERO,texture.get_size())
@@ -78,10 +104,10 @@ func frame_region(key: String,index: int,texture: Texture2D,cols: int,rows: int)
  var size=texture.get_size()/Vector2(cols,rows)
  return Rect2(Vector2(index%cols,index/cols)*size,size)
 
-func sprite(texture: Texture2D,key: String,index: int,base: Vector2,height: float,tint: Color=Color.WHITE,angle: float=0.0) -> void:
+func sprite(texture: Texture2D,key: String,index: int,base: Vector2,height: float,tint: Color=Color.WHITE,angle: float=0.0,motion_scale: Vector2=Vector2.ONE) -> void:
  var source=frame_region(key,index,texture,3,1 if key=="heroes" else 2)
  var width=height*source.size.x/source.size.y
- g.draw_set_transform(base,angle)
+ g.draw_set_transform(base,angle,motion_scale)
  g.draw_texture_rect_region(texture,Rect2(-width*0.5,-height,width,height),source,tint)
  g.draw_set_transform(Vector2.ZERO)
 
@@ -112,8 +138,8 @@ func skyline(world: int,top: float,bottom: float) -> void:
   g.draw_line(p,p+Vector2(-3,9),Color(BLUE,0.13),1,true)
 
 func hero(at: Vector2,scale_value: float,pose: String) -> void:
- var bob=sin(g.clock*3)*1.0
- var recoil=-3.5 if g.shoot_flash>0 else 0.0
+ var motion=g.combat_motion.hero_pose()
+ var offset: Vector2=motion["offset"]
  var outfit=int(g.profile.data["outfit"])
  var tint=[Color.WHITE,Color(0.72,0.9,1.12),Color(1.12,0.85,0.83)][outfit]
  if g.damage_flash>0:tint=Color(1.7,0.55,0.55)
@@ -121,7 +147,7 @@ func hero(at: Vector2,scale_value: float,pose: String) -> void:
  if pose=="defeat":tilt=-0.72
  elif g.damage_flash>0:tilt=-0.07
  g.draw_ellipse_shadow(at+Vector2(0,3),27*scale_value,6*scale_value)
- sprite(heroes,"heroes",int(g.profile.data["class"]),at+Vector2(recoil,bob),112*scale_value,tint,tilt)
+ sprite(heroes,"heroes",int(g.profile.data["class"]),at+offset*scale_value+g.combat_motion.camera_offset(),112*scale_value,tint,tilt+float(motion["angle"]),motion["scale"])
  if g.shield>0 or pose=="special":
   g.draw_arc(at+Vector2(0,-52*scale_value),53*scale_value,-1.75,1.5,38,Color(BLUE,0.55),2,true)
  if g.shoot_flash>0:
@@ -149,9 +175,9 @@ func enemy(e: Dictionary) -> bool:
  if boss:tint=[Color(1,0.9,0.8),Color(0.8,1.1,0.8),Color(1,0.9,0.7),Color(0.7,1.1,0.95),Color(0.8,0.9,1.25),Color(1.2,0.9,0.6),Color(0.6,1.1,1.4),Color(1.3,0.7,0.5),Color(1.1,0.75,1.3),Color(1.2,0.8,1.2)][identity]
  if float(e["flash"])>0:tint=Color(1.5,1.5,1.5)
  var base=Vector2(e["x"],e["y"])
- var bob=sin(float(e["age"])*7)*2
+ var motion=g.combat_motion.enemy_pose(e)
  g.draw_ellipse_shadow(base,24 if not boss else 47,5 if not boss else 8)
- sprite(enemies,"enemies",atlas,base+Vector2(0,bob),height,tint,sin(float(e["age"])*7)*0.025)
+ sprite(enemies,"enemies",atlas,base+motion["offset"]+g.combat_motion.camera_offset(),height,tint,float(motion["angle"]),motion["scale"])
  if kind in [5,6,10,11,14] or boss:
   var accent=VIOLET if kind==14 else (AMBER if kind in [6,11] else MINT)
   if kind==10:accent=BLUE
@@ -170,21 +196,20 @@ func enemy(e: Dictionary) -> bool:
 
 func hud() -> void:
  plate(Rect2(16,16,508,103),BLUE,Color("0c1527"),10)
- text("RF / DEADWAVE",Vector2(30,37),11,BLUE,true)
- text("SEKTOR %02d"%g.level,Vector2(29,63),24,PAPER)
- text(Content.WORLDS[int(g.layout["world"])].to_upper(),Vector2(30,81),10,QUIET,true)
+ text("Einsatz %02d"%g.level,Vector2(29,45),23,PAPER)
+ text(Content.WORLDS[int(g.layout["world"])],Vector2(30,65),12,QUIET)
  text("%02d FEINDE"%(g.remaining+g.enemies.size()),Vector2(331,80),9,QUIET,true)
  var title="WELLE %02d"%g.wave
  text(title,Vector2(330,41),15,PAPER)
  text("/ %02d"%g.wave_count,Vector2(419,41),11,QUIET,true)
  for i in range(g.wave_count):
   g.draw_rect(Rect2(331+i*minf(18,118.0/g.wave_count),56,12 if g.wave_count<8 else 5,3),MINT if i<g.wave else Color("28344d"))
- g.bar(Rect2(30,96,252,5),g.hp/maxf(1,float(g.stats["max_hp"])),g.CORAL)
- text("%03d / %03d HP"%[maxi(0,int(g.hp)),int(g.stats["max_hp"])],Vector2(30,113),9,QUIET,true)
+ g.bar(Rect2(30,81,252,7),g.hp/maxf(1,float(g.stats["max_hp"])),g.CORAL)
+ text("%03d / %03d HP"%[maxi(0,int(g.hp)),int(g.stats["max_hp"])],Vector2(30,108),11,PAPER,true)
  text("CR  %s"%g.compact(int(g.profile.data["coins"])),Vector2(355,105),15,AMBER,true)
  plate(Rect2(16,354,508,57),BLUE,Color("101c30"),8)
- g.draw_line(Vector2(169,366),Vector2(169,400),Color(BLUE,0.16),1,true)
- g.draw_line(Vector2(370,366),Vector2(370,400),Color(BLUE,0.16),1,true)
+ g.draw_line(Vector2(169,366),Vector2(169,400),Color(PAPER,0.07),1,true)
+ g.draw_line(Vector2(370,366),Vector2(370,400),Color(PAPER,0.07),1,true)
  text("MUNITION / %s"%g.compact(int(g.stats["capacity"])),Vector2(29,370),9,QUIET,true)
  var ammo_tint=AMBER if g.ammo<=30 else MINT
  text(g.compact(g.ammo),Vector2(29,395),25,ammo_tint)
@@ -205,7 +230,7 @@ func wave_cue() -> void:
 func factory() -> void:
  # Active reactor forge: recessed circular engine, powered rails and three gates.
  plate(Rect2(16,473,508,401),BLUE,Color("080f1d"),12)
- g.draw_texture_rect(forge,Rect2(28,486,484,379),false,Color(0.85,0.94,1,1))
+ rounded_texture(forge,Rect2(28,486,484,379),18,Color(0.85,0.94,1,1))
  var center=Vector2(270,668)
  # Slow induction arcs belong to the back plate; impacts supply the bright action.
  for radius in [116,159]:
@@ -347,18 +372,30 @@ func icon_key(id: int) -> String:
  return "damage"
 
 func menu() -> void:
- page_background()
- g.draw_texture_rect(city,Rect2(0,230,540,370),false)
- g.draw_texture_rect(shade_top,Rect2(0,230,540,95),false)
- g.draw_texture_rect(shade_bottom,Rect2(0,465,540,150),false)
- for radius in [83,98,116]:
-  g.draw_arc(Vector2(275,471),radius,-g.clock*0.1,g.clock*0.05+4.1,60,Color(BLUE,0.15),1,true)
- hero(Vector2(266,587),2.38,"idle")
- plate(Rect2(30,268,145,26),BLUE,Color("0d2032"),5)
- text("DIE WELT NACH NULL",Vector2(40,285),9,BLUE,true)
- plate(Rect2(30,596,480,36),BLUE,Color("0d2032"),6)
- plate(Rect2(353,547,157,35),MINT,Color("0d2032"),6)
- text("OFFLINE / BEREIT",Vector2(366,569),10,MINT,true)
+ var reduced=bool(g.profile.data["settings"].get("reduced_motion",false))
+ var settle=0.0 if reduced else pow(maxf(0,1-g.screen_age/1.1),3)
+ var drift=0.0 if reduced else sin(g.clock*0.23)*3
+ if key_art!=null:
+  cover(key_art,Rect2(-8-settle*8+drift,-8-settle*10,556+settle*16,980+settle*20))
+ else:page_background()
+ g.draw_texture_rect(shade_top,Rect2(0,0,540,190),false,Color(0.8,0.6,1,0.72))
+ g.draw_texture_rect(shade_bottom,Rect2(0,495,540,465),false,Color(0.7,0.6,0.9,1))
+ # Bounded embers and drifting depth. No gameplay state participates in the title scene.
+ var count=8 if reduced or g.quality==0 else 26
+ for i in range(count):
+  var x=fposmod(i*91.7+sin(g.clock*0.4+i)*11,540)
+  var y=290+fposmod(i*47.3-g.clock*(10+i%5*3),345)
+  var a=0.1+0.25*pow(maxf(0,sin(g.clock*1.2+i*2.1)),2)
+  var color=AMBER if i%3 else BLUE
+  g.draw_circle(Vector2(x,y),1.2 if i%2 else 1.8,Color(color,a))
+  if i%4==0:g.draw_line(Vector2(x,y),Vector2(x-2,y+7),Color(color,a*0.3),1,true)
+ if not reduced:
+  var beat=fposmod(g.clock,2.1)
+  var flash=maxf(0,1-beat/0.13) if beat<0.13 else (maxf(0,1-(beat-0.21)/0.1) if beat>=0.21 and beat<0.31 else 0.0)
+  if flash>0 and g.reactor_fx.glow!=null:
+   g.draw_texture_rect(g.reactor_fx.glow,Rect2(300,340,130,85),false,Color(1,0.63,0.3,flash*0.8))
+ plate(Rect2(30,611,480,57),BLUE,Color(0.07,0.075,0.13,0.92),16)
+ g.draw_circle(Vector2(48,40),3.5,Color("ff826d"))
 
 func style_slider(slider: HSlider) -> void:
  var rail=StyleBoxFlat.new()

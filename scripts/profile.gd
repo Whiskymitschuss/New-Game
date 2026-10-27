@@ -7,7 +7,7 @@ func _init() -> void:
  reset()
 
 func reset() -> void:
- data={"version":1,"level":1,"xp":0,"coins":0,"class":0,"weapon":0,"unlocked":1,"stars":{},"seeds":{},"layouts":{},"weapon_levels":{},"seen_weapons":[0],"stats":{"kills":0,"wins":0,"drops":0},"settings":{"music":0.45,"sfx":0.65,"quality":1},"outfit":0,"abilities":[],"equipment":{}}
+ data={"version":1,"level":1,"xp":0,"coins":0,"class":0,"weapon":0,"unlocked":1,"stars":{},"seeds":{},"layouts":{},"weapon_levels":{},"seen_weapons":[0],"stats":{"kills":0,"wins":0,"drops":0},"settings":{"music":0.45,"sfx":0.65,"quality":1,"reduced_motion":false},"outfit":0,"abilities":[],"equipment":{}}
 
 func load_game() -> bool:
  for path in [PATH,PATH+".bak"]:

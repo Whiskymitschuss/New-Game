@@ -38,7 +38,7 @@ jobs:
         run: |
           source "$DEADWAVE_TOOLS/env.sh"
           ./scripts/build.sh
-      - name: Verify visible balls through real OpenGL rendering
+      - name: Verify interface and combat motion through real OpenGL rendering
         shell: bash
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
@@ -48,23 +48,25 @@ jobs:
             sudo apt-get update
             sudo apt-get install --no-install-recommends -y xvfb
           fi
-          test_data=$(mktemp -d /tmp/deadwave-render-XXXXXXXX)
-          XDG_DATA_HOME="$test_data" xvfb-run -a "$GODOT_BIN" --path . --rendering-method gl_compatibility --audio-driver Dummy --fixed-fps 60 --script res://tests/render_balls.gd > builds/test-render.log 2>&1
-          cat builds/test-render.log
-          if rg -q 'SCRIPT ERROR|Parse Error|FAIL:' builds/test-render.log; then exit 1; fi
+          for suite in render_balls interface_motion combat_motion; do
+            test_data=$(mktemp -d /tmp/deadwave-render-XXXXXXXX)
+            XDG_DATA_HOME="$test_data" xvfb-run -a "$GODOT_BIN" --path . --rendering-method gl_compatibility --audio-driver Dummy --fixed-fps 60 --script "res://tests/$suite.gd" -- --render > "builds/test-render-$suite.log" 2>&1
+            cat "builds/test-render-$suite.log"
+            if rg -q 'SCRIPT ERROR|Parse Error|FAIL:' "builds/test-render-$suite.log"; then exit 1; fi
+          done
       - name: Upload Android debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: DeadwaveHeroes-v0.2.4-debug
+          name: DeadwaveHeroes-v0.2.5-debug
           path: |
-            builds/DeadwaveHeroes-v0.2.4-debug.apk
+            builds/DeadwaveHeroes-v0.2.5-debug.apk
             builds/manifest.json
           if-no-files-found: error
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
-          name: DeadwaveHeroes-v0.2.4-windows
-          path: builds/DeadwaveHeroes-v0.2.4-windows.zip
+          name: DeadwaveHeroes-v0.2.5-windows
+          path: builds/DeadwaveHeroes-v0.2.5-windows.zip
           if-no-files-found: error
       - name: Preserve build and test evidence
         if: always()

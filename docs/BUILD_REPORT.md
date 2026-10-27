@@ -148,3 +148,22 @@ Lokale Endprüfung: 6.692 Einzelprüfungen bestanden (Audio11, Layout-/Wellenpl�
 - `apksigner verify --verbose` und `zipalign -c -P 16 4` bestanden. Paket `com.rfworlds.deadwaveheroes`, Version 0.2.4, Versionscode 7, Mindest-API24, Ziel-API36, ARMv7/ARM64. Öffentliches Signierzertifikat stimmt mit der heruntergeladenen v0.2.3 überein: Update ohne vorherige Deinstallation möglich.
 - Zusätzlich aus der lokal erzeugten APK extrahierte echte Export-Ressourcen geprüft: alle zwölf Waffen-Texturen laden mit 128 × 64, die kompilierten Progression-/Arsenalskripte laden und ein frisches Profil sperrt die Maschinenpistole. Das ist eine Prüfung des Exportinhalts im passenden Godot-Desktop-Runner, kein Android-Gerätetest.
 - Öffentliche Release-Anhänge enthalten die neue Arsenalansicht, gesperrte Waffenvorschau und echte Freischaltung in 2160 × 3840.
+
+
+## 0.2.5 / Cinema & Motion · 27.10.2026
+
+Neue bildfüllende Startillustration mit langsamem Kameraeinschwingen, begrenzten Glutpartikeln und lokalem Mündungslicht. Eigene neu generierte Grafik (941 × 1672); kein Anspruch durchgehend nativer 4K-Assets. Abgerundete Oberflächen, weichere Schatten, wärmere Hauptaktion und neue Texthierarchie ersetzen die kantigen Rahmen. Reaktorbild wird mit gerundeter Kontur gezeichnet. Die Startfläche bleibt direkt bedienbar, ohne blockierende Intro-Sequenz.
+
+Neues `InterfaceMotion` animiert den gezeichneten Buttonhintergrund mit Druckfeder, lokalem Ripple, Fokus und kurzem Glanz. Native Text- und Touch-Rechtecke bleiben stabil. Menüwechsel blenden kurz ein; abgebrochene Übergänge werden beim Wechsel beendet. Der Shader berücksichtigt die vererbte Alpha-Transparenz, geprüft im echten GL-Framebuffer. Das Arsenalportrait atmet bei voller Bewegung leicht. Neue gespeicherte Option „Bewegung reduziert“ dämpft Übergänge und Kamerabewegung.
+
+`CombatMotion` ergänzt Atmen, Schussrückstoß, Lauf-/Trefferreaktionen, begrenzte Hülsen/Funken, eingefrorene fallende Todessilhouetten und Impulswellen. Es sind prozedurale Transformationen bestehender Figurenillustrationen, keine vollständigen handgezeichneten Einzelbild-Animationen. Effekte sind auf das Schlachtfeld begrenzt und bei Pause eingefroren. Eigener visueller Zufall verändert weder Kampfzufall noch Schaden, Physik oder Ressourcen. Obergrenzen für hohe/niedrige Qualität: 20/10 Ereignisse, 90/32 Partikel, 12/5 Todessilhouetten.
+
+In der ersten Welle der ersten drei Einsätze werden die ersten drei bereits vorgesehenen Gegner näher eingeführt, sodass der erste echte Schuss mit tatsächlichem Munitionsverbrauch innerhalb einer Sekunde fällt. Keine zusätzlichen Gegner oder Testschäden; die geplante Gesamtzahl bleibt erhalten. Waffenfreischaltungen, Rangkosten und Saveformat v1 bleiben kompatibel.
+
+Lokaler vollständiger Android-/Windows-Build erfolgreich. Android-APK: 73.334.177 Bytes, SHA-256 `98fb004f6458574e95a0af2f45e999201f4a44f24280e48e4e05b2a07529c669`; Signatur und 16-KiB-Ausrichtung geprüft. Diese lokale Prüfsumme ist kein Nachweis einer späteren CI-Datei: der CI-Build verwendet seine wiederverwendete eigene Debug-Identität.
+
+6.736 headless Einzelprüfungen bestanden: Audio11, InterfaceMotion27, CombatMotion24, erster Spielsekunde13, Wellen-/Balancepläne5705, Fortschritt97, Waffen56, Reaktor19, Systeme314, Pool-Reuse120, UI241, UX109. Zusätzlich 79 echte OpenGL-Prüfungen: Kugelsichtbarkeit/Eingaben20, InterfaceMotion32, CombatMotion27. Damit 6.815 Prüfungsdurchläufe, darunter bewusst erneut unter GL geprüfte Motion-Fälle. Alle 16 vollständigen Kampagnen-/Waffenläufe bestanden: zehn Klassen-/Bossfälle und sechs Waffenmeilensteine. Dies ist kein Beleg perfekter Balance aller 100 Einsätze.
+
+`tests/capture_cinema.gd` erzeugt die drei echten Godot-Ausgaben in 2160 × 3840 unter `docs/screenshots/cinema-*-v0.2.5.png`. Gameplay zeigt einen regulären Level-1-Lauf mit sichtbaren Kugeln und Gegnern. `tests/film_cinema.gd` bedient native Mausereignisse für Starten, Zielen, zweimal Abwerfen, Impuls, Pause und Arsenal. Aufnahme bestätigt 24 abgeworfene Startkugeln, sieben Abschüsse und korrektes Endmenü. Die beigefügte MP4 unter `docs/previews/` dauert 19,1 Sekunden, 540 × 960 bei 30 Bildern/s und enthält die integrierte Hintergrundmusik. Movie-Maker-Ausgabe mit festem Zeitschritt ist keine Hardware-FPS-Messung.
+
+Nicht durchgeführt: Installation, Touch-/Audioprüfung oder FPS-Messung auf einem physischen Android-Gerät; Windows-Ausführung. Veröffentlichung samt tatsächlicher öffentlicher Prüfsumme und Signaturvergleich wird nach erfolgreichem Remote-Build ergänzt.
