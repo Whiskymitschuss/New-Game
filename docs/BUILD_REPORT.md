@@ -227,3 +227,13 @@ Nicht durchgeführt: Installation, Touch-/Audioprüfung oder FPS-Messung auf ein
 
 
 Die tatsächlich erzeugte native Filmaufnahme ist ebenfalls geprüft: `docs/previews/DeadwaveHeroes-v0.2.7-motion.mp4`, 55,366667 Sekunden, 540 × 960, 30 Bilder/s, H.264/AAC, 8.913.017 Bytes. Derselbe normale Eingabeablauf bestätigt 33 Abschüsse, drei Abwürfe mit 44 Startkugeln, Gürtel, Panzer und eine eingesammelte Powerzelle. Die vollständige Aufnahme zeigt auch die tatsächlich getroffenen Upgrade-Entscheidungen. MovieMaker-Aufzeichnung mit festem Zeitschritt ist keine Smartphone-FPS-Messung.
+
+
+### Veröffentlichung 0.2.7 verifiziert
+
+- Quellstand `11e0696` auf `main`.
+- [GitHub-Build 40686062729](https://github.com/Whiskymitschuss/New-Game/actions/runs/40686062729) erfolgreich: 6 min 1 s insgesamt, Buildjob 5 min 56 s. Android-/Windows-Export, alle headless Suiten und sechs echte OpenGL-Suiten abgeschlossen.
+- [Download-Veröffentlichung 40686877703](https://github.com/Whiskymitschuss/New-Game/actions/runs/40686877703) erfolgreich in 31 s. APK aus genau diesem geprüften Build übernommen und vor Veröffentlichung gegen dessen Manifest geprüft.
+- Tatsächlich öffentlich heruntergeladene [DeadwaveHeroes-v0.2.7-debug.apk](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.7-debug/DeadwaveHeroes-v0.2.7-debug.apk): 74.678.354 Bytes, SHA-256 `61099f7889748b4016371b3a0821f50e0e00b9262a1fdec1af0e01871936483e`. Identisch zur öffentlichen `SHA256SUMS.txt`.
+- `apksigner verify --verbose` und `zipalign -c -P 16 4` für die heruntergeladene Datei bestanden. Paket `com.rfworlds.deadwaveheroes`, Version 0.2.7, Versionscode 10, Mindest-API 24, Ziel-API 36, ARMv7/ARM64. Das öffentliche Signierzertifikat stimmt mit der heruntergeladenen v0.2.6 überein; Paket-, Versions- und Signaturbedingungen für ein Update sind erfüllt. Keine vorherige Deinstallation nötig. Kein tatsächlicher Smartphone-Installationstest behauptet.
+- Auch die veröffentlichte [55-Sekunden-Spielvorschau](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.7-debug/DeadwaveHeroes-v0.2.7-motion.mp4) öffentlich heruntergeladen und bytegenau verglichen: 8.913.017 Bytes, SHA-256 `2a6f12bbb5e9bc60b7c2b624e17ea8b0df6d1c94290fbb5e6e6cb721dc3c8f63`, identisch zur geprüften nativen Aufnahme. Release-Anhänge enthalten außerdem die drei echten 4K-Spielansichten und den ausdrücklich gekennzeichneten Drei-Klassen-Ausrüstungsvergleich.
