@@ -17,13 +17,13 @@ static func gear_state(game: Node) -> Dictionary:
  var capacity=maxf(0,float(stats.get("capacity",Content.ammo_capacity(level)))-Content.ammo_capacity(level))
  var magazines=maxf(0,float(stats.get("magazine",0)))
  var drop=maxf(0,float(stats.get("drop",12))-12)
- var belt=clampi(ceili(capacity/250.0)+ceili(magazines/6.0)+ceili(drop/4.0),0,3)
+ var belt=maxi(Workshop.rank(data,"belt"),clampi(ceili(capacity/250.0)+ceili(magazines/6.0)+ceili(drop/4.0),0,3))
  var armor=maxf(0,float(stats.get("armor",0)))
  var thorns=float(stats.get("thorns",0))>0
- var plates=clampi(ceili(armor/3.0),0,3)
+ var plates=maxi(Workshop.rank(data,"armor"),clampi(ceili(armor/3.0),0,3))
  var rank=Progression.effective_rank(data,int(data.get("weapon",0)))
  var extra_damage=maxf(0,float(stats.get("damage",baseline["damage"]))-float(baseline["damage"]))
- var weapon=clampi(maxi(rank,ceili(maxf(0,extra_damage-0.00001)/0.30)),0,3)
+ var weapon=maxi(Workshop.rank(data,"weapon"),clampi(maxi(rank,ceili(maxf(0,extra_damage-0.00001)/0.30)),0,3))
  var power=game.get("overdrive_left")
  return {"belt":belt,"armor":plates,"thorns":thorns,"weapon":weapon,"rank":rank,"medic":float(stats.get("regen",baseline["regen"]))>float(baseline["regen"])+0.01,"shield":float(game.get("shield"))>0,"overdrive":power!=null and float(power)>0,"class":cls,"outfit":clampi(int(data.get("outfit",0)),0,2),"drone":float(stats.get("drone",0))>(1.0 if cls==1 else 0.0)}
 

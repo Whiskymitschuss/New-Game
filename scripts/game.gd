@@ -9,6 +9,10 @@ const CORAL = Color("d87564")
 const CYAN = Color("90d6cf")
 const MAX_BALLS = 128
 var font = preload("res://assets/fonts/SpaceGrotesk.ttf")
+var ammo_cargo = SpecialAmmo.new()
+var reactor_switch = ReactorSwitch.new()
+var workshop_view: WorkshopView
+var switch_button: Button
 var future: FutureArt
 var screen_age := 0.0
 var deployment_age := 0.0
@@ -96,6 +100,7 @@ var hero_dot = 0.0
 var boss_slow = 0.0
 
 func _ready() -> void:
+ reactor_switch.game=self
  future=FutureArt.new(self)
  profile.load_game()
  rng.randomize()
@@ -142,6 +147,7 @@ func clear_ui() -> void:
   controls.remove_child(child)
   child.queue_free()
  drop_button=null
+ switch_button=null
  special_button=null
  hud_label=null
 
@@ -220,8 +226,9 @@ func show_menu() -> void:
  button("ARSENAL",Rect2(30,783,151,63),show_armory)
  button("WELTKARTE",Rect2(194,783,151,63),show_map)
  var settings=button("OPTIONEN",Rect2(358,783,152,63),show_settings)
- label("HELD LV %d   ·   %s CR"%[profile.data["level"],compact(profile.data["coins"])],Vector2(32,873),12,MUTED,470)
- label("OFFLINE BEREIT                                 v0.2.7",Vector2(32,920),10,MUTED)
+ button("WERKBANK  ·  DAUERHAFTE AUSRÜSTUNG",Rect2(30,853,480,44),show_workshop)
+ label("HELD LV %d   ·   %s CR"%[profile.data["level"],compact(profile.data["coins"])],Vector2(32,902),10,MUTED,470)
+ label("OFFLINE BEREIT                                 v0.2.8",Vector2(32,920),10,MUTED)
  reveal_ui(0)
 
 func page_header(title: String,subtitle: String) -> void:
@@ -252,6 +259,11 @@ func show_armory(id: int=-1) -> void:
  arsenal.build(int(profile.data["weapon"]) if id<0 else id)
  if entering:reveal_ui(160)
 
+func show_workshop() -> void:
+ if workshop_view==null:workshop_view=WorkshopView.new(self)
+ workshop_view.build()
+ reveal_ui(160)
+
 func weapon_available(id: int) -> bool:
  return Progression.available(profile.data,id)
 
@@ -262,7 +274,7 @@ func show_character() -> void:
  var w=weapon()
  var rank=Progression.effective_rank(profile.data,int(profile.data["weapon"]))
  label(cls["name"].to_upper()+" / LEVEL %d"%int(profile.data["level"]),Vector2(30,188),24,LIME)
- var values=["Erfahrung|%d / %d"%[profile.data["xp"],int(profile.data["level"])*100],"Maximalleben|%d"%int(float(cls["hp"])+(int(profile.data["level"])-1)*4),"Angriffsschaden|%.1f"%(float(w[1])*float(cls["damage"])*(1+rank*0.1)),"Schüsse / Sekunde|%.2f"%(1.0/float(w[2])),"Kritische Chance|5%", "Kritischer Schaden|175%", "Rüstung|0 + Run-Upgrades", "Ausweichchance|0% + Run-Upgrades", "Regeneration|%.1f HP / s"%cls["regen"], "Munitionskapazität|%d"%Content.ammo_capacity(int(profile.data["unlocked"])), "Spezialenergie|100 / Impuls kostet 50", "Entdeckte Fähigkeiten|%d / %d"%[profile.data["abilities"].size(),Content.UPGRADES.size()]]
+ var values=["Erfahrung|%d / %d"%[profile.data["xp"],int(profile.data["level"])*100],"Maximalleben|%d"%int(float(cls["hp"])+(int(profile.data["level"])-1)*4),"Angriffsschaden|%.1f"%(float(w[1])*float(cls["damage"])*(1+rank*0.1)*(1+0.05*Workshop.rank(profile.data,"weapon"))),"Schüsse / Sekunde|%.2f"%(1.0/float(w[2])),"Kritische Chance|5%", "Kritischer Schaden|175%", "Rüstung|%d + Einsatz-Upgrades"%Workshop.rank(profile.data,"armor"), "Ausweichchance|0% + Run-Upgrades", "Regeneration|%.1f HP / s"%cls["regen"], "Munitionskapazität|%d"%(Content.ammo_capacity(int(profile.data["unlocked"]))+40*Workshop.rank(profile.data,"belt")), "Spezialenergie|100 / Impuls kostet 50", "Entdeckte Fähigkeiten|%d / %d"%[profile.data["abilities"].size(),Content.UPGRADES.size()]]
  for i in range(values.size()):
   var parts=values[i].split("|")
   label(parts[0],Vector2(30,260+i*43),14,MUTED)
@@ -316,6 +328,7 @@ func show_licenses() -> void:
 
 func start_level(number: int) -> void:
  deployment_age=0
+ ammo_cargo.reset()
  wave_booster.clear()
  overdrive_left=0
  gear_flash=0
@@ -334,6 +347,7 @@ func start_level(number: int) -> void:
  rng.seed=int(layout["seed"])+int(profile.data["stats"]["wins"])*31
  var cls=Content.CLASSES[int(profile.data["class"])]
  stats={"max_hp":float(cls["hp"])+float(profile.data["level"]-1)*4,"damage":float(cls["damage"]),"speed":1.0,"crit":0.05,"crit_damage":1.75,"armor":0.0,"dodge":0.0,"regen":float(cls["regen"]),"capacity":float(Content.ammo_capacity(level)),"pierce":0.0,"multishot":0.0,"poison":0.0,"burn":0.0,"drone":1.0 if int(profile.data["class"])==1 else 0.0,"slow":0.0,"recycle":0.0,"splash":0.0,"leech":0.0,"bounty":1.0,"wisdom":1.0,"drop":12.0,"collection":1.0,"reload":0.0,"magazine":0.0,"special":1.0,"energy_regen":4.0 if int(profile.data["class"])==1 else 2.0,"range":0.0,"thorns":0.0}
+ Workshop.apply_stats(profile.data,stats)
  hp=stats["max_hp"]
  ammo=int(cls["ammo"])
  shield=0
@@ -371,10 +385,15 @@ func start_level(number: int) -> void:
 func build_hud() -> void:
  clear_ui()
  button("Ⅱ",Rect2(467,27,43,39),pause_game)
- drop_button=button("ABWERFEN",Rect2(24,888,310,54),drop_ammo,true)
- special_button=button("IMPULS",Rect2(350,888,166,54),special_attack)
+ drop_button=button("ABWERFEN",Rect2(24,888,228,54),drop_ammo,true)
+ drop_button.add_theme_font_size_override("font_size",14)
+ switch_button=button(reactor_switch.caption(),Rect2(264,888,120,54),toggle_switch)
+ switch_button.add_theme_font_size_override("font_size",11)
+ switch_button.tooltip_text="Lenkt mittige Kugeln um. Einmal während jedes Abwurfs umstellen."
+ special_button=button("IMPULS",Rect2(396,888,120,54),special_attack)
+ special_button.add_theme_font_size_override("font_size",12)
  special_button.tooltip_text="Kostet 50 Energie. Trifft die Horde und gibt einen Schild."
- drop_button.tooltip_text="%d Startkugeln. Ein Versuch pro Abwurf. Wähle mit Ziehen den Weg."%int(stats["drop"])
+ drop_button.tooltip_text="%d Startkugeln. Ein Versuch pro Abwurf. Max. 12 Spezialladungen pro Abwurf, 36 im Vorrat."%int(stats["drop"])
  var slider=HSlider.new()
  slider.position=Vector2(45,438)
  slider.size=Vector2(450,28)
@@ -392,6 +411,10 @@ func build_hud() -> void:
  aim_surface.mouse_default_cursor_shape=Control.CURSOR_HSIZE
  aim_surface.gui_input.connect(aim_input)
  controls.add_child(aim_surface)
+
+func toggle_switch() -> void:
+ if reactor_switch.toggle():
+  reactor_fx.pulse(reactor_switch.body.position,CYAN,"switch",0.8)
 
 func aim_input(event: InputEvent) -> void:
  if mode!="play":return
@@ -418,16 +441,19 @@ func route_factor() -> int:
 
 func reactor_hint() -> String:
  if power_message_left>0:return power_message
+ if reactor_switch.can_toggle():return "WEICHE BEREIT · EINMAL PRO ABWURF UMLEITEN"
  if not pending_balls.is_empty():return "INJEKTION LÄUFT · KUGELN SIND UNTERWEGS"
  if active_balls()>0:return "REAKTOR AKTIV · SAMMLER FÜLLT DEIN LAGER"
  if clock-last_drop_time<3 and not last_drop_message.is_empty():return last_drop_message
  if ammo>=int(stats["capacity"]):return "LAGER VOLL · ABWURF WIEDER NACH VERBRAUCH"
  if attempts<=0:return "KEIN ABWURF · NÄCHSTE WELLE GIBT +1" if wave<wave_count else "LETZTE HORDE · IMPULS ZUR UNTERSTÜTZUNG"
  if ammo<=30:return "MUNITION KNAPP · JETZT KUGELN ABWERFEN"
+ if level<=3 and wave==1 and dropped==0:return "PORTAL: EMP · MITTE: BRAND/KRYO · BIS 12 LADUNGEN"
  if not wave_booster.is_empty() and not bool(wave_booster.get("consumed",false)):return "POWERZELLE SICHTBAR · MIT EINER KUGEL AKTIVIEREN"
  return "IM REAKTOR ZIEHEN · WEG WÄHLEN · ABWERFEN"
 
 func clear_geometry() -> void:
+ reactor_switch.reset()
  for child in geometry.get_children():
   geometry.remove_child(child)
   child.queue_free()
@@ -450,13 +476,18 @@ func build_maze() -> void:
  clear_geometry()
  solid(Vector2(22,680),Vector2(16,405))
  solid(Vector2(518,680),Vector2(16,405))
+ var piece_index=0
  for item in layout["pieces"]:
   var x=float(item["x"])
   var y=float(item["y"])
   var variant=int(item["variant"])
-  var kind=String(item["kind"])
+  var kind="switch" if piece_index==0 else String(item["kind"])
+  piece_index+=1
   var ob={"kind":kind,"pos":Vector2(x,y),"variant":variant,"body":null,"broken":false}
   match kind:
+   "switch":
+    ob["body"]=solid(Vector2(x,y),Vector2(65+variant*12,9),0.4,true)
+    reactor_switch.attach_body(ob["body"],variant)
    "ramp","wall","reverse","breakable":
     var angle=([0.4,-0.4,0.65][variant] if kind!="wall" else PI/2)
     ob["body"]=solid(Vector2(x,y),Vector2(65+variant*12,9),angle)
@@ -477,6 +508,7 @@ func build_maze() -> void:
   obstacles.append(ob)
 
 func clear_balls() -> void:
+ reactor_switch.end_drop()
  pending_balls.clear()
  drop_emit_timer=0
  for ball in pool:
@@ -489,12 +521,13 @@ func active_balls() -> int:
    count+=1
  return count
 
-func emit_ball(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0,used_portal: bool=false) -> bool:
+func emit_ball(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0,used_portal: bool=false,ammo_kind: String="normal") -> bool:
  var limit=MAX_BALLS if quality==1 else 64
  for i in range(limit):
   if not pool[i].live:
    pool[i].activate(at,velocity,amount,mask)
    pool[i].portal_used=used_portal
+   pool[i].ammo_kind=ammo_kind
    return true
  return false
 
@@ -509,6 +542,8 @@ func drop_ammo() -> void:
  drop_credited=0
  drop_overflow=0
  drop_running=true
+ ammo_cargo.begin_drop()
+ reactor_switch.begin_drop()
  dropped+=count
  profile.data["stats"]["drops"]+=1
  for i in range(count):
@@ -540,6 +575,7 @@ func multiply_ball(ball: AmmoBall,row: int) -> void:
  var gate=layout["gates"][row]
  var factor=int(gate["left"] if ball.position.x<gate_split(row) else gate["right"])
  if factor<2:return # Open bypass has no multiplier, light flash or multiplication sound.
+ if row==1 and ball.ammo_kind=="normal":ball.ammo_kind="fire" if ball.position.x<gate_split(row) else "frost"
  reactor_fx.gate_hit(ball.position,row,0 if ball.position.x<gate_split(row) else 1,factor)
  ball.glow=0.35
  ball.weight*=factor
@@ -547,7 +583,7 @@ func multiply_ball(ball: AmmoBall,row: int) -> void:
  # Split representative weights exactly, never instantiate factor-many bodies.
  if ball.weight>=4 and active_balls()<48 and quality==1:
   var portion=int(ball.weight/2)
-  if emit_ball(ball.position+Vector2(8,8),ball.linear_velocity+Vector2(45,0),portion,ball.gates,ball.portal_used):
+  if emit_ball(ball.position+Vector2(8,8),ball.linear_velocity+Vector2(45,0),portion,ball.gates,ball.portal_used,ball.ammo_kind):
    ball.weight-=portion
  audio.play_effect("multiply",0.9+row*0.15)
 
@@ -560,6 +596,7 @@ func collect_ball(ball: AmmoBall) -> void:
  collection_remainder=maxf(0,exact-credited)
  var accepted=mini(credited,maxi(0,int(stats["capacity"])-ammo))
  ammo+=accepted
+ ammo_cargo.add_refined(ball.ammo_kind,accepted)
  produced+=accepted
  drop_credited+=accepted
  drop_overflow+=credited-accepted
@@ -573,6 +610,7 @@ func collect_ball(ball: AmmoBall) -> void:
  audio.play_effect("collect",rng.randf_range(0.85,1.2))
 
 func physics_balls(delta: float) -> void:
+ reactor_switch.update(delta)
  emit_pending_balls(delta)
  for rotor in rotors:
   if rotor["kind"]=="trapdoor":
@@ -599,6 +637,7 @@ func physics_balls(delta: float) -> void:
      if distance<20 and not ball.portal_used:
       ball.teleport_to(Vector2(540-ob["pos"].x,ob["pos"].y+35),Vector2(30*(variant-1),180))
       ball.portal_used=true
+      if ball.ammo_kind=="normal":ball.ammo_kind="emp"
       reactor_fx.pulse(ob["pos"],FutureArt.VIOLET,"portal",1.2)
       reactor_fx.pulse(Vector2(540-ob["pos"].x,ob["pos"].y+35),CYAN,"portal",1.2)
     "boost":
@@ -628,6 +667,7 @@ func physics_balls(delta: float) -> void:
   ball.previous=ball.position
  if drop_running and active_balls()==0 and pending_balls.is_empty():
   drop_running=false
+  reactor_switch.end_drop()
   last_drop_message="+%s MUNITION EINGELAGERT"%compact(drop_credited)
   if drop_overflow>0:last_drop_message+=" · %s ÜBERLAUF"%compact(drop_overflow)
   last_drop_time=clock
@@ -692,6 +732,7 @@ func spawn_enemy(boss: bool=false) -> Dictionary:
  return e
 
 func update_combat(delta: float) -> void:
+ ammo_cargo.reconcile(ammo)
  hp=minf(float(stats["max_hp"]),hp+float(stats["regen"])*delta)
  boss_slow=maxf(0,boss_slow-delta)
  if hero_dot>0:
@@ -710,6 +751,11 @@ func update_combat(delta: float) -> void:
  if remaining==0 and wave==wave_count and bool(layout["boss"]) and not boss_spawned:
   spawn_enemy(true)
   boss_spawned=true
+  # A boss adds a separate health budget after the horde. Supply one bounded
+  # production chance, rather than letting a class run out before that encounter.
+  attempts+=1
+  power_message="BOSSKONTAKT · +1 NOTFALL-ABWURF"
+  power_message_left=4
   audio.play_music("boss")
  for e in enemies:
   if e["dead"]:
@@ -722,7 +768,13 @@ func update_combat(delta: float) -> void:
    hit_enemy(e,dot*delta,false)
   if e["dead"]:
    continue
-  var speed=float(e["speed"])*(1-clampf(float(stats["slow"])+float(e["slow"]),0,0.75))
+  var emp_stunned=SpecialAmmo.tick_enemy(self,e,delta)
+  if e["dead"]:continue
+  if emp_stunned:
+   e["age"]-=delta
+   e["timer"]+=delta
+   continue
+  var speed=float(e["speed"])*(1-clampf(float(stats["slow"])+float(e["slow"]),0,0.75))*SpecialAmmo.speed_factor(e)
   if int(e["type"])==1:
    speed*=1.0+0.3*sin(e["age"]*5)
   var ranged=int(e["type"]) in [5,12,13] and level>=20
@@ -841,18 +893,22 @@ func shoot() -> void:
  var hits=1+int(stats["pierce"])+(2 if effect in ["pierce","laser"] else 0)
  var extra=1+int(stats["multishot"])
  damage*=extra
+ ammo_cargo.reconcile(ammo)
+ var round_kind=ammo_cargo.peek()
  if rng.randf()>=minf(0.8,float(stats["recycle"])):
   ammo-=1
+  ammo_cargo.consume()
  magazine-=1
  fire_timer=shot_interval()
  shoot_flash=0.1
  hero_pose="attack"
  combat_motion.on_shot(Vector2(target["x"],target["y"]-28),int(profile.data["weapon"]),critical)
  hit_enemy(target,damage,true,critical)
+ SpecialAmmo.apply_hit(self,target,round_kind,damage)
  target["poison"]=float(stats["poison"])
  target["burn"]=float(stats["burn"])+(8 if effect=="fire" else 0)
  var impact=Vector2(target["x"],target["y"]-28)
- tracers.append({"from":Vector2(146,263),"to":impact,"life":0.12 if effect!="laser" else 0.2,"color":CYAN if effect in ["laser","plasma"] else LIME})
+ tracers.append({"from":Vector2(146,263),"to":impact,"life":0.12 if effect!="laser" else 0.2,"color":SpecialAmmo.color(round_kind) if round_kind!="normal" else (CYAN if effect in ["laser","plasma"] else LIME)})
  var count=1
  var splash_hits=0
  for e in enemies:
@@ -1205,6 +1261,9 @@ func _process(delta: float) -> void:
   drop_button.disabled=attempts<=0 or in_flight or ammo>=int(stats["capacity"])
   if ammo>=int(stats["capacity"]) and not in_flight:drop_button.text="MUNITIONSLAGER VOLL"
   elif attempts<=0 and not in_flight:drop_button.text="NÄCHSTE WELLE: +1 ABWURF" if wave<wave_count else "ABWÜRFE AUFGEBRAUCHT"
+ if is_instance_valid(switch_button):
+  switch_button.text=reactor_switch.caption()
+  switch_button.disabled=not reactor_switch.can_toggle()
  if is_instance_valid(special_button):
   special_button.text="IMPULS BEREIT" if energy>=50 else "IMPULS %d / 50"%int(energy)
   special_button.disabled=energy<50
@@ -1369,7 +1428,7 @@ func _draw() -> void:
  if mode=="menu":
   future.menu()
   return
- if mode in ["map","armory","settings","character","licenses"]:
+ if mode in ["map","armory","workshop","settings","character","licenses"]:
   future.page_background()
   future.plate(Rect2(16,15,508,138),CYAN,Color(0.035,0.075,0.08,0.94),10)
   if mode=="armory":future.plate(Rect2(22,670,496,204),CYAN,Color("0b1b1e"),10)

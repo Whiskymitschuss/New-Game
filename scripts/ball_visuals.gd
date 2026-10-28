@@ -18,6 +18,9 @@ func _draw() -> void:
    continue
   var at=ball.position
   var tint=Color("d5fc84") if ball.weight>1 else Color("f3fcff")
+  var cargo=ball.get("ammo_kind")
+  var typed=cargo is String and cargo in ["fire","frost","emp"]
+  if typed:tint=SpecialAmmo.color(String(cargo))
   var trail=ball.linear_velocity.limit_length(420)*0.035
   draw_line(at-trail*1.9,at,Color(tint,0.09),9,true)
   draw_line(at-trail,at,Color(tint,0.32),5,true)
@@ -26,6 +29,8 @@ func _draw() -> void:
   draw_circle(at+Vector2(1,2),8,Color(0.01,0.03,0.05,0.7))
   draw_circle(at,7.5,tint)
   draw_arc(at,7.5,0,TAU,20,Color("5a8692"),1,true)
+  # A luminous core keeps refined cargo readable above a busy physical board.
+  if typed:draw_circle(at,4.4,Color("f7fdff"))
   draw_circle(at-Vector2(2,2.5),2.4,Color.WHITE)
   if ball.glow>0:
    draw_arc(at,10+ball.glow*9,0,TAU,20,Color(tint,ball.glow*1.6),1,true)

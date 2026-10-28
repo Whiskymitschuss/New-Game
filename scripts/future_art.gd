@@ -193,7 +193,8 @@ func enemy(e: Dictionary) -> bool:
  g.draw_ellipse_shadow(base,24 if not boss else 47,5 if not boss else 8)
  var source=frame_region("enemies",atlas,enemies,3,2)
  var reduced=bool(g.profile.data["settings"].get("reduced_motion",false))
- ActorRig.draw_enemy(g,enemies,source,base+Vector2(motion["offset"].x,0)+g.combat_motion.camera_offset(),height,tint,kind,boss,float(e["age"]),float(e.get("speed",17)),reduced,g.quality,float(motion["angle"])*0.4,motion["scale"])
+ ActorRig.draw_enemy(g,enemies,source,base+Vector2(motion["offset"].x,0)+g.combat_motion.camera_offset(),height,tint,kind,boss,float(e["age"]),float(e.get("speed",17))*SpecialAmmo.speed_factor(e),reduced,g.quality,float(motion["angle"])*0.4,motion["scale"])
+ SpecialAmmo.paint(g,e,float(g.clock),reduced,int(g.quality))
  if kind in [5,6,10,11,14] or boss:
   var accent=VIOLET if kind==14 else (AMBER if kind in [6,11] else MINT)
   if kind==10:accent=BLUE
@@ -231,10 +232,21 @@ func hud() -> void:
  var ammo_tint=AMBER if g.ammo<=30 else BLUE
  text(g.compact(g.ammo),Vector2(29,396),27,ammo_tint,true)
  g.bar(Rect2(30,402,122,2),float(g.ammo)/maxf(1,float(g.stats["capacity"])),ammo_tint)
- text(g.weapon()[0].to_upper(),Vector2(183,375),12,PAPER)
+ text(g.weapon()[0].to_upper(),Vector2(183,371),11,PAPER)
+ var cargo=g.get("ammo_cargo")
+ var next_kind=String(cargo.peek()) if cargo!=null else "normal"
+ for i in range(3):
+  var ammo_kind=["fire","frost","emp"][i]
+  var count=int(cargo.count(ammo_kind)) if cargo!=null else 0
+  var color=SpecialAmmo.color(ammo_kind)
+  var x=184+i*59
+  g.draw_circle(Vector2(x+2,382),1.7,Color(color,0.9 if count>0 else 0.24))
+  text(["BR","KR","EMP"][i]+" %02d"%count,Vector2(x+7,385),8,Color(color,1.0 if count>0 else 0.43),true)
+  if next_kind==ammo_kind and count>0:
+   g.draw_line(Vector2(x+7,389),Vector2(x+47,389),Color(color,0.65),1,true)
  var magazine_state="NACHLADEN" if g.reload_timer>0 else "%02d IM MAGAZIN"%g.magazine
  if g.overdrive_left>0:magazine_state+=" · BOOST %ds"%ceili(g.overdrive_left)
- text(magazine_state,Vector2(184,397),9,AMBER if g.overdrive_left>0 else QUIET,true)
+ text(magazine_state,Vector2(184,402),8,AMBER if g.overdrive_left>0 else QUIET,true)
  text("KINETIK",Vector2(385,370),9,QUIET,true)
  text("BEREIT" if g.energy>=50 else "%02d / 50"%int(g.energy),Vector2(385,391),15,BLUE,true)
  g.bar(Rect2(385,398,121,3),g.energy/100.0,BLUE)
@@ -260,11 +272,12 @@ func circuit_disc(at: Vector2,radii: Vector2,color: Color) -> void:
   points.append(at+Vector2(cos(angle)*radii.x,sin(angle)*radii.y))
  g.draw_colored_polygon(points,color)
 
-func circuit_gate(x: float,y: float,width: float,factor: int,power: float,side: int,spin: float) -> void:
+func circuit_gate(x: float,y: float,width: float,factor: int,power: float,side: int,spin: float,imprint: String="normal") -> void:
  # The whole powered aperture is the true crossing span; open lanes have no gate.
  if factor<2:return
  var color=MINT if factor>=3 else BLUE
  if factor>=10:color=AMBER
+ if imprint!="normal":color=SpecialAmmo.color(imprint)
  var at=Vector2(x+width*0.5,y)
  var radii=Vector2(maxf(12,width*0.5),17)
  circuit_disc(at+Vector2(0,3),radii+Vector2(3,3),Color(0,0,0,0.4))
@@ -282,6 +295,16 @@ func circuit_gate(x: float,y: float,width: float,factor: int,power: float,side: 
  # An engraved readout on the outer rim leaves the ball channel completely open.
  text(caption,Vector2(caption_x,y-22),25,color)
  g.draw_line(Vector2(caption_x,y-16),Vector2(caption_x+caption_width,y-16),Color(color,0.2+power*0.5),1,true)
+ if imprint!="normal":
+  # The imprint is part of this real aperture; no extra invisible pickup field.
+  var badge_x=caption_x
+  if imprint=="fire":
+   g.draw_polyline(PackedVector2Array([Vector2(badge_x+1,y-3),Vector2(badge_x+1,y-8),Vector2(badge_x+4,y-11),Vector2(badge_x+6,y-7),Vector2(badge_x+8,y-9),Vector2(badge_x+9,y-3)]),color,1.2,true)
+  else:
+   for arm in range(3):
+    var ray=Vector2.from_angle(arm*PI/3)*4
+    g.draw_line(Vector2(badge_x+5,y-6)-ray,Vector2(badge_x+5,y-6)+ray,color,1.1,true)
+  text("BRAND" if imprint=="fire" else "KRYO",Vector2(badge_x+14,y-3),8,color,true)
  for i in range(2 if g.quality==0 else 3):
   var phase=fposmod(spin*0.35+i*0.32,1.0)
   var px=x+12+(width-24)*phase
@@ -312,6 +335,8 @@ func circuit_portal(at: Vector2,exit: bool,spin: float) -> void:
  g.draw_polyline(points,Color(MINT if exit else color,0.8),1.7,true)
  # A tiny inner highlight gives the outgoing hole its unambiguous exit cue.
  if exit:g.draw_line(at+Vector2(-4,7),at+Vector2(4,7),Color(MINT,0.55),1.2,true)
+ else:
+  text("EMP",at+Vector2(-9,39),8,SpecialAmmo.color("emp"),true)
 
 func circuit_obstacle(ob: Dictionary,spin: float) -> void:
  var p: Vector2=ob["pos"]
@@ -337,10 +362,23 @@ func circuit_obstacle(ob: Dictionary,spin: float) -> void:
    g.draw_line(Vector2(-width/2.0+3,-3),Vector2(width/2.0-3,-3),Color("b4c4bb"),1.2,true)
    g.draw_line(Vector2(-width/2.0+3,3),Vector2(width/2.0-3,3),Color("16292b"),1.6,true)
    for end_x in [-width/2.0+5,width/2.0-5]:g.draw_circle(Vector2(end_x,0),1.2,Color("d5d7c6"))
-   for n in range(3):
-    var x=-12+n*10
-    g.draw_line(Vector2(x,-2),Vector2(x-4,2),Color(AMBER,0.65),1.8,true)
-   if kind in ["rotor","trapdoor"]:
+   if kind!="switch":
+    for n in range(3):
+     var x=-12+n*10
+     g.draw_line(Vector2(x,-2),Vector2(x-4,2),Color(AMBER,0.65),1.8,true)
+   if kind=="switch":
+    var routing=g.get("reactor_switch")
+    var ready=routing!=null and routing.can_toggle()
+    var moving=routing!=null and bool(routing.turning)
+    var lamp=AMBER if moving else (BLUE if ready else Color("647d7d"))
+    var direction=1 if body.rotation>=0 else -1
+    g.draw_line(Vector2(-19,0),Vector2(19,0),Color(lamp,0.85),1.6,true)
+    g.draw_polyline(PackedVector2Array([Vector2(direction*10,-2.5),Vector2(direction*17,0),Vector2(direction*10,2.5)]),PAPER if ready else lamp,1.4,true)
+    g.draw_circle(Vector2.ZERO,3.8,Color("10282c"))
+    g.draw_circle(Vector2.ZERO,1.8,lamp)
+    for end_x in [-width/2.0+2,width/2.0-2]:
+     g.draw_line(Vector2(end_x,-2.5),Vector2(end_x,2.5),Color(lamp,0.9 if ready else 0.35),2,true)
+   elif kind in ["rotor","trapdoor"]:
     g.draw_circle(Vector2.ZERO,4,Color("142528"))
     g.draw_circle(Vector2.ZERO,2,AMBER)
     g.draw_arc(Vector2.ZERO,10,0.4,2.6,12,Color(AMBER,0.25),1,true)
@@ -350,6 +388,10 @@ func circuit_obstacle(ob: Dictionary,spin: float) -> void:
     var sign_value=1 if variant%2==0 else -1
     g.draw_polyline(PackedVector2Array([Vector2(-7*sign_value,-2),Vector2(0,0),Vector2(-7*sign_value,2)]),BLUE,1.1,true)
    g.draw_set_transform(Vector2.ZERO)
+   if kind=="switch":
+    var routing=g.get("reactor_switch")
+    var ready=routing!=null and routing.can_toggle()
+    text("WEICHE",p+Vector2(-18,-15),8,BLUE if ready else QUIET,true)
  elif kind=="portal":
   var destination=Vector2(540-p.x,p.y+35)
   for i in range(1,9):
@@ -411,7 +453,8 @@ func factory() -> void:
    var x=35.0 if side==0 else split+7
    var width=split-42 if side==0 else 505-split-7
    var factor=int(gate["left"] if side==0 else gate["right"])
-   circuit_gate(x,y,width,factor,float(g.reactor_fx.gate_charge[row*2+side]),side,spin)
+   var imprint=("fire" if side==0 else "frost") if row==1 else "normal"
+   circuit_gate(x,y,width,factor,float(g.reactor_fx.gate_charge[row*2+side]),side,spin,imprint)
  for ob in g.obstacles:
   if not ob["broken"]:circuit_obstacle(ob,spin)
  var booster=g.get("wave_booster")

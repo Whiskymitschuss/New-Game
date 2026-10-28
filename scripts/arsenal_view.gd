@@ -92,7 +92,7 @@ func build(id: int) -> void:
  note("RANG %d / %d"%[rank,Progression.MAX_RANK] if available else "GESPERRT",Vector2(378,684),10,g.CYAN if available else WARNING,130)
  note(ROLES[selected],Vector2(43,709),11,g.MUTED,458)
  if available:
-  var damage=float(w[1])*float(Content.CLASSES[int(g.profile.data["class"])]["damage"])*(1+rank*.1)
+  var damage=float(w[1])*float(Content.CLASSES[int(g.profile.data["class"])]["damage"])*(1+rank*.1)*(1+0.05*Workshop.rank(g.profile.data,"weapon"))
   note("%.1f SCHADEN  ·  %.1f SCHUSS/S  ·  %.1fs LADEN"%[damage,1.0/float(w[2]),w[3]],Vector2(43,735),11,g.CYAN,458)
   note("%d IM MAGAZIN  ·  1 MUNITION PRO SCHUSS"%int(w[4]),Vector2(43,758),10,g.MUTED,458)
  else:

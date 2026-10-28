@@ -71,3 +71,14 @@ Alle neuen Circuit-Flächen und Gear-Anbauteile sind eigener prozeduraler Godot-
 Geplante Medienpfade sind `docs/screenshots/circuit-live-v0.2.7.png`, `circuit-power-v0.2.7.png`, `circuit-gear-v0.2.7.png` und `docs/previews/DeadwaveHeroes-v0.2.7-motion.mp4`. Die Bedingungen der tatsächlichen Aufnahmen, insbesondere normal bedienter Lauf gegenüber gezielt hergestellter Ausrüstungs-Testansicht, werden im Buildbericht festgehalten. Erst dort dokumentierte erzeugte Dateien, Testläufe und öffentliche Download-/Signaturprüfungen gelten als Nachweis; ein Film mit festem Zeitschritt ist keine Smartphone-FPS-Messung.
 
 Die drei neuen Gameplay-Bilder sind tatsächliche Godot-Ausgaben in 2160 × 3840 aus einem normalen nativen Eingabelauf. Die MP4 zeigt denselben Ablauf vollständig in 540 × 960 bei fest aufgezeichneten 30 Bildern/s, Dauer 55,366667 Sekunden. Gürtel und Panzer wurden über die echten Tutorial-Karten gewählt; die Powerzelle wurde von einer normalen Kugel erreicht. Der separate Drei-Klassen-Vergleich ist als isolierter Ausrüstungstest gekennzeichnet.
+
+
+## Forge 0.2.8
+
+Die offene Reaktorkammer bleibt erhalten. Ihr erster Metallkörper wird zur animierten physischen Weiche: Pfeil, LED und Beschriftung zeigen Richtung und verfügbare Umschaltung. Die neue Taste steht zwischen Abwurf und Impuls und behält eine feste native Touchfläche. Die mittleren aktiven Aperturen tragen Brand-/Kryo-Kennzeichnung, der Portaleingang ein EMP-Signal. Freie Wege erhalten keine Veredelungskennzeichnung. Farbige Kugelränder und kurze Spuren folgen der tatsächlichen Prägung; ein heller Kern bewahrt den Kontrast im dunklen Feld.
+
+Drei kleine Statuszähler im Waffenstreifen zeigen die vorhandenen Spezialladungen; die Markierung nennt den nächsten verwendeten Typ. Der Kampf visualisiert Brand, Frost und EMP mit begrenzten örtlichen Zeichen. Die Darstellung liest echte Statuswerte und erzeugt keine zusätzliche Munition oder unabhängigen Spielzufall. Qualitäts- und Bewegungseinstellungen bleiben wirksam.
+
+Die Werkbank ergänzt eine ruhige Ausrüstungsansicht mit animiertem Helden, drei Rangreihen, konkreten Werten, Kosten und Abschlussvoraussetzungen. Permanente Ränge erweitern sichtbar Gürtel, Panzerplatten und Waffenspule. Die Vorschau verwendet dieselben eigenen Atlasgrafiken, `ActorRig` und `HeroGear` wie der Einsatz; sie liest nur eine Profilkopie. Karten und Kaufknöpfe bleiben an festen Positionen, Rückmeldung erklärt Freischaltung, fehlendes Guthaben oder gespeicherten Ausbau. Es werden keine neuen externen Grafiken, Schriften oder Audiodateien benötigt; neue Elemente sind prozeduraler Godot-Zeichencode.
+
+Die aktuellen Aufnahme- und Prüfbedingungen stehen in `BUILD_REPORT.md`. Die vorgesehenen Forge-Dateien sind echte Spielausgaben, sobald dort ihre tatsächliche Erzeugung dokumentiert ist; vorbereitete technische Vergleichsansichten sind getrennt zu kennzeichnen. Filmaufzeichnung mit festem Zeitschritt ist keine Smartphone-Leistungsmessung.

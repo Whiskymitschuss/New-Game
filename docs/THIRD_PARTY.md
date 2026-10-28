@@ -21,3 +21,6 @@
 
 - Circuit & Gear 0.2.7 benötigt kein neues externes Artwork. Multiplikatoraperturen, Metallhindernisse, Portalöffnungen, Powerzellen und die sichtbaren `HeroGear`-Anbauteile sind eigener prozeduraler Godot-Zeichencode. Die vorhandenen eigenen Helden-/Reaktorillustrationen und SVG-Symbole werden weiterverwendet; es wurden keine fremden Ausrüstungs-, Portal- oder Multiplikatorgrafiken übernommen.
 - Die geplante Circuit-Vorschau nutzt die bestehende Spielausgabe und eingebundene Musik. Aufnahmebedingungen sowie gegebenenfalls gezielt vorbereitete Gear-Testzustände werden im Buildbericht offengelegt; eine Vorschau behauptet weder einen ungeprüften öffentlichen Build noch Smartphone-Messwerte.
+
+
+- Forge 0.2.8 verwendet keine neuen externen Assets. Weichenanzeige, Spezialmunitionsmarkierungen, Statusdarstellung und Werkbankoberfläche sind eigener prozeduraler Godot-Zeichencode. Werkbankheld und permanente Ausrüstungsanbauten verwenden die bereits dokumentierten eigenen Atlanten und Systeme. Bestehende Schriften und die vom Nutzer bereitgestellte Hintergrundmusik bleiben unverändert eingebunden.

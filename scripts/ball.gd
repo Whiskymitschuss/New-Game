@@ -1,6 +1,7 @@
 class_name AmmoBall
 extends RigidBody2D
 var weight: int = 1
+var ammo_kind := "normal"
 var gates: int = 0
 var age: float = 0.0
 var previous := Vector2.ZERO
@@ -57,6 +58,7 @@ func _ready() -> void:
 func activate(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> void:
  previous=at
  weight=amount
+ ammo_kind="normal"
  gates=mask
  age=0
  glow=0.0

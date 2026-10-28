@@ -20,21 +20,21 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SOURCE_RUN_ID: ${{ inputs.source_run_id || github.event.workflow_run.id }}
-      RELEASE_TAG: v0.2.7-debug
+      RELEASE_TAG: v0.2.8-debug
       SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Download the already tested APK
-        run: gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name DeadwaveHeroes-v0.2.7-debug --dir release-assets
+        run: gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name DeadwaveHeroes-v0.2.8-debug --dir release-assets
       - name: Verify APK matches the successful build manifest
         run: |
           python3 - <<'PY'
           import hashlib,json
           from pathlib import Path
           root=Path('release-assets')
-          name='DeadwaveHeroes-v0.2.7-debug.apk'
+          name='DeadwaveHeroes-v0.2.8-debug.apk'
           info=json.loads((root/'manifest.json').read_text())[name]
           apk=root/name
           assert apk.stat().st_size==info['bytes'], 'APK size mismatch'
@@ -45,9 +45,11 @@ jobs:
       - name: Publish direct download as an explicitly marked debug prerelease
         run: |
           cat > /tmp/deadwave-release-notes.md <<'NOTES'
-          Spielbarer Prototyp v0.2.7 von RF Worlds. Die APK unten direkt herunterladen und auf Android installieren. Android 7 oder neuer, ARMv7/ARM64. Die Datei stammt unverändert aus dem zugehörigen erfolgreich geprüften GitHub-Build.
+          Spielbarer Prototyp v0.2.8 von RF Worlds. Die APK unten direkt herunterladen und auf Android installieren. Android 7 oder neuer, ARMv7/ARM64. Die Datei stammt unverändert aus dem zugehörigen erfolgreich geprüften GitHub-Build.
 
-          Circuit & Gear: neue Energieaperturen mit echten Multiplikatoren ab ×2; freie Strecken ohne ×1-Hardware. Drei bis vier physische Hindernisse und ein funktionierendes Portalpaar pro Einsatz. Seltene Powerzellen für Spezialenergie, fünf Sekunden Overdrive oder Schild. Gürtel, Patronentaschen, Panzerplatten und Waffenanbauten folgen den tatsächlichen Upgrades; die ersten Tutorial-Auswahlen machen Gürtel und Panzer direkt zugänglich. Spielstand, Waffenfreischaltungen und Hintergrundmusik bleiben integriert. Frühere Reaktorgeometrie wird einmalig aktualisiert, gespeicherte Seeds und Fortschritt bleiben erhalten. Die Vorschau zeigt einen normalen Lauf mit tatsächlich gewählten Upgrade-Karten und eingesammelter Powerzelle.
+          Forge: eine echte physische Weiche lässt sich einmal pro laufendem Abwurf umstellen. Portalwege veredeln EMP; aktive mittlere Multiplikatoren veredeln links Brand und rechts Kryo. Höchstens zwölf Spezialladungen pro Abwurf und 36 im Vorrat; diese Ladungen sind Teil der regulären Munition. Keine Zusatzmunition durch Veredeln oder Überlauf. Brand, Verlangsamung und kurze EMP-Unterbrechung haben echte begrenzte Kampfwirkungen.
+
+          Die neue Werkbank speichert Munitionsgürtel, Schutzpanzer und Waffenmodul dauerhaft. Je drei Ränge für 180 / 540 / 1.080 Credits, freigeschaltet durch tatsächliche Abschlüsse von Einsatz 1, Einsatz 5 und Boss 10. Ausrüstung ist im Vorschaubild und beim nächsten Einsatz am Helden sichtbar. Bestehende Waffenfreischaltungen, Spielstände und die Hintergrundmusik bleiben integriert. Die beigefügten Aufnahmen stammen aus dem Godot-Spiel; genaue Aufnahmebedingungen und Testnachweise stehen im Buildbericht des Repositories.
 
           Das Savegame-Format bleibt kompatibel. Der Debug-Schlüssel wird aus dem Buildcache wiederverwendet.
 
@@ -57,4 +59,4 @@ jobs:
             echo "This version already has a direct download; keeping its existing APK."
             exit 0
           fi
-          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --prerelease --title 'DEADWAVE HEROES v0.2.7 · Android Debug' --notes-file /tmp/deadwave-release-notes.md release-assets/DeadwaveHeroes-v0.2.7-debug.apk release-assets/SHA256SUMS.txt docs/screenshots/circuit-live-v0.2.7.png docs/screenshots/circuit-power-v0.2.7.png docs/screenshots/circuit-gear-v0.2.7.png docs/screenshots/circuit-gear-comparison-v0.2.7.png docs/previews/DeadwaveHeroes-v0.2.7-motion.mp4
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --prerelease --title 'DEADWAVE HEROES v0.2.8 · Android Debug' --notes-file /tmp/deadwave-release-notes.md release-assets/DeadwaveHeroes-v0.2.8-debug.apk release-assets/SHA256SUMS.txt docs/screenshots/forge-gameplay-v0.2.8.png docs/screenshots/forge-workshop-v0.2.8.png docs/previews/DeadwaveHeroes-v0.2.8-motion.mp4
