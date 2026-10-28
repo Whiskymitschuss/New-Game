@@ -14,7 +14,7 @@ Beim ersten tatsächlichen Bosskontakt gibt es einmal pro Begegnung **einen zus�
 
 [Spielansicht](docs/screenshots/forge-gameplay-v0.2.8.png) · [Werkbank](docs/screenshots/forge-workshop-v0.2.8.png) · [Bewegte Vorschau (MP4)](docs/previews/DeadwaveHeroes-v0.2.8-motion.mp4)
 
-Den tatsächlichen Test-, Aufnahme- und Veröffentlichungsstand dokumentiert [BUILD_REPORT.md](docs/BUILD_REPORT.md). Ein vorhandener Downloadlink oder Workflow ist allein kein Nachweis eines erfolgreichen öffentlichen Builds.
+Die öffentliche APK, das Spielvideo und beide 4K-Ansichten wurden vollständig heruntergeladen und geprüft. Tests, Prüfsummen und Update-Signatur stehen in [BUILD_REPORT.md](docs/BUILD_REPORT.md).
 
 ## Circuit & Gear 0.2.7
 
@@ -94,15 +94,15 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.8-debug/DeadwaveHeroes-v0.2.8-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.8-debug). Nach erfolgreicher Veröffentlichung benötigt der öffentliche Download keinen GitHub-Login und kein Entpacken eines Actions-Archivs. Den tatsächlich geprüften Veröffentlichungsstand dokumentiert `docs/BUILD_REPORT.md`.
+**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.8-debug/DeadwaveHeroes-v0.2.8-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.8-debug). Der geprüfte öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs. Details stehen im [Buildbericht](docs/BUILD_REPORT.md).
 
-Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.8-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut. Geht dieser Cache verloren, kann ein späterer Testbuild eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
+Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.8-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Die öffentliche v0.2.8 besitzt dasselbe Signierzertifikat wie v0.2.7 und einen höheren Versionscode. CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut.
 
 **Neon Update 0.2.0:** Der wiederholte Abwurf wird im Physikserver korrekt zurückgesetzt; 24 Abwürfe mit denselben Poolkörpern werden in beiden Qualitätsstufen geprüft. Neue detaillierte Helden-/Gegnergrafiken, eigene Sci-Fi-Stadt, futuristisches HUD, Reaktor-Labyrinth, Klassenporträts und dreispaltige Upgrade-Karten sind integriert. Die Oberfläche skaliert als Vektor-/Canvas-UI; echte Vorschauen mit 2160 × 3840 Pixeln stehen unter `docs/screenshots/neon-*-4k.png`. Das ist ein Nachweis der hochauflösenden Darstellung, keine Zusage von 4K/60 FPS auf einem Smartphone.
 
-Das Savegame-Format bleibt unverändert. Debug-Schlüssel werden seit v0.1.1 im Buildcache wiederverwendet. Ob eine konkrete neue APK dieselbe Signieridentität wie die vorherige öffentliche Version besitzt, wird am heruntergeladenen Artefakt geprüft und im Buildbericht dokumentiert. Ein erfolgreicher Export allein ist kein Nachweis eines auf einem Gerät installierten Updates.
+Das Savegame-Format bleibt kompatibel. Paket, Versionscode und Signierzertifikat der heruntergeladenen v0.2.8 erfüllen die Update-Bedingungen gegenüber v0.2.7. Ein Test auf einem physischen Android-Gerät steht noch aus.
 
-Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.8-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
+APK, Windows-ZIP und Prüfprotokolle stehen außerdem im erfolgreichen [GitHub-Actions-Lauf 40774732831](https://github.com/Whiskymitschuss/New-Game/actions/runs/40774732831) unter **Artifacts**.
 
 ## Entwicklung und Builds (Linux)
 
