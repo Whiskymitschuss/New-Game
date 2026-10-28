@@ -157,6 +157,7 @@ func hero(at: Vector2,scale_value: float,pose: String) -> void:
  var source=frame_region("heroes",int(g.profile.data["class"]),heroes,3,1)
  var reduced=bool(g.profile.data["settings"].get("reduced_motion",false))
  ActorRig.draw_hero(g,heroes,source,at+Vector2(offset.x,0)*scale_value+g.combat_motion.camera_offset(),112*scale_value,tint,g.combat_motion.clock,g.deployment_age if g.mode in ["play","pause","upgrade"] else -1.0,reduced,g.quality,tilt+float(motion["angle"]),motion["scale"])
+ HeroGear.draw(g,g,at,scale_value,motion,tilt)
  if not g.stats.is_empty():
   var integrity=clampf(g.hp/maxf(1,float(g.stats["max_hp"])),0,1)
   for i in range(5):
@@ -231,7 +232,9 @@ func hud() -> void:
  text(g.compact(g.ammo),Vector2(29,396),27,ammo_tint,true)
  g.bar(Rect2(30,402,122,2),float(g.ammo)/maxf(1,float(g.stats["capacity"])),ammo_tint)
  text(g.weapon()[0].to_upper(),Vector2(183,375),12,PAPER)
- text("NACHLADEN" if g.reload_timer>0 else "%02d IM MAGAZIN"%g.magazine,Vector2(184,397),9,QUIET,true)
+ var magazine_state="NACHLADEN" if g.reload_timer>0 else "%02d IM MAGAZIN"%g.magazine
+ if g.overdrive_left>0:magazine_state+=" · BOOST %ds"%ceili(g.overdrive_left)
+ text(magazine_state,Vector2(184,397),9,AMBER if g.overdrive_left>0 else QUIET,true)
  text("KINETIK",Vector2(385,370),9,QUIET,true)
  text("BEREIT" if g.energy>=50 else "%02d / 50"%int(g.energy),Vector2(385,391),15,BLUE,true)
  g.bar(Rect2(385,398,121,3),g.energy/100.0,BLUE)
@@ -242,134 +245,200 @@ func wave_cue() -> void:
  plate(Rect2(173,132,226,36),MINT,Color(0.04,0.1,0.16,alpha*0.94),7)
  text("WELLE %02d  /  %d FEINDE"%[g.wave,Content.wave_enemy_count(g.level,g.wave)],Vector2(186,155),12,Color(MINT,alpha),true)
 
+func circuit_orbit(at: Vector2,radii: Vector2,color: Color,width: float=1.0,from: float=0.0,to: float=TAU) -> void:
+ var points=PackedVector2Array()
+ var steps=32 if g.quality==1 else 20
+ for i in range(steps+1):
+  var angle=lerpf(from,to,float(i)/steps)
+  points.append(at+Vector2(cos(angle)*radii.x,sin(angle)*radii.y))
+ g.draw_polyline(points,color,width,true)
+
+func circuit_disc(at: Vector2,radii: Vector2,color: Color) -> void:
+ var points=PackedVector2Array()
+ for i in range(32 if g.quality==1 else 20):
+  var angle=TAU*i/(32.0 if g.quality==1 else 20.0)
+  points.append(at+Vector2(cos(angle)*radii.x,sin(angle)*radii.y))
+ g.draw_colored_polygon(points,color)
+
+func circuit_gate(x: float,y: float,width: float,factor: int,power: float,side: int,spin: float) -> void:
+ # The whole powered aperture is the true crossing span; open lanes have no gate.
+ if factor<2:return
+ var color=MINT if factor>=3 else BLUE
+ if factor>=10:color=AMBER
+ var at=Vector2(x+width*0.5,y)
+ var radii=Vector2(maxf(12,width*0.5),17)
+ circuit_disc(at+Vector2(0,3),radii+Vector2(3,3),Color(0,0,0,0.4))
+ circuit_disc(at,radii,Color(0.035,0.11,0.12,0.23+power*0.17))
+ circuit_orbit(at,radii,Color("35494a"),4)
+ circuit_orbit(at,radii-Vector2(1,2),Color(color,0.4+power*0.5),1.6)
+ circuit_orbit(at+Vector2(0,2),radii-Vector2(4,4),Color(color,0.7+power*0.3),2,0,PI)
+ circuit_orbit(at,radii-Vector2(6,5),Color(color,0.18+power*0.28),1,PI,TAU)
+ for end_x in [x,x+width]:
+  g.draw_line(Vector2(end_x,y-5),Vector2(end_x,y+6),Color("687b79"),4,true)
+  g.draw_circle(Vector2(end_x,y),1.4,Color(color,0.8))
+ var caption="×%d"%factor
+ var caption_width=display_font.get_string_size(caption,HORIZONTAL_ALIGNMENT_LEFT,-1,25).x
+ var caption_x=x+11 if side==0 else x+width-caption_width-11
+ # An engraved readout on the outer rim leaves the ball channel completely open.
+ text(caption,Vector2(caption_x,y-22),25,color)
+ g.draw_line(Vector2(caption_x,y-16),Vector2(caption_x+caption_width,y-16),Color(color,0.2+power*0.5),1,true)
+ for i in range(2 if g.quality==0 else 3):
+  var phase=fposmod(spin*0.35+i*0.32,1.0)
+  var px=x+12+(width-24)*phase
+  var drop=sin(phase*PI)*7
+  g.draw_line(Vector2(px,y-7-drop),Vector2(px,y-3-drop),Color(color,0.16+power*0.42),1,true)
+
+func circuit_portal(at: Vector2,exit: bool,spin: float) -> void:
+ var color=Color("9baef5")
+ var halo=Color(color,0.06)
+ var direction=-1.0 if exit else 1.0
+ # Dark throat and concentric depth are readable as a hole, not a flat ring icon.
+ g.draw_circle(at+Vector2(0,3),26,Color(0,0,0,0.34))
+ g.draw_circle(at,23,Color("263743"))
+ g.draw_circle(at,19.5,Color("020609"))
+ circuit_orbit(at,Vector2(23,21),Color("5a7184"),2.2)
+ circuit_orbit(at,Vector2(20,18),Color(color,0.82),1.6)
+ circuit_orbit(at,Vector2(16,14),Color(color,0.18),1.0)
+ for ring in range(3):
+  var angle=spin*direction*(1.2+ring*0.12)+ring*TAU/3
+  circuit_orbit(at,Vector2(17-ring*3,15-ring*2),Color(color,0.25+ring*0.08),1.2,angle,angle+2.0)
+ for i in range(4 if g.quality==1 else 2):
+  var angle=spin*direction*1.1+i*TAU/4
+  var p=at+Vector2(cos(angle)*24,sin(angle)*22)
+  var tangent=Vector2(-sin(angle),cos(angle))*direction
+  g.draw_line(p-tangent*3,p+tangent,Color(color,0.52),1.1,true)
+ var marker=at+Vector2(0,27 if exit else -27)
+ var points=PackedVector2Array([marker+Vector2(-4,-2),marker+Vector2(0,2),marker+Vector2(4,-2)])
+ g.draw_polyline(points,Color(MINT if exit else color,0.8),1.7,true)
+ # A tiny inner highlight gives the outgoing hole its unambiguous exit cue.
+ if exit:g.draw_line(at+Vector2(-4,7),at+Vector2(4,7),Color(MINT,0.55),1.2,true)
+
+func circuit_obstacle(ob: Dictionary,spin: float) -> void:
+ var p: Vector2=ob["pos"]
+ var kind=String(ob["kind"])
+ var variant=int(ob["variant"])
+ if ob["body"]!=null:
+  var body=ob["body"]
+  if kind=="peg":
+   var radius=10+variant*3
+   g.draw_circle(p+Vector2(1,3),radius+2,Color(0,0,0,0.38))
+   g.draw_circle(p,radius,Color("394b50"))
+   g.draw_arc(p,radius-1.0,0,TAU,24,Color("8eaaa8"),1.4,true)
+   g.draw_circle(p,radius-4,Color("16282c"))
+   for i in range(3):
+    var bolt=p+Vector2.from_angle(i*TAU/3-PI/2)*(radius-3)
+    g.draw_circle(bolt,1,Color("c0cac0"))
+   g.draw_circle(p,2.4,Color(AMBER,0.8))
+  else:
+   g.draw_set_transform(p,body.rotation)
+   var width=65+variant*12
+   g.panel(Rect2(-width/2.0-1,0,width+2,7),Color(0,0,0,0.4),2)
+   g.panel(Rect2(-width/2.0,-4.5,width,9),Color("425557") if kind!="breakable" else Color("69504a"),2)
+   g.draw_line(Vector2(-width/2.0+3,-3),Vector2(width/2.0-3,-3),Color("b4c4bb"),1.2,true)
+   g.draw_line(Vector2(-width/2.0+3,3),Vector2(width/2.0-3,3),Color("16292b"),1.6,true)
+   for end_x in [-width/2.0+5,width/2.0-5]:g.draw_circle(Vector2(end_x,0),1.2,Color("d5d7c6"))
+   for n in range(3):
+    var x=-12+n*10
+    g.draw_line(Vector2(x,-2),Vector2(x-4,2),Color(AMBER,0.65),1.8,true)
+   if kind in ["rotor","trapdoor"]:
+    g.draw_circle(Vector2.ZERO,4,Color("142528"))
+    g.draw_circle(Vector2.ZERO,2,AMBER)
+    g.draw_arc(Vector2.ZERO,10,0.4,2.6,12,Color(AMBER,0.25),1,true)
+   elif kind=="breakable":
+    g.draw_polyline(PackedVector2Array([Vector2(-7,-4),Vector2(-2,0),Vector2(-5,3),Vector2(4,1),Vector2(8,4)]),Color("192327"),1.2,true)
+   elif kind=="reverse":
+    var sign_value=1 if variant%2==0 else -1
+    g.draw_polyline(PackedVector2Array([Vector2(-7*sign_value,-2),Vector2(0,0),Vector2(-7*sign_value,2)]),BLUE,1.1,true)
+   g.draw_set_transform(Vector2.ZERO)
+ elif kind=="portal":
+  var destination=Vector2(540-p.x,p.y+35)
+  for i in range(1,9):
+   var t=float(i)/9
+   var point=p.lerp(destination,t)+Vector2(0,-sin(t*PI)*14)
+   g.draw_circle(point,0.7,Color("9baef5",0.13))
+  circuit_portal(p,false,spin)
+  circuit_portal(destination,true,spin)
+ elif kind=="boost":
+  for n in range(3):
+   g.draw_polyline(PackedVector2Array([p+Vector2(-10,-9+n*8),p+Vector2(0,-2+n*8),p+Vector2(10,-9+n*8)]),BLUE,2,true)
+ elif kind=="bonus":
+  g.draw_circle(p,18,Color("1b2d2b"))
+  circuit_orbit(p,Vector2(18,18),Color(AMBER,0.65),1.4)
+  text("+%d"%(5*(variant+1)),p+Vector2(-12,5),13,AMBER)
+
+func circuit_power(booster: Dictionary,spin: float) -> void:
+ if booster.is_empty() or bool(booster.get("consumed",false)):return
+ var kind=String(booster.get("kind","energy"))
+ var p=Vector2(float(booster.get("x",270)),float(booster.get("y",620)))
+ var color=AMBER if kind=="overdrive" else (MINT if kind=="shield" else BLUE)
+ var pulse=0.5+0.5*sin(spin*2.0)
+ g.draw_circle(p,30,Color(color,0.025+pulse*0.025))
+ circuit_orbit(p,Vector2(30,30),Color(color,0.12),1)
+ var shell=PackedVector2Array()
+ for i in range(6):shell.append(p+Vector2.from_angle(i*TAU/6+PI/6)*19)
+ g.draw_colored_polygon(shell,Color("13262a"))
+ var outline=shell.duplicate();outline.append(shell[0])
+ g.draw_polyline(outline,Color(color,0.75),1.6,true)
+ var icon=icons["speed" if kind=="overdrive" else ("shield" if kind=="shield" else "energy")]
+ g.draw_texture_rect(icon,Rect2(p-Vector2(12,12),Vector2(24,24)),false,Color(color,0.9))
+ for side in [-1,1]:
+  g.draw_line(p+Vector2(side*22,-6),p+Vector2(side*22,6),Color(color,0.4+pulse*0.3),2,true)
+ var caption="OVERDRIVE" if kind=="overdrive" else ("SCHILD" if kind=="shield" else "ENERGIE")
+ var caption_width=mono_font.get_string_size(caption,HORIZONTAL_ALIGNMENT_LEFT,-1,8).x
+ text(caption,p+Vector2(-caption_width*0.5,-35),8,color,true)
+
 func factory() -> void:
- # Active reactor forge: recessed circular engine, powered rails and three gates.
- plate(Rect2(16,473,508,401),BLUE,Color("080f1d"),12)
- rounded_texture(forge,Rect2(28,486,484,379),8,Color(0.63,0.78,0.75,1))
- var center=Vector2(270,668)
- # Slow induction arcs belong to the back plate; impacts supply the bright action.
- for radius in [116,159]:
-  g.draw_arc(center,radius,g.clock*0.12+radius,g.clock*0.12+radius+0.8,28,Color(BLUE,0.07),1,true)
+ # A pinball-like physical circuit, with open lanes between powered apertures.
+ plate(Rect2(16,473,508,401),BLUE,Color("080f16"),12)
+ rounded_texture(forge,Rect2(28,486,484,379),8,Color(0.49,0.63,0.61,1))
  var busy=g.active_balls()>0 or not g.pending_balls.is_empty()
+ var reduced=bool(g.profile.data["settings"].get("reduced_motion",false))
+ var spin=0.0 if reduced else float(g.clock)
+ # Quiet wall guides leave the obstacles and falling balls as the main action.
  for x in [22,518]:
-  g.draw_line(Vector2(x,490),Vector2(x,857),Color("192b43"),8,true)
-  g.draw_line(Vector2(x,490),Vector2(x,857),Color(BLUE,0.18),1,true)
-  for i in range(10):
-   var y=503+i*34
-   var alpha=0.22+(0.55*maxf(0,sin(g.clock*5-i*0.7)) if busy else 0.0)
-   g.draw_line(Vector2(x,y),Vector2(x,y+16),Color(MINT,alpha),3,true)
- # Subtle aim guide is honest about the first gate, never a promised trajectory.
- if not busy:
-  var first_y=float(g.layout["gates"][0]["y"])-23
+  g.draw_line(Vector2(x,490),Vector2(x,857),Color("253b41"),7,true)
+  g.draw_line(Vector2(x,490),Vector2(x,857),Color(BLUE,0.15),1,true)
   for i in range(5):
-   var y=510+i*7
-   if y<first_y:g.draw_circle(Vector2(g.aim,y),1.1,Color(BLUE,0.25+i*0.08))
+   var y=507+i*70
+   g.draw_line(Vector2(x,y),Vector2(x,y+12),Color(MINT,0.32),2.5,true)
+ if not busy:
+  for i in range(5):g.draw_circle(Vector2(g.aim,510+i*7),1.0,Color(BLUE,0.18+i*0.05))
  for row in range(3):
-  var gate=g.layout["gates"][row];var y=float(gate["y"]);var split=g.gate_split(row)
+  var gate=g.layout["gates"][row]
+  var y=float(gate["y"])
+  var split=g.gate_split(row)
   for side in range(2):
    var x=35.0 if side==0 else split+7
    var width=split-42 if side==0 else 505-split-7
    var factor=int(gate["left"] if side==0 else gate["right"])
-   var tint=MINT if factor>=3 else BLUE
-   if factor==1:tint=QUIET
-   var power=g.reactor_fx.gate_charge[row*2+side]
-   g.draw_rect(Rect2(x,y-16,width,32),Color(tint,0.025+power*0.09))
-   # Segmented laser field, glass badge and illuminated electrode endcaps.
-   for offset in [-8,8]:
-    g.draw_line(Vector2(x,y+offset),Vector2(x+width,y+offset),Color(tint,0.12+power*0.3),1,true)
-   g.draw_line(Vector2(x,y),Vector2(x+width,y),Color(tint,0.3+power*0.5),1.3,true)
-   for electrode_x in [x,x+width]:
-    plate(Rect2(electrode_x-3,y-20,6,40),tint,Color("304343"),2)
-    g.draw_line(Vector2(electrode_x,y-13),Vector2(electrode_x,y+13),Color(tint,0.8),2,true)
-   var badge_x=x+width*0.5
-   plate(Rect2(badge_x-36,y-23,72,46),tint,Color("0c1c20"),9)
-   g.draw_line(Vector2(badge_x-25,y+19),Vector2(badge_x+25,y+19),Color(tint,0.12+power*0.7),2,true)
-   text("×%d"%factor,Vector2(badge_x-25 if factor<10 else badge_x-30,y+10),28,tint)
-   # Bright traveling energy flecks, accelerated only while balls are in flight.
-   if factor>1:
-    var travel=fmod(g.clock*(65 if busy else 17)+row*43+side*20,maxf(1,width))
-    g.draw_line(Vector2(x+travel,y),Vector2(x+minf(width,travel+9),y),Color(tint,0.5),2,true)
-  g.draw_circle(Vector2(split,y),4,Color("24364e"))
-  g.draw_arc(Vector2(split,y),7,g.clock*2,g.clock*2+4.8,16,Color(BLUE,0.6),1,true)
+   circuit_gate(x,y,width,factor,float(g.reactor_fx.gate_charge[row*2+side]),side,spin)
  for ob in g.obstacles:
-  if ob["broken"]:continue
-  var p: Vector2=ob["pos"];var kind=String(ob["kind"]);var variant=int(ob["variant"])
-  if ob["body"]!=null:
-   var body=ob["body"]
-   if kind=="peg":
-    g.draw_circle(p,13+variant*3,Color("234157"))
-    g.draw_arc(p,10+variant*3,0,TAU,24,BLUE,2,true)
-    g.draw_circle(p,4,PAPER)
-   else:
-    g.draw_set_transform(p,body.rotation)
-    var width=66+variant*12
-    g.panel(Rect2(-width/2,-6,width,12),Color("1b2b42") if kind!="breakable" else Color("553b39"),3)
-    g.draw_line(Vector2(-width/2+3,-4),Vector2(width/2-3,-4),Color("a4becb"),2,true)
-    g.draw_line(Vector2(-width/2+3,4),Vector2(width/2-3,4),Color(BLUE,0.45),1.2,true)
-    for n in range(3):g.draw_line(Vector2(-14+n*12,-3),Vector2(-18+n*12,3),Color(AMBER,0.55),2,true)
-    if kind in ["rotor","trapdoor"]:
-     g.draw_circle(Vector2.ZERO,9,Color("1d293b"))
-     g.draw_arc(Vector2.ZERO,6,0,TAU,20,g.CORAL,2,true)
-     g.draw_circle(Vector2.ZERO,2,PAPER)
-    g.draw_set_transform(Vector2.ZERO)
-  elif kind=="portal":
-   for pos in [p,Vector2(540-p.x,p.y+35)]:
-    g.draw_arc(pos,19,g.clock*2,g.clock*2+5.4,28,VIOLET,3,true)
-    g.draw_arc(pos,24,-g.clock,-g.clock+3.8,24,Color(BLUE,0.4),1,true)
-  elif kind=="boost":
-   for n in range(3):g.draw_polyline(PackedVector2Array([p+Vector2(-10,-10+n*9),p+Vector2(0,-3+n*9),p+Vector2(10,-10+n*9)]),BLUE,2.5,true)
-  elif kind=="bonus":
-   g.draw_circle(p,23,Color(AMBER,0.07))
-   g.draw_arc(p,18,0,TAU,24,Color(AMBER,0.7),1.5,true)
-   text("+%d"%(5*(variant+1)),p+Vector2(-12,5),14,AMBER)
- # Twin-clamp magnetic injector. Its light follows each real emitted ball.
+  if not ob["broken"]:circuit_obstacle(ob,spin)
+ var booster=g.get("wave_booster")
+ if booster is Dictionary:circuit_power(booster,spin)
+ # Articulated magnetic injector: the actual emission point remains y498.
  var at=Vector2(g.aim,480)
  var recoil=g.reactor_fx.nozzle_charge
- g.draw_line(at-Vector2(0,19),at+Vector2(0,7),Color("3b536c"),10,true)
- plate(Rect2(at-Vector2(31,12),Vector2(62,29)),BLUE,Color("24364d"),7)
+ g.draw_line(at-Vector2(0,19),at+Vector2(0,7),Color("3b5358"),9,true)
+ g.panel(Rect2(at-Vector2(27,8),Vector2(54,24)),Color("293e43"),5)
  for offset in [-21,21]:
-  g.draw_line(at+Vector2(offset,4),at+Vector2(offset*0.7,18+recoil*3),Color("547087"),5,true)
- g.draw_line(at+Vector2(-15,-6),at+Vector2(15,-6),MINT,2.5,true)
- g.draw_line(at+Vector2(-10,14),at+Vector2(10,14),Color(BLUE,0.65+recoil*0.35),3,true)
- # Real virtual mass, rather than the capped number of representative bodies.
+  g.draw_line(at+Vector2(offset,2),at+Vector2(offset*0.65,18+recoil*3),Color("8ca6a4"),4,true)
+ g.draw_line(at+Vector2(-14,-3),at+Vector2(14,-3),MINT,2,true)
+ g.draw_line(at+Vector2(-9,14),at+Vector2(9,14),Color(BLUE,0.65+recoil*0.35),2.5,true)
+ # Slim collection rail: the old status cards obscured the lowest physical obstacle.
  var units=0
  for ball in g.pool:
   if ball.live:units+=ball.weight
- if busy:
-  plate(Rect2(35,786,116,41),BLUE,Color(0.035,0.07,0.12,0.92),5)
-  plate(Rect2(339,786,164,41),MINT,Color(0.035,0.07,0.12,0.92),5)
-  text("IM FLUSS",Vector2(40,801),9,QUIET,true)
-  text(g.compact(units),Vector2(40,821),18,MINT,true)
-  text("GUTGESCHRIEBEN",Vector2(346,801),9,QUIET,true)
-  text("+"+g.compact(g.drop_credited),Vector2(415,821),18,MINT,true)
- else:
-  plate(Rect2(35,786,256,41),BLUE,Color(0.035,0.07,0.12,0.92),5)
-  plate(Rect2(339,786,164,41),MINT,Color(0.035,0.07,0.12,0.92),5)
-  text("%d KUGELN · GERADE ROUTE ×%d"%[int(g.stats["drop"]),g.route_factor()],Vector2(42,801),10,BLUE)
-  text("ABPRALLER ÄNDERN DEN WEG",Vector2(42,818),9,QUIET,true)
-  text("LAGER FREI",Vector2(347,801),9,QUIET,true)
-  text(g.compact(maxi(0,int(g.stats["capacity"])-g.ammo)),Vector2(430,820),18,MINT,true)
- # Magnetic collection mouth. Rotor light responds to actual incoming units.
  var charge=minf(1,g.reactor_fx.collector_charge)
- g.draw_colored_polygon(PackedVector2Array([Vector2(34,831),Vector2(506,831),Vector2(477,869),Vector2(63,869)]),Color(0.045,0.09,0.16,0.6))
- g.draw_polyline(PackedVector2Array([Vector2(34,831),Vector2(63,869),Vector2(477,869),Vector2(506,831)]),Color(BLUE,0.3),1,true)
- g.draw_line(Vector2(47,836),Vector2(493,836),Color(MINT,0.1+charge*0.22),9,true)
- g.draw_line(Vector2(47,836),Vector2(493,836),Color(MINT,0.5+charge*0.5),2,true)
- for x in [85,455]:
-  var p=Vector2(x,852)
-  g.draw_circle(p,13,Color("091421"))
-  g.draw_arc(p,12,0,TAU,28,Color(BLUE,0.3),1,true)
-  for blade in range(3):
-   var angle=g.clock*(5 if busy else 1.5)+blade*TAU/3
-   g.draw_arc(p,8,angle,angle+1.1,8,Color(MINT,0.4+charge*0.6),2,true)
-  g.draw_circle(p,2,PAPER)
- for n in range(5):
-  var x=133+n*66
-  var offset=fmod(g.clock*(25 if busy else 10)+n*5,17)
-  var alpha=0.15+charge*0.5
-  g.draw_polyline(PackedVector2Array([Vector2(x-6,838+offset),Vector2(x,843+offset),Vector2(x+6,838+offset)]),Color(MINT,alpha),1.5,true)
- plate(Rect2(185,845,170,21),MINT,Color("0d2021"),4)
- text("MUNITIONSSCHMIEDE",Vector2(202,860),10,MINT,true)
+ var mouth=PackedVector2Array([Vector2(34,838),Vector2(506,838),Vector2(487,868),Vector2(53,868)])
+ g.draw_colored_polygon(mouth,Color("0d2228"))
+ var edge=mouth.duplicate();edge.append(mouth[0])
+ g.draw_polyline(edge,Color(BLUE,0.3),1,true)
+ g.draw_line(Vector2(42,840),Vector2(498,840),Color(MINT,0.16+charge*0.24),5,true)
+ g.draw_line(Vector2(42,840),Vector2(498,840),Color(MINT,0.48+charge*0.52),1.5,true)
+ text("IM FLUSS %s"%g.compact(units) if busy else "%d STARTKUGELN"%int(g.stats["drop"]),Vector2(42,861),9,QUIET,true)
+ text("SAMMLER +%s"%g.compact(g.drop_credited),Vector2(213,861),10,MINT,true)
+ text("FREI %s"%g.compact(maxi(0,int(g.stats["capacity"])-g.ammo)),Vector2(415,861),9,QUIET,true)
 
 func icon_key(id: int) -> String:
  var stat=String(Content.UPGRADES[id][2])

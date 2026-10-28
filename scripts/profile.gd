@@ -57,7 +57,14 @@ func get_level(number: int) -> Dictionary:
   var layout := Content.level_data(number)
   data["layouts"][key]=layout
   data["seeds"][key]=layout["seed"]
- return data["layouts"][key].duplicate(true)
+ var stored: Dictionary=data["layouts"][key]
+ if int(stored.get("circuit_version",0))<Content.CIRCUIT_VERSION:
+  # Only the physical circuit is revised once. The player's seed, original
+  # gates, progression, custom metadata and every other saved value survive.
+  var stored_seed=int(stored.get("seed",data["seeds"].get(key,734219+number*104729)))
+  stored["pieces"]=Content.circuit_pieces(number,stored_seed)
+  stored["circuit_version"]=Content.CIRCUIT_VERSION
+ return stored.duplicate(true)
 
 func add_xp(amount: int) -> void:
  data["xp"]+=amount

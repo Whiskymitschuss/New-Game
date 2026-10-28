@@ -17,7 +17,7 @@ func run() -> void:
    check(gates!=previous,"multipliers change every wave")
    previous=gates
    for gate in gates:
-    check(int(gate["left"]) in [1]+Content.MULTIPLIERS and int(gate["right"]) in [1]+Content.MULTIPLIERS,"valid exact multiplier")
+    check(int(gate["left"]) in [0]+Content.MULTIPLIERS and int(gate["right"]) in [0]+Content.MULTIPLIERS,"only real multipliers or an open lane are generated")
    check(Content.wave_enemy_count(number,wave)>=15 and Content.wave_enemy_count(number,wave)<=90,"bounded increased horde quota")
  game.start_level(3);game.set_physics_process(false)
  check(game.remaining==15,"sector 3 starts with 15 instead of 4 zombies")

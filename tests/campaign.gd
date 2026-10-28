@@ -29,8 +29,10 @@ func run() -> void:
     if game.ammo<45 and game.active_balls()==0 and game.attempts>0:
      var left=1;var right=1
      for gate in game.layout["gates"]:
-      left*=int(gate["left"]);right*=int(gate["right"])
-     game.set_aim(125 if left>right else 415)
+      left*=maxi(1,int(gate["left"]));right*=maxi(1,int(gate["right"]))
+     # Use the visible outer corridors. Aiming through the intake near 140/400
+     # would change downstream lanes, so a straight-lane estimate is not honest there.
+     game.set_aim(85 if left>right else 455)
      game.drop_ammo()
     if game.energy>=70 and game.enemies.size()>2:
      game.special_attack()

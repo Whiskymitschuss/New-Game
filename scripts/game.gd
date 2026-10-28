@@ -12,6 +12,11 @@ var font = preload("res://assets/fonts/SpaceGrotesk.ttf")
 var future: FutureArt
 var screen_age := 0.0
 var deployment_age := 0.0
+var wave_booster: Dictionary = {}
+var overdrive_left := 0.0
+var gear_flash := 0.0
+var power_message := ""
+var power_message_left := 0.0
 var blood_fx: BloodFX
 var combat_motion: CombatMotion
 var profile = Profile.new()
@@ -216,7 +221,7 @@ func show_menu() -> void:
  button("WELTKARTE",Rect2(194,783,151,63),show_map)
  var settings=button("OPTIONEN",Rect2(358,783,152,63),show_settings)
  label("HELD LV %d   ·   %s CR"%[profile.data["level"],compact(profile.data["coins"])],Vector2(32,873),12,MUTED,470)
- label("OFFLINE BEREIT                                 v0.2.6",Vector2(32,920),10,MUTED)
+ label("OFFLINE BEREIT                                 v0.2.7",Vector2(32,920),10,MUTED)
  reveal_ui(0)
 
 func page_header(title: String,subtitle: String) -> void:
@@ -311,6 +316,11 @@ func show_licenses() -> void:
 
 func start_level(number: int) -> void:
  deployment_age=0
+ wave_booster.clear()
+ overdrive_left=0
+ gear_flash=0
+ power_message=""
+ power_message_left=0
  Progression.sanitize_loadout(profile.data)
  hero_pose="idle"
  shoot_flash=0
@@ -337,6 +347,8 @@ func start_level(number: int) -> void:
  run_kills=0
  collected=0
  collection_remainder=0
+ drop_credited=0
+ drop_overflow=0
  drop_running=false
  last_drop_message=""
  reactor_fx.reset()
@@ -401,16 +413,18 @@ func set_aim(value: float) -> void:
 func route_factor() -> int:
  var factor=1
  for row in range(3):
-  factor*=int(layout["gates"][row]["left"] if aim<gate_split(row) else layout["gates"][row]["right"])
+  factor*=maxi(1,int(layout["gates"][row]["left"] if aim<gate_split(row) else layout["gates"][row]["right"]))
  return factor
 
 func reactor_hint() -> String:
+ if power_message_left>0:return power_message
  if not pending_balls.is_empty():return "INJEKTION LÄUFT · KUGELN SIND UNTERWEGS"
  if active_balls()>0:return "REAKTOR AKTIV · SAMMLER FÜLLT DEIN LAGER"
  if clock-last_drop_time<3 and not last_drop_message.is_empty():return last_drop_message
  if ammo>=int(stats["capacity"]):return "LAGER VOLL · ABWURF WIEDER NACH VERBRAUCH"
  if attempts<=0:return "KEIN ABWURF · NÄCHSTE WELLE GIBT +1" if wave<wave_count else "LETZTE HORDE · IMPULS ZUR UNTERSTÜTZUNG"
  if ammo<=30:return "MUNITION KNAPP · JETZT KUGELN ABWERFEN"
+ if not wave_booster.is_empty() and not bool(wave_booster.get("consumed",false)):return "POWERZELLE SICHTBAR · MIT EINER KUGEL AKTIVIEREN"
  return "IM REAKTOR ZIEHEN · WEG WÄHLEN · ABWERFEN"
 
 func clear_geometry() -> void:
@@ -475,11 +489,12 @@ func active_balls() -> int:
    count+=1
  return count
 
-func emit_ball(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> bool:
+func emit_ball(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0,used_portal: bool=false) -> bool:
  var limit=MAX_BALLS if quality==1 else 64
  for i in range(limit):
   if not pool[i].live:
    pool[i].activate(at,velocity,amount,mask)
+   pool[i].portal_used=used_portal
    return true
  return false
 
@@ -524,6 +539,7 @@ func multiply_ball(ball: AmmoBall,row: int) -> void:
  ball.gates |= bit
  var gate=layout["gates"][row]
  var factor=int(gate["left"] if ball.position.x<gate_split(row) else gate["right"])
+ if factor<2:return # Open bypass has no multiplier, light flash or multiplication sound.
  reactor_fx.gate_hit(ball.position,row,0 if ball.position.x<gate_split(row) else 1,factor)
  ball.glow=0.35
  ball.weight*=factor
@@ -531,7 +547,7 @@ func multiply_ball(ball: AmmoBall,row: int) -> void:
  # Split representative weights exactly, never instantiate factor-many bodies.
  if ball.weight>=4 and active_balls()<48 and quality==1:
   var portion=int(ball.weight/2)
-  if emit_ball(ball.position+Vector2(8,8),ball.linear_velocity+Vector2(45,0),portion,ball.gates):
+  if emit_ball(ball.position+Vector2(8,8),ball.linear_velocity+Vector2(45,0),portion,ball.gates,ball.portal_used):
    ball.weight-=portion
  audio.play_effect("multiply",0.9+row*0.15)
 
@@ -583,6 +599,8 @@ func physics_balls(delta: float) -> void:
      if distance<20 and not ball.portal_used:
       ball.teleport_to(Vector2(540-ob["pos"].x,ob["pos"].y+35),Vector2(30*(variant-1),180))
       ball.portal_used=true
+      reactor_fx.pulse(ob["pos"],FutureArt.VIOLET,"portal",1.2)
+      reactor_fx.pulse(Vector2(540-ob["pos"].x,ob["pos"].y+35),CYAN,"portal",1.2)
     "boost":
      if distance<32:
       ball.apply_central_force(Vector2((variant-1)*400,1100))
@@ -598,6 +616,7 @@ func physics_balls(delta: float) -> void:
       ob["broken"]=true
       ob["body"].collision_layer=0
       burst(ob["pos"],CORAL,5)
+  activate_booster(ball)
   # Every represented unit eventually reaches collection, even if it rests on a peg.
   if ball.age>7:
    ball.collision_mask=0
@@ -613,7 +632,33 @@ func physics_balls(delta: float) -> void:
   if drop_overflow>0:last_drop_message+=" · %s ÜBERLAUF"%compact(drop_overflow)
   last_drop_time=clock
 
+func activate_booster(ball: AmmoBall) -> void:
+ if mode!="play" or not ball.live or ball.reset_pending or wave_booster.is_empty() or bool(wave_booster.get("consumed",false)):return
+ var at=Vector2(float(wave_booster["x"]),float(wave_booster["y"]))
+ if ball.position.distance_to(at)>30:return
+ wave_booster["consumed"]=true
+ match String(wave_booster["kind"]):
+  "energy":
+   var before=energy
+   energy=minf(100,energy+12)
+   power_message="POWERZELLE · +%d SPEZIALENERGIE"%roundi(energy-before)
+  "overdrive":
+   overdrive_left=maxf(overdrive_left,5)
+   power_message="OVERDRIVE · +25% FEUERRATE FÜR 5 SEKUNDEN"
+  "shield":
+   var before=shield
+   shield=maxf(shield,minf(float(stats["max_hp"])*0.75,shield+12))
+   power_message="POWERZELLE · +%d SCHILDPUNKTE"%roundi(shield-before)
+ power_message_left=3
+ reactor_fx.pulse(at,FutureArt.AMBER,"power",1.5)
+ audio.play_effect("upgrade")
+
+func shot_interval() -> float:
+ var boost=1.25 if overdrive_left>0 else 1.0
+ return float(weapon()[2])/(maxf(0.2,float(stats["speed"]))*boost)*(1.7 if boss_slow>0 else 1.0)
+
 func begin_wave() -> void:
+ wave_booster=Content.power_plan(level,wave).duplicate(true)
  remaining=Content.wave_enemy_count(level,wave)
  layout["gates"]=Content.wave_gates(level,wave,profile.get_level(level)["gates"])
  spawn_timer=0.35 if wave==1 and level<=3 else 0.8
@@ -799,7 +844,7 @@ func shoot() -> void:
  if rng.randf()>=minf(0.8,float(stats["recycle"])):
   ammo-=1
  magazine-=1
- fire_timer=float(w[2])/maxf(0.2,float(stats["speed"]))* (1.7 if boss_slow>0 else 1.0)
+ fire_timer=shot_interval()
  shoot_flash=0.1
  hero_pose="attack"
  combat_motion.on_shot(Vector2(target["x"],target["y"]-28),int(profile.data["weapon"]),critical)
@@ -909,8 +954,17 @@ func choose_upgrade() -> void:
   if not can_offer_upgrade(id):continue
   pool.append(id)
   if String(Content.UPGRADES[id][2]) in ["ammo","drop","attempt","collection"]:supply.append(id)
+ # The first two tutorial choices teach actual, visible suit improvements.
+ # They remain optional free cards; their real values use the normal upgrade path.
+ if level<=3 and wave<=2:
+  for id in [23,13]:
+   var missing=float(stats["drop"])<=12 if id==23 else float(stats["armor"])<=0
+   if missing and pool.has(id):cards.append(id);pool.erase(id)
  # Offer one useful production route when reserve is low; all cards stay free.
- if ammo<45 and not supply.is_empty():
+ var has_supply=false
+ for id in cards:
+  if String(Content.UPGRADES[id][2]) in ["ammo","drop","attempt","collection"]:has_supply=true
+ if ammo<45 and not has_supply and not supply.is_empty() and cards.size()<3:
   var id=supply[rng.randi_range(0,supply.size()-1)]
   cards.append(id);pool.erase(id)
  while cards.size()<3 and not pool.is_empty():
@@ -988,6 +1042,10 @@ func apply_upgrade(id: int) -> void:
   "salvage": ammo=mini(int(stats["capacity"]),ammo+int(value)); profile.data["coins"]+=int(value); run_coins+=int(value)
   "field": shield+=value; stats["regen"]+=0.5
   _: stats[key]+=value
+ if key in ["capacity","magazine","drop","armor","thorns","damage","regen","crit","crit_damage","range","reload","speed"]:
+  gear_flash=1.2
+  if key in ["capacity","magazine","drop"]:floating("MUNITIONSGÜRTEL",Vector2(39,232),CYAN)
+  elif key in ["armor","thorns"]:floating("PANZER AUFGERÜSTET",Vector2(39,232),CYAN)
  if not id in profile.data["abilities"]:
   profile.data["abilities"].append(id)
 
@@ -1005,7 +1063,11 @@ func upgrade_preview(id: int) -> String:
   "max_hp":return "LEBEN  %d → %d"%[int(stats["max_hp"]),int(float(stats["max_hp"])*(1+value))]
   "heal":return "LEBEN  %d → %d"%[int(hp),mini(int(stats["max_hp"]),int(hp+value))]
   "ammo":return "MUNITION  %d → %d"%[ammo,mini(int(stats["capacity"]),ammo+int(value))]
-  "drop":return "KUGELN  %d → %d"%[int(stats["drop"]),int(stats["drop"]+value)]
+  "armor":return "PANZER  %d → %d"%[int(stats["armor"]),int(stats["armor"]+value)]
+  "thorns":return "DORNENPANZER  +%d"%int(value)
+  "capacity":return "GÜRTEL  %d → %d"%[int(stats["capacity"]),int(stats["capacity"]+value)]
+  "magazine":return "MAGAZIN  +%d → +%d"%[int(stats["magazine"]),int(stats["magazine"]+value)]
+  "drop":return "GÜRTEL  %d → %d"%[int(stats["drop"]),int(stats["drop"]+value)]
   "collection":return "SAMMLUNG  %.0f → %.0f%%"%[float(stats["collection"])*100,(float(stats["collection"])+value)*100]
   "energy":return "ENERGIE  %d → %d"%[int(energy),mini(100,int(energy+value))]
   "shield":return "SCHILD  %d → %d"%[int(shield),int(shield+value)]
@@ -1096,6 +1158,9 @@ func _physics_process(delta: float) -> void:
   if ball.live:
    ball.freeze=not running
  if running:
+  overdrive_left=maxf(0,overdrive_left-delta)
+  gear_flash=maxf(0,gear_flash-delta)
+  power_message_left=maxf(0,power_message_left-delta)
   physics_balls(delta)
   update_combat(delta)
  if auto_test and clock>1.0 and attempts>0 and active_balls()==0 and mode=="play":

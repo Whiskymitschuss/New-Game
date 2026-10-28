@@ -21,8 +21,10 @@ func select_card() -> void:
 func supply() -> void:
  var left=1;var right=1
  for gate in game.layout["gates"]:
-  left*=int(gate["left"]);right*=int(gate["right"])
- game.set_aim(125 if left>right else 415)
+  left*=maxi(1,int(gate["left"]));right*=maxi(1,int(gate["right"]))
+ # The portal near 140/400 can divert a nominal high-value lane into a
+ # weaker downstream path. The open outer corridors preserve this estimate.
+ game.set_aim(85 if left>right else 455)
  game.drop_ammo()
 func run() -> void:
  game=load("res://main.tscn").instantiate();root.add_child(game);await process_frame

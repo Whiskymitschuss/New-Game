@@ -6,6 +6,7 @@ const COLORS = ["273c51", "254739", "394b42", "244448", "344362", "70503a", "3d6
 const BOSSES = ["Der Schrotthüter", "Dornenmutter", "General Rost", "Der Schlund", "Projekt NULL", "Sandbrecher", "Frostkönigin", "Aschekoloss", "Die Vielstimmige", "DEADWAVE PRIME"]
 const BOSS_ATTACKS = ["SCHROTTSCHLAG", "DORNENBRUT", "SALVENFEUER", "MUNITIONSRAUB", "REKONSTRUKTION", "SANDSTURM", "KRYOWELLE", "ASCHEBRAND", "MUTANTENKLON", "EMP-KASKADE"]
 const MULTIPLIERS = [2,3,4,5,10,15,20,25,35,50,100]
+const CIRCUIT_VERSION = 2
 const CLASSES = [
  {"name":"Soldat", "desc":"Präzision · +25% Schaden", "hp":120.0, "damage":1.25, "regen":0.3, "ammo":45},
  {"name":"Techniker", "desc":"Drohne · Energie regeneriert schneller", "hp":105.0, "damage":1.0, "regen":0.5, "ammo":35},
@@ -84,15 +85,44 @@ static func level_data(number: int) -> Dictionary:
   gates.append({"y":560+row*105,"left":MULTIPLIERS[mini(left-2,10)],"right":MULTIPLIERS[mini(right-2,10)],"moving":number>=12 and row==1})
  if number<=3:
   gates = [{"y":560,"left":2,"right":3,"moving":false},{"y":665,"left":2,"right":2,"moving":false},{"y":770,"left":2,"right":3,"moving":false}]
- var pieces: Array = []
- var catalog := modules()
- for i in range(3 if number<50 else 5):
-  var pick := rng.randi_range(0,mini(29,5+number))
-  var item: Dictionary = catalog[pick].duplicate()
-  item["x"] = rng.randf_range(100,440)
-  item["y"] = 605 + (i%3)*98 + rng.randf_range(-12,12)
-  pieces.append(item)
- return {"number":number,"seed":seed_value,"world":world,"waves":clampi(5+(number-1)/10,5,15),"gates":gates,"pieces":pieces,"boss":number%10==0}
+ var pieces=circuit_pieces(number,seed_value)
+ return {"number":number,"seed":seed_value,"world":world,"waves":clampi(5+(number-1)/10,5,15),"gates":gates,"pieces":pieces,"boss":number%10==0,"circuit_version":CIRCUIT_VERSION}
+
+static func circuit_pieces(number: int,stored_seed: int) -> Array:
+ # Three separated physical encounters, plus one directional portal pair. The
+ # fourth late-game wall is short and leaves both side routes navigable.
+ var rng=RandomNumberGenerator.new()
+ rng.seed=stored_seed+39019
+ var result: Array=[]
+ var kinds=["ramp","peg","rotor"]
+ if number>=7:
+  kinds[0]=["ramp","ramp","breakable","reverse"][rng.randi_range(0,3)]
+  kinds[1]=["peg","peg","wall"][rng.randi_range(0,2)]
+  kinds[2]=["rotor","rotor","trapdoor"][rng.randi_range(0,2)]
+ var positions=[Vector2(294+rng.randf_range(-20,20),603+rng.randf_range(-5,5)),Vector2(195+rng.randf_range(-12,12),703+rng.randf_range(-5,5)),Vector2(405+rng.randf_range(-20,20),802+rng.randf_range(-4,4))]
+ for i in range(3):
+  var variant=rng.randi_range(0,1 if number<=3 else 2)
+  var kind=String(kinds[i])
+  var catalog_index=["ramp","peg","rotor","wall","portal","boost","bonus","trapdoor","reverse","breakable"].find(kind)
+  result.append({"kind":kind,"variant":variant,"id":catalog_index*3+variant,"x":positions[i].x,"y":positions[i].y})
+ if number>=50:
+  result.append({"kind":"wall","variant":0,"id":9,"x":100.0,"y":714.0})
+ # First tutorials demonstrate an entry on alternating sides. The exit remains
+ # above the second multiplier row, so crossing the field has an honest purpose.
+ var portal_x=140.0 if posmod(number,2)==1 else 400.0
+ result.append({"kind":"portal","variant":0,"id":12,"x":portal_x,"y":608.0})
+ return result
+
+static func power_plan(number: int,wave: int) -> Dictionary:
+ # At most one optional field in roughly two waves per five-wave early mission.
+ # This separate seeded stream never advances combat or physical emission RNG.
+ if wave<2 or posmod(wave,3)!=2:return {}
+ var rng=RandomNumberGenerator.new()
+ rng.seed=734219+number*104729+wave*8191+541
+ var kind=["energy","overdrive","shield"][posmod(number+wave/3,3)]
+ var x=140.0 if rng.randi_range(0,1)==0 else 400.0
+ # Keep it in the lower open corridor, away from the permanent portal's exit.
+ return {"kind":kind,"x":x,"y":725.0,"radius":30.0}
 
 static func wave_enemy_count(number: int,wave: int) -> int:
  return clampi(12+wave*3+(number-1)/3,15,90)
@@ -102,17 +132,18 @@ static func ammo_capacity(number: int) -> int:
 
 static func wave_gates(number: int,wave: int,original: Array) -> Array:
  var result=original.duplicate(true)
- var plans=[[[2,1],[1,3],[2,2]],[[1,3],[3,1],[2,2]],[[3,1],[2,2],[1,3]],[[2,2],[1,3],[3,1]],[[1,2],[2,1],[3,3]]]
+ var plans=[[[2,0],[0,3],[2,2]],[[0,3],[3,0],[2,2]],[[3,0],[2,2],[0,3]],[[2,2],[0,3],[3,0]],[[0,2],[2,0],[3,3]]]
  var phase=posmod(wave-1+(number-1)%3,plans.size())
  var plan=plans[phase]
  for row in range(result.size()):
   result[row]["left"]=plan[row][0]
   result[row]["right"]=plan[row][1]
- # Later worlds introduce larger single gates, balanced by neutral downstream lanes.
+ # Zero means an open lane with no multiplier hardware or x1 decoration.
+ # Later worlds introduce larger single gates, balanced by open downstream lanes.
  if number>=10:
   var strongest=MULTIPLIERS[mini(10,1+(number-1)/10)]
   var selected=(wave+number)%3
   var side="left" if wave%2==0 else "right"
   for row in range(result.size()):
-   result[row][side]=strongest if row==selected else 1
+   result[row][side]=strongest if row==selected else 0
  return result

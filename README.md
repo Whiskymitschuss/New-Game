@@ -1,6 +1,22 @@
 # DEADWAVE HEROES · RF Worlds
 
-Spielbarer Godot-4.6.3-Prototyp **v0.2.6**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+Spielbarer Godot-4.6.3-Prototyp **v0.2.7**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+
+## Circuit & Gear 0.2.7
+
+Das Kugelfeld ist als offener physischer Circuit überarbeitet: durchlässige, beleuchtete Multiplikatorlinsen statt großer Statuskarten, plastische Prallkörper, rotierende Metallhindernisse und ein sichtbares Portalpaar. Aktive Multiplikatoren beginnen bei **×2**. Neutrale Wege sind echte freie Durchgänge ohne ×1-Beschriftung, Torhardware, Multiplikationslicht oder Multiplikationssound; sie verändern die Kugelmenge nicht. Die Werte wechseln weiterhin reproduzierbar zwischen den Wellen und bleiben während eines Abwurfs fest.
+
+Jedes Layout enthält drei feste/rotierende Hindernisse und einen Portaleingang mit sichtbarem Ausgang; ab Einsatz 50 kommt ein viertes physisches Hindernis dazu. Das Portal versetzt eine berührende Kugel einmal auf die gegenüberliegende Seite oberhalb der zweiten Multiplikatorreihe. Damit ändern sich tatsächliche Wege und mögliche Erträge. Bestehende gespeicherte Layouts erhalten einmalig Circuit-Version 2: Hindernisliste und Circuit-Versionsfeld werden erneuert, Seed, ursprüngliche Gates, Fortschritt und übrige gespeicherte Daten bleiben erhalten. Die neue Wegeführung ist eine begründete Layoutänderung, keine Zusage identischer Erträge oder perfekter Balance aller 100 Einsätze.
+
+In Welle 2, 5, 8 und danach jeder dritten Welle erscheint höchstens eine optionale **Powerzelle**. Eine echte Kugel aktiviert sie einmalig innerhalb ihres Radius von 30 Pixeln. Je nach Zelle gibt es +12 Spezialenergie bis maximal 100, fünf aktive Spielsekunden **Overdrive** mit +25 % Feuerrate oder +12 Schildpunkte bis zu 75 % Maximalleben. Ein bereits stärkerer Schild bleibt erhalten. Repräsentiert eine sichtbare Kugel viele virtuelle Einheiten, gibt die Zelle trotzdem nur eine Belohnung.
+
+Verbesserungen sind am Helden sichtbar: Kapazitäts-, Magazin- und Abwurf-Upgrades ergänzen Munitionsgürtel und Träger; Rüstung setzt zusätzliche Platten an, Dornen erzeugen Spitzen, Regeneration ein medizinisches Modul. Waffenrang und Schadensverbesserungen erweitern die Waffenspule. Schild, zusätzlicher Drohnensupport und aktiver Overdrive erhalten passende Anzeigen am Körper. `HeroGear` leitet alles aus tatsächlichen Werten ab und folgt der animierten Körperhaltung. Run-Ausrüstung beginnt im nächsten Einsatz neu; dauerhaft gekaufte Waffenränge bleiben bestehen. Es gibt dafür keinen zusätzlichen Kosmetikshop.
+
+[Circuit im Spiel](docs/screenshots/circuit-live-v0.2.7.png) · [Powerzelle](docs/screenshots/circuit-power-v0.2.7.png) · [Sichtbare Aufrüstung](docs/screenshots/circuit-gear-v0.2.7.png) · [Bewegte Vorschau (MP4)](docs/previews/DeadwaveHeroes-v0.2.7-motion.mp4)
+
+Aufnahmebedingungen, automatisierte Tests und tatsächlich verifizierte öffentliche Builds stehen in [BUILD_REPORT.md](docs/BUILD_REPORT.md). Insbesondere wird dort zwischen normalen Spieleingaben und einer gegebenenfalls gezielt aufgebauten Gear-Testansicht unterschieden. Ein Aufnahmevideo belegt keine gemessene Smartphone-Leistung.
+
+Die ersten beiden Upgrade-Auswahlen in den Tutorial-Einsätzen 1–3 bieten noch nicht gewählten Gürtel und Panzer gezielt an. Es bleiben freiwillige Karten mit ihrer regulären Wirkung; spätere Angebote bleiben zufällig und berücksichtigen den Ressourcenbedarf.
 
 ## Quarantine 0.2.6
 
@@ -46,7 +62,7 @@ Sammelboni erhalten Bruchteile über alle Repräsentanten: vier einzelne Kugeln 
 
 Die ersten drei Einsätze enthalten 105 Gegner in fünf Wellen (15, 18, 21, 24, 27) statt insgesamt 30. Gegner kommen häufiger und ab Welle 2 in Gruppen; maximal 40 sind gleichzeitig aktiv. Anfangs gibt es drei Abwürfe und danach einen weiteren pro Welle. Das Basis-Munitionslager wächst mit dem Einsatz (Level 1: 248, Level 3: 264), Kapazitäts-Upgrades bleiben wirksam. Bei vollem Lager werden keine Abwurfversuche verschwendet.
 
-Multiplikatoren wechseln reproduzierbar pro Level/Welle. ×1 ist eine neutrale Durchleitung; größere Faktoren werden in späteren Welten eingeführt. Werte bleiben während laufender Kugelabwürfe fest: Eine Welle endet erst nach vollständigem Einsammeln. Gespeicherte Layoutgeometrie und Fortschritt bleiben erhalten.
+Multiplikatoren wechseln reproduzierbar pro Level/Welle. Aktive Gates verwenden ×2 oder mehr; neutrale Wege sind offene Durchgänge ohne ×1-Anzeige und ohne Mengenänderung. Größere Faktoren werden in späteren Welten eingeführt. Werte bleiben während laufender Kugelabwürfe fest: Eine Welle endet erst nach vollständigem Einsammeln. Circuit-Version 2 aktualisiert einmalig die Hindernisgeometrie gespeicherter alter Layouts; der ursprüngliche Seed und der Fortschritt bleiben erhalten.
 
 ## Hintergrundmusik
 
@@ -64,15 +80,15 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.6-debug/DeadwaveHeroes-v0.2.6-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.6-debug). Nach erfolgreicher Veröffentlichung benötigt der öffentliche Download keinen GitHub-Login und kein Entpacken eines Actions-Archivs. Den tatsächlich geprüften Veröffentlichungsstand dokumentiert `docs/BUILD_REPORT.md`.
+**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.7-debug/DeadwaveHeroes-v0.2.7-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.7-debug). Nach erfolgreicher Veröffentlichung benötigt der öffentliche Download keinen GitHub-Login und kein Entpacken eines Actions-Archivs. Den tatsächlich geprüften Veröffentlichungsstand dokumentiert `docs/BUILD_REPORT.md`.
 
-Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.6-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut. Geht dieser Cache verloren, kann ein späterer Testbuild eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
+Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.7-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut. Geht dieser Cache verloren, kann ein späterer Testbuild eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
 
 **Neon Update 0.2.0:** Der wiederholte Abwurf wird im Physikserver korrekt zurückgesetzt; 24 Abwürfe mit denselben Poolkörpern werden in beiden Qualitätsstufen geprüft. Neue detaillierte Helden-/Gegnergrafiken, eigene Sci-Fi-Stadt, futuristisches HUD, Reaktor-Labyrinth, Klassenporträts und dreispaltige Upgrade-Karten sind integriert. Die Oberfläche skaliert als Vektor-/Canvas-UI; echte Vorschauen mit 2160 × 3840 Pixeln stehen unter `docs/screenshots/neon-*-4k.png`. Das ist ein Nachweis der hochauflösenden Darstellung, keine Zusage von 4K/60 FPS auf einem Smartphone.
 
 Das Savegame-Format bleibt unverändert. Debug-Schlüssel werden seit v0.1.1 im Buildcache wiederverwendet. Ob eine konkrete neue APK dieselbe Signieridentität wie die vorherige öffentliche Version besitzt, wird am heruntergeladenen Artefakt geprüft und im Buildbericht dokumentiert. Ein erfolgreicher Export allein ist kein Nachweis eines auf einem Gerät installierten Updates.
 
-Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.6-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
+Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.7-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
 
 ## Entwicklung und Builds (Linux)
 
@@ -98,7 +114,7 @@ source /workspace/tools/env.sh
 ## Implementierte Systeme
 
 - Gleichzeitiger Kampf und Physikproduktion; feste Pools mit höchstens 128 Physikobjekten (64 in Sparqualität), keine Kugel-zu-Kugel-Kollisionen. Exakte ganzzahlige virtuelle Gewichte, Splitting ohne Mengenverlust, bis zu drei Gates pro Layout. Alle geforderten Multiplikatoren vorhanden. Kapazitätsüberschuss wird bewusst nicht als Munition übernommen.
-- Zehn Labyrinthmechaniken mit je drei Konfigurationen: Rampen, Pins, Rotoren, Wände, Portale, Beschleuniger, Bonusfelder, Falltüren, Richtungswechsler und zerstörbare Balken. 30 kombinierbare Konfigurationen, nicht 30 vollständig unterschiedliche Mechaniken. Ab Level 50 fünf statt drei Module.
+- Ein Modulkatalog mit zehn Mechaniken und jeweils drei Konfigurationen: Rampen, Pins, Rotoren, Wände, Portale, Beschleuniger, Bonusfelder, Falltüren, Richtungswechsler und zerstörbare Balken. Das sind 30 Kombinationen, keine 30 völlig unterschiedlichen Mechaniken. Der aktuelle Circuit-Generator setzt drei physische Hindernisse plus ein Portalpaar ein, ab Einsatz 50 vier Hindernisse plus Portalpaar. Seltene Powerzellen ergänzen einzelne Wellen.
 - Drei Klassen, zwölf konfigurierbare Waffen mit unterschiedlichen Schadens-/Reichweiten-/Nachlade-/Effektwerten und Sounds, 48 funktionale Upgrade-Karten einschließlich klassenspezifischer Karten.
 - 15 Gegnertypen; Angriffe, Statusschaden, Panzerung, Fernangriffe ab Level 20. Zehn parametrisierte Bossbegegnungen mit unterschiedlicher Spezialfähigkeit, Warnung und zweiter Phase.
 - 100 reproduzierbare und gespeicherte Level, fünf bis vierzehn Wellen, Progression, Waffenverbesserung, Klassen-/Waffenauswahl, Outfits, Charakterwerte, Pause, Sieg, Niederlage, Musik-/Effektregler.
@@ -106,7 +122,7 @@ source /workspace/tools/env.sh
 
 ## Design und Regressionstests
 
-`tests/reuse.gd` prüft das wiederholte Recycling derselben Physikkörper. `tests/ui_layout.gd` prüft alle 48 Upgrade-Karten, Klassenporträts und Waffennamen. `tests/render_balls.gd` prüft echte sichtbare Bildpunkte und vier aufeinanderfolgende gerenderte Abwürfe; hierfür ist eine grafische Sitzung erforderlich. Hinzu kommen Eingabe-/Shaderprüfungen für `InterfaceMotion`, die Gelenk-/Standphasen von `ActorRig`, die Grenzen und Zustände von `BloodFX` sowie vollständige Kampagnen-/Waffenprobeläufe. Tatsächlich ausgeführte Suiten, Ergebnisse und verbleibende Gerätetestlücken werden pro Version im Buildbericht festgehalten.
+`tests/reuse.gd` prüft das wiederholte Recycling derselben Physikkörper. `tests/ui_layout.gd` prüft alle 48 Upgrade-Karten, Klassenporträts und Waffennamen. `tests/render_balls.gd` prüft echte sichtbare Bildpunkte und vier aufeinanderfolgende gerenderte Abwürfe; hierfür ist eine grafische Sitzung erforderlich. Hinzu kommen Eingabe-/Shaderprüfungen für `InterfaceMotion`, die Gelenk-/Standphasen von `ActorRig`, die Grenzen und Zustände von `BloodFX`, die Circuit-Layout-/Portal-/Powerzellenlogik, die statabhängige Ausrüstung von `HeroGear` sowie vollständige Kampagnen-/Waffenprobeläufe. Tatsächlich ausgeführte Suiten, Ergebnisse und verbleibende Gerätetestlücken werden pro Version im Buildbericht festgehalten.
 
 ```bash
 # In einer vorhandenen grafischen Sitzung, nachdem env.sh geladen wurde:
