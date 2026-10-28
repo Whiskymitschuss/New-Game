@@ -171,7 +171,7 @@ Nicht durchgeführt: Installation, Touch-/Audioprüfung oder FPS-Messung auf ein
 
 ### Veröffentlichung 0.2.5 nach Wiederherstellung verifiziert · 28.10.2026
 
-Der vorherige Cloud-Ausfall wurde durch die wieder verfügbare Arbeitsumgebung überwunden. Quellstand `c3d86b1`; [GitHub-Build40566382217](https://github.com/Whiskymitschuss/New-Game/actions/runs/40566382217) erfolgreich (4 min15s, Job4min10s), [Download-Veröffentlichung40567038314](https://github.com/Whiskymitschuss/New-Game/actions/runs/40567038314) erfolgreich (24s). Die tatsächlich öffentlich heruntergeladene APK ist73.334.177Bytes groß und hat SHA-256 `8fc9e79bb91a199caee40917739e415568c9ad8bb34a9c2f28bad3bf9fb9e767`, identisch zur öffentlichen SHA256SUMS.txt. `apksigner verify --verbose` und16-KiB-zipalign bestanden; das öffentliche Zertifikat stimmt mit der erneut heruntergeladenen v0.2.4 überein. Der Download und die Update-Signatur sind damit nachträglich bestätigt; kein Geräteinstallationstest.
+Der vorherige Cloud-Ausfall wurde durch die wieder verfügbare Arbeitsumgebung überwunden. Quellstand `c3d86b1`; [GitHub-Build 40566382217](https://github.com/Whiskymitschuss/New-Game/actions/runs/40566382217) erfolgreich (4 min 15 s, Job 4 min 10 s), [Download-Veröffentlichung 40567038314](https://github.com/Whiskymitschuss/New-Game/actions/runs/40567038314) erfolgreich (24 s). Die tatsächlich öffentlich heruntergeladene APK ist 73.334.177 Bytes groß und hat SHA-256 `8fc9e79bb91a199caee40917739e415568c9ad8bb34a9c2f28bad3bf9fb9e767`, identisch zur öffentlichen SHA256SUMS.txt. `apksigner verify --verbose` und 16-KiB-zipalign bestanden; das öffentliche Zertifikat stimmt mit der erneut heruntergeladenen v0.2.4 überein. Der Download und die Update-Signatur sind damit nachträglich bestätigt; kein Geräteinstallationstest.
 
 
 ## 0.2.6 / Quarantine · 28.10.2026
@@ -191,3 +191,13 @@ Sechs echte Godot-Ausgaben mit 2160 × 3840 unter `docs/screenshots/quarantine-*
 `tests/film_quarantine.gd` bedient native Mausereignisse für Start, Zielen, zwei Abwürfe, Impuls, Pause, Arsenal, Karte und Optionen. Aufnahme bestätigt sieben Abschüsse, 24 abgeworfene Startkugeln, 31 gespeicherte Blutspuren und Endzustand Optionen. H.264/AAC-MP4: 25,1 Sekunden, 540 × 960, 30 Bilder/s, 3.744.934 Bytes. Aufzeichnung mit festem Zeitschritt ist kein Geräte-FPS-Benchmark.
 
 Nicht durchgeführt: Installation, Touch-/Audioprüfung oder FPS-Messung auf einem physischen Android-Gerät; Windows-Ausführung. Öffentlicher Download, CI-Prüfsumme und Zertifikatsvergleich folgen nach dem Remote-Build.
+
+
+### Veröffentlichung 0.2.6 verifiziert
+
+- Quellstand `83dc27a` auf `main`.
+- [GitHub-Build 40645847350](https://github.com/Whiskymitschuss/New-Game/actions/runs/40645847350) erfolgreich: 3 min 29 s insgesamt, Buildjob 3 min 24 s. Android-/Windows-Export, alle automatisierten Suiten und fünf echte OpenGL-Suiten abgeschlossen.
+- [Download-Veröffentlichung 40646204515](https://github.com/Whiskymitschuss/New-Game/actions/runs/40646204515) erfolgreich in 23 s. APK aus dem geprüften Build übernommen und gegen dessen Manifest geprüft.
+- Öffentlich tatsächlich heruntergeladene [DeadwaveHeroes-v0.2.6-debug.apk](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.6-debug/DeadwaveHeroes-v0.2.6-debug.apk): 74.661.817 Bytes, SHA-256 `1937df1e9cadbc13483a6cc6c5e8d081b9df85d02405b0aaa7edfac08bd6705f`. Prüfsumme stimmt mit der veröffentlichten `SHA256SUMS.txt` überein.
+- `apksigner verify --verbose` und `zipalign -c -P 16 4` für die heruntergeladene Datei bestanden. Paket `com.rfworlds.deadwaveheroes`, Versionsname 0.2.6, Versionscode 9, Mindest-API 24, Ziel-API 36, ARMv7/ARM64. Öffentliches Signierzertifikat stimmt mit der heruntergeladenen v0.2.5 überein: Paket-, Versions- und Signaturbedingungen für ein Update sind erfüllt. Keine vorherige Deinstallation erforderlich; kein tatsächlicher Gerätetest behauptet.
+- Auch die öffentlich heruntergeladene [MP4-Vorschau](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.6-debug/DeadwaveHeroes-v0.2.6-motion.mp4) wurde bytegenau verglichen: 3.744.934 Bytes, SHA-256 `3a625b6abf8238de7888efa92da53988f23c4d5d7e81c451d50d1634a9025da9`, identisch zur im Repository dokumentierten Aufnahme. Die sechs 4K-Ansichten sind ebenfalls Release-Anhänge.
