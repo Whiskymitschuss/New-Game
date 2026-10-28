@@ -44,13 +44,13 @@ func run() -> void:
   var image=root.get_texture().get_image()
   var fill=image.get_pixel(45,60)
   var corner=image.get_pixel(21,31);var outside=image.get_pixel(18,28)
-  check(fill.r>0.7 and fill.r>fill.g+0.1,"real shader produces a warm coral button surface")
+  check(fill.g>0.65 and fill.b>0.6 and fill.g>fill.r+0.07,"real shader produces a readable cool cyan console primary")
   check(absf(corner.r-outside.r)+absf(corner.g-outside.g)+absf(corner.b-outside.b)<0.08,"real rounded corner reveals the background instead of a square")
   var text_pixels=0
   for y in range(47,79):
    for x in range(90,190):
     var pixel=image.get_pixel(x,y)
-    if pixel.r<0.25 and pixel.g<0.2 and pixel.b<0.3:text_pixels+=1
+    if pixel.r<0.18 and pixel.g<0.25 and pixel.b<0.26:text_pixels+=1
   check(text_pixels>50,"native button text remains visibly above the animated shader")
   image.save_png("/tmp/deadwave-interface-motion-proof.png")
   button.modulate.a=0.0
@@ -62,7 +62,7 @@ func run() -> void:
   await process_frame;await RenderingServer.frame_post_draw
   var faded_image=root.get_texture().get_image()
   var faded_fill=faded_image.get_pixel(45,60)
-  check(faded_fill.r>outside.r+0.08 and faded_fill.r<fill.r-0.08,"parent half alpha visibly fades the real shader surface")
+  check(faded_fill.g>outside.g+0.08 and faded_fill.g<fill.g-0.08,"parent half alpha visibly fades the real shader surface")
   button.modulate.a=1.0
  click(Vector2(100,60));await process_frame
  check(pressed_count[0]==1,"native viewport click reaches the original button through its animated surface")

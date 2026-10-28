@@ -1,16 +1,18 @@
 extends Node2D
 # RF Worlds · original vector art, physics production and automatic combat.
-const BG = Color("0b0b15")
-const PANEL = Color("1c1e32")
-const INK = Color("fff8f0")
-const MUTED = Color("8a9dbb")
-const LIME = Color("5af5c5")
-const CORAL = Color("ff7286")
-const CYAN = Color("55d8ff")
+const BG = Color("060d0f")
+const PANEL = Color("111d20")
+const INK = Color("e3e4d4")
+const MUTED = Color("99adaa")
+const LIME = Color("98c9b4")
+const CORAL = Color("d87564")
+const CYAN = Color("90d6cf")
 const MAX_BALLS = 128
 var font = preload("res://assets/fonts/SpaceGrotesk.ttf")
 var future: FutureArt
 var screen_age := 0.0
+var deployment_age := 0.0
+var blood_fx: BloodFX
 var combat_motion: CombatMotion
 var profile = Profile.new()
 var arsenal: ArsenalView
@@ -114,6 +116,9 @@ func _ready() -> void:
  combat_motion=CombatMotion.new()
  combat_motion.game=self
  add_child(combat_motion)
+ blood_fx=BloodFX.new()
+ blood_fx.game=self
+ add_child(blood_fx)
  reactor_fx=ReactorFX.new()
  reactor_fx.game=self
  add_child(reactor_fx)
@@ -158,8 +163,8 @@ func button(text: String,rect: Rect2,callback: Callable,accent: bool=false) -> B
  item.add_theme_font_override("font",font)
  item.add_theme_font_size_override("font_size",16)
  var normal=StyleBoxFlat.new()
- normal.bg_color=Color("ff886e") if accent else PANEL
- normal.set_corner_radius_all(22)
+ normal.bg_color=CYAN if accent else PANEL
+ normal.set_corner_radius_all(10)
  normal.content_margin_left=12
  normal.content_margin_right=12
  normal.border_color=Color(0.8,0.85,1,0.08)
@@ -168,7 +173,7 @@ func button(text: String,rect: Rect2,callback: Callable,accent: bool=false) -> B
  normal.shadow_size=10 if accent else 5
  item.add_theme_stylebox_override("normal",normal)
  var hover=normal.duplicate()
- hover.bg_color=Color("ffa68f") if accent else Color("292e46")
+ hover.bg_color=Color("b6ebe3") if accent else Color("263c3e")
  item.add_theme_stylebox_override("hover",hover)
  item.add_theme_stylebox_override("pressed",hover)
  var disabled=normal.duplicate()
@@ -198,11 +203,11 @@ func show_menu() -> void:
  enemies.clear()
  clear_ui()
  audio.play_music("menu")
- label("RF WORLDS",Vector2(61,29),12,INK)
+ label("RF WORLDS  /  QUARANTÄNE",Vector2(61,29),10,CYAN)
  label("DEADWAVE",Vector2(28,84),53,INK)
  label("HEROES",Vector2(27,139),73,INK)
- label("Jede Kugel zählt.",Vector2(32,231),18,Color("d6c8cf"))
- label("DEIN NÄCHSTES ZIEL",Vector2(46,621),9,MUTED,445)
+ label("ÜBERLEBEN IST EIN SYSTEM.",Vector2(32,229),13,INK)
+ label("NÄCHSTES FREISCHALTZIEL",Vector2(46,621),9,CYAN,445)
  label(next_goal(),Vector2(46,641),12,INK,445)
  var unlocked=int(profile.data["unlocked"])
  var start=button("SPIELEN  ·  EINSATZ %02d"%unlocked,Rect2(30,692,480,67),func(): start_level(unlocked),true)
@@ -211,12 +216,12 @@ func show_menu() -> void:
  button("WELTKARTE",Rect2(194,783,151,63),show_map)
  var settings=button("OPTIONEN",Rect2(358,783,152,63),show_settings)
  label("HELD LV %d   ·   %s CR"%[profile.data["level"],compact(profile.data["coins"])],Vector2(32,873),12,MUTED,470)
- label("OFFLINE BEREIT                                 v0.2.5",Vector2(32,920),10,MUTED)
+ label("OFFLINE BEREIT                                 v0.2.6",Vector2(32,920),10,MUTED)
  reveal_ui(0)
 
 func page_header(title: String,subtitle: String) -> void:
  clear_ui()
- label("DEADWAVE HEROES",Vector2(28,26),11,CYAN)
+ label("RF WORLDS  /  LOKALES TERMINAL",Vector2(28,26),10,CYAN)
  label(title,Vector2(28,70),32)
  label(subtitle,Vector2(30,122),13,MUTED)
  button("← ZURÜCK",Rect2(30,888,480,48),show_menu)
@@ -264,9 +269,9 @@ func show_settings() -> void:
  page_header("EINSTELLUNGEN","Musik, Darstellung und Bedienung")
  for i in range(2):
   var key="music" if i==0 else "sfx"
-  label("MUSIK" if i==0 else "EFFEKTE",Vector2(30,230+i*130),16,CYAN)
+  label("MUSIK" if i==0 else "EFFEKTE",Vector2(30,190+i*110),16,CYAN)
   var slider=HSlider.new()
-  slider.position=Vector2(30,290+i*130)
+  slider.position=Vector2(30,238+i*110)
   slider.size=Vector2(480,40)
   slider.min_value=0
   slider.max_value=1
@@ -280,10 +285,11 @@ func show_settings() -> void:
    profile.save_game())
   future.style_slider(slider)
   controls.add_child(slider)
- button("QUALITÄT: "+("STANDARD" if quality==1 else "SPARSAM"),Rect2(30,560,480,60),func(): quality=1-quality; profile.data["settings"]["quality"]=quality; profile.save_game(); show_settings())
- button("OUTFIT: "+["PATROUILLE","NACHTWACHE","RETTUNG"][int(profile.data["outfit"])],Rect2(30,650,480,60),func(): profile.data["outfit"]=(int(profile.data["outfit"])+1)%3; profile.save_game(); show_settings())
+ button("QUALITÄT: "+("STANDARD" if quality==1 else "SPARSAM"),Rect2(30,458,480,52),func(): quality=1-quality; profile.data["settings"]["quality"]=quality; profile.save_game(); show_settings())
+ button("OUTFIT: "+["PATROUILLE","NACHTWACHE","RETTUNG"][int(profile.data["outfit"])],Rect2(30,526,480,52),func(): profile.data["outfit"]=(int(profile.data["outfit"])+1)%3; profile.save_game(); show_settings())
+ button("BLUTEFFEKTE: "+("AN" if bool(profile.data["settings"].get("blood_fx",true)) else "AUS"),Rect2(30,662,480,52),func(): profile.data["settings"]["blood_fx"]=not bool(profile.data["settings"].get("blood_fx",true));profile.save_game();show_settings())
  button("LIZENZEN & CREDITS",Rect2(30,815,480,48),show_licenses)
- button("BEWEGUNG: "+("REDUZIERT" if bool(profile.data["settings"].get("reduced_motion",false)) else "VOLLE DYNAMIK"),Rect2(30,718,480,44),func(): profile.data["settings"]["reduced_motion"]=not bool(profile.data["settings"].get("reduced_motion",false));profile.save_game();show_settings())
+ button("BEWEGUNG: "+("REDUZIERT" if bool(profile.data["settings"].get("reduced_motion",false)) else "VOLLE DYNAMIK"),Rect2(30,594,480,52),func(): profile.data["settings"]["reduced_motion"]=not bool(profile.data["settings"].get("reduced_motion",false));profile.save_game();show_settings())
  label("Fortschritt: %d Siege · %d Abschüsse"%[profile.data["stats"]["wins"],profile.data["stats"]["kills"]],Vector2(30,783),12,MUTED)
 
 func show_licenses() -> void:
@@ -304,6 +310,7 @@ func show_licenses() -> void:
  scroll.add_child(copy)
 
 func start_level(number: int) -> void:
+ deployment_age=0
  Progression.sanitize_loadout(profile.data)
  hero_pose="idle"
  shoot_flash=0
@@ -334,6 +341,7 @@ func start_level(number: int) -> void:
  last_drop_message=""
  reactor_fx.reset()
  combat_motion.reset()
+ blood_fx.reset()
  produced=0
  dropped=0
  sparks.clear()
@@ -827,6 +835,7 @@ func hit_enemy(e: Dictionary,amount: float,visual: bool=true,critical: bool=fals
  e["hp"]-=amount
  if visual:
   combat_motion.on_hit(Vector2(e["x"],e["y"]-30),critical)
+  blood_fx.on_hit(e,critical)
   e["flash"]=0.12
   burst(Vector2(e["x"],e["y"]-24),LIME,3)
   if floats.size()<20:
@@ -834,6 +843,7 @@ func hit_enemy(e: Dictionary,amount: float,visual: bool=true,critical: bool=fals
  if e["hp"]<=0:
   e["dead"]=true
   combat_motion.on_death(e)
+  blood_fx.on_death(e)
   run_kills+=1
   var coins=int(int(e["reward"])*float(stats["bounty"]))*(5 if e["boss"] else 1)
   run_coins+=coins
@@ -859,6 +869,7 @@ func hurt_hero(amount: float) -> void:
  hp-=damage-absorbed
  damage_flash=0.25
  combat_motion.on_hurt()
+ if damage>absorbed:blood_fx.on_hero_hurt()
  hero_pose="hit"
  audio.play_effect("hit")
 
@@ -910,12 +921,12 @@ func choose_upgrade() -> void:
 func build_upgrade_picker() -> void:
  clear_ui()
  label("WELLE %02d GESICHERT   /   EVOLUTION BEREIT"%wave,Vector2(30,431),10,CYAN)
- label("Wähle deine Evolution.",Vector2(28,457),29,INK)
+ label("ANZUG MODIFIZIEREN",Vector2(28,463),26,INK)
  label("Als Nächstes: %d Feinde  ·  +1 Abwurf  ·  freie Wahl"%Content.wave_enemy_count(level,wave+1),Vector2(30,501),13,MUTED)
  for i in range(3):
   var card=Content.UPGRADES[cards[i]]
   var x=24+i*168
-  var tint=[CYAN,Color("ad8cff"),Color("ffc880")][i]
+  var tint=[CYAN,Color("b4c2b8"),Color("d9aa70")][i]
   var pick=button("",Rect2(x,544,156,261),func():
    if mode!="upgrade":return
    apply_upgrade(cards[i])
@@ -925,7 +936,7 @@ func build_upgrade_picker() -> void:
    build_hud()
    begin_wave())
   var normal=StyleBoxFlat.new()
-  normal.bg_color=Color("142039")
+  normal.bg_color=Color("112124")
   normal.border_color=Color(tint,0.65)
   normal.set_border_width_all(1)
   normal.set_corner_radius_all(10)
@@ -933,7 +944,7 @@ func build_upgrade_picker() -> void:
   normal.shadow_size=8
   pick.add_theme_stylebox_override("normal",normal)
   var hover=normal.duplicate()
-  hover.bg_color=Color("203554")
+  hover.bg_color=Color("253c3d")
   hover.border_color=tint
   pick.add_theme_stylebox_override("hover",hover)
   pick.add_theme_stylebox_override("pressed",hover)
@@ -1060,8 +1071,8 @@ func pause_game() -> void:
  mode="pause"
  ball_visuals.hide()
  clear_ui()
- label("DURCHATMEN.",Vector2(30,422),38,LIME)
- label("Physik und Kampf pausieren vollständig.",Vector2(30,484),15,MUTED)
+ label("SYSTEM ANGEHALTEN",Vector2(30,435),29,CYAN)
+ label("Dein Einsatz wartet. Kein Fortschritt geht verloren.",Vector2(30,484),13,MUTED)
  button("WEITERSPIELEN",Rect2(30,574,480,65),func(): mode="play"; build_hud(),true)
  button("EINSATZ AUFGEBEN",Rect2(30,661,480,55),func(): finish_level(false))
  button("SPEICHERN & HAUPTMENÜ",Rect2(30,738,480,55),func(): profile.save_game(); show_menu())
@@ -1098,6 +1109,7 @@ func _physics_process(delta: float) -> void:
   begin_wave()
 
 func _process(delta: float) -> void:
+ if mode=="play":deployment_age+=delta
  screen_age+=delta
  if is_instance_valid(ball_visuals):
   ball_visuals.visible=mode=="play"
@@ -1294,8 +1306,8 @@ func _draw() -> void:
   return
  if mode in ["map","armory","settings","character","licenses"]:
   future.page_background()
-  future.plate(Rect2(16,15,508,138),CYAN,Color(0.04,0.07,0.13,0.85),10)
-  if mode=="armory":future.plate(Rect2(22,670,496,204),CYAN,Color("0c1729"),10)
+  future.plate(Rect2(16,15,508,138),CYAN,Color(0.035,0.075,0.08,0.94),10)
+  if mode=="armory":future.plate(Rect2(22,670,496,204),CYAN,Color("0b1b1e"),10)
   return
  if layout.is_empty():return
  backdrop(int(layout["world"]),121,380)
@@ -1321,8 +1333,8 @@ func _draw() -> void:
  for f in floats:text_at(f["text"],f["pos"],14,Color(f["color"],minf(1,f["life"]*2)))
  if mode in ["upgrade","pause","victory","defeat"]:
   draw_rect(Rect2(0,413,540,547),Color(BG,0.98))
-  future.plate(Rect2(16,415,508,459),CYAN,Color("0b1426"),12)
+  future.plate(Rect2(16,415,508,459),CYAN,Color("0b181b"),12)
   if mode in ["victory","defeat"]:
-   future.plate(Rect2(30,616,480,94),CYAN,Color("10243a"),8)
+   future.plate(Rect2(30,616,480,94),CYAN,Color("142a2b"),8)
    bar(Rect2(36,733,468,3),float(profile.data["xp"])/maxf(1,float(profile.data["level"])*100),CYAN)
  if damage_flash>0:draw_rect(Rect2(0,0,540,960),Color(CORAL,damage_flash*0.25))

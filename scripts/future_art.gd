@@ -15,17 +15,17 @@ var mono_font: Font
 var shade_top: GradientTexture2D
 var shade_bottom: GradientTexture2D
 var icons: Dictionary = {}
-const BLUE = Color("55d8ff")
-const MINT = Color("5af5c5")
-const VIOLET = Color("ad8cff")
-const AMBER = Color("ffc880")
-const PAPER = Color("eff5ff")
-const QUIET = Color("8a9dbb")
+const BLUE = Color("90d6cf")
+const MINT = Color("98c9b4")
+const VIOLET = Color("b4b7ac")
+const AMBER = Color("d9aa70")
+const PAPER = Color("e3e4d4")
+const QUIET = Color("99adaa")
 
 func _init(game: Node2D) -> void:
  g=game
  city=load("res://assets/art/neon_city.png")
- if ResourceLoader.exists("res://assets/art/first_light.png"):key_art=load("res://assets/art/first_light.png")
+ if ResourceLoader.exists("res://assets/art/quarantine_terminal.png"):key_art=load("res://assets/art/quarantine_terminal.png")
  forge=load("res://assets/art/reactor_forge.png")
  heroes=load("res://assets/art/heroes.png")
  if ResourceLoader.exists("res://assets/art/enemies.png"):
@@ -55,23 +55,27 @@ func gradient(a: Color,b: Color) -> GradientTexture2D:
 func text(s: String,p: Vector2,size: int=16,color: Color=PAPER,mono: bool=false) -> void:
  g.draw_string(mono_font if mono else (display_font if size>=22 else title_font),p,s,HORIZONTAL_ALIGNMENT_LEFT,-1,size,color)
 
-func plate(rect: Rect2,color: Color=BLUE,fill: Color=Color("0f192b"),cut: float=9.0) -> void:
- # Soft, layered surfaces instead of cut-corner wire frames.
- var radius=maxf(2,minf(cut*2.2,minf(rect.size.x,rect.size.y)*0.5))
- var key=color.to_html()+fill.to_html()+str(int(radius))
+func plate(rect: Rect2,color: Color=BLUE,fill: Color=Color("101b1e"),cut: float=9.0) -> void:
+ # Glass console surfaces: warm steel, powered edges and a quiet scan texture.
+ var radius=maxf(2,minf(cut,10))
+ var steel=fill.lerp(Color("0a1416"),0.42)
+ var key=color.to_html()+steel.to_html()+str(int(radius))
  if not surfaces.has(key):
   if surfaces.size()>=128:surfaces.clear()
   var box=StyleBoxFlat.new()
-  box.bg_color=fill
-  box.set_corner_radius_all(int(radius))
-  box.corner_detail=10
-  box.border_color=Color(color,0.1)
-  box.set_border_width_all(1)
-  box.shadow_color=Color(0.01,0.01,0.025,0.28)
-  box.shadow_size=8
-  box.shadow_offset=Vector2(0,4)
+  box.bg_color=steel;box.set_corner_radius_all(int(radius));box.corner_detail=8
+  box.border_color=Color(color,0.24);box.set_border_width_all(1)
+  box.shadow_color=Color(0,0,0,0.4);box.shadow_size=7;box.shadow_offset=Vector2(0,3)
   surfaces[key]=box
  g.draw_style_box(surfaces[key],rect)
+ if rect.size.x>100 and rect.size.y>24:
+  var p=rect.position;var e=rect.end
+  g.draw_line(p+Vector2(1,9),p+Vector2(1,minf(31,rect.size.y-8)),Color(color,0.8),2,true)
+  g.draw_line(p+Vector2(10,5),p+Vector2(minf(54,rect.size.x-10),5),Color(color,0.13),1,true)
+  g.draw_line(e-Vector2(24,6),e-Vector2(10,6),Color(color,0.32),1,true)
+  for row in range(int((rect.size.y-14)/5)):
+   var y=p.y+8+row*5
+   g.draw_line(Vector2(p.x+8,y),Vector2(e.x-8,y),Color(color,0.018),1)
 
 func rounded_texture(texture: Texture2D,rect: Rect2,radius: float,tint: Color=Color.WHITE) -> void:
  var points=PackedVector2Array()
@@ -112,13 +116,16 @@ func sprite(texture: Texture2D,key: String,index: int,base: Vector2,height: floa
  g.draw_set_transform(Vector2.ZERO)
 
 func page_background() -> void:
- cover(city,Rect2(0,0,540,960),Color(0.18,0.25,0.39,1))
- g.draw_rect(Rect2(0,0,540,960),Color(0.018,0.03,0.065,0.55))
- for i in range(7):
-  var x=30+i*82
-  g.draw_line(Vector2(x,150),Vector2(x-140,960),Color(BLUE,0.035),1,true)
- g.draw_texture_rect(shade_top,Rect2(0,0,540,330),false)
- g.draw_texture_rect(shade_bottom,Rect2(0,650,540,310),false)
+ var texture=key_art if key_art!=null else city
+ cover(texture,Rect2(0,0,540,960),Color(0.2,0.29,0.27,1))
+ g.draw_rect(Rect2(0,0,540,960),Color(0.016,0.032,0.033,0.78))
+ for i in range(14):
+  var y=170+i*54
+  g.draw_line(Vector2(18,y),Vector2(522,y),Color(BLUE,0.035),1)
+ for x in [18,522]:
+  g.draw_line(Vector2(x,169),Vector2(x,873),Color(BLUE,0.12),1,true)
+ g.draw_texture_rect(shade_top,Rect2(0,0,540,250),false)
+ g.draw_texture_rect(shade_bottom,Rect2(0,810,540,150),false)
 
 func skyline(world: int,top: float,bottom: float) -> void:
  var tint=Color.WHITE
@@ -127,7 +134,7 @@ func skyline(world: int,top: float,bottom: float) -> void:
  elif world==6:tint=Color(0.65,0.88,1)
  elif world>=8:tint=Color(0.9,0.72,1)
  # Fixed stage ratio preserves the ground plane; only distant holograms drift.
- g.draw_texture_rect(city,Rect2(0,top,540,bottom-top),false,tint)
+ g.draw_texture_rect(city,Rect2(0,top,540,bottom-top),false,tint*Color(0.69,0.8,0.77,1))
  g.draw_texture_rect(shade_top,Rect2(0,top,540,56),false)
  g.draw_texture_rect(shade_bottom,Rect2(0,bottom-28,540,28),false)
  for i in range(3):
@@ -147,7 +154,13 @@ func hero(at: Vector2,scale_value: float,pose: String) -> void:
  if pose=="defeat":tilt=-0.72
  elif g.damage_flash>0:tilt=-0.07
  g.draw_ellipse_shadow(at+Vector2(0,3),27*scale_value,6*scale_value)
- sprite(heroes,"heroes",int(g.profile.data["class"]),at+offset*scale_value+g.combat_motion.camera_offset(),112*scale_value,tint,tilt+float(motion["angle"]),motion["scale"])
+ var source=frame_region("heroes",int(g.profile.data["class"]),heroes,3,1)
+ var reduced=bool(g.profile.data["settings"].get("reduced_motion",false))
+ ActorRig.draw_hero(g,heroes,source,at+Vector2(offset.x,0)*scale_value+g.combat_motion.camera_offset(),112*scale_value,tint,g.combat_motion.clock,g.deployment_age if g.mode in ["play","pause","upgrade"] else -1.0,reduced,g.quality,tilt+float(motion["angle"]),motion["scale"])
+ if not g.stats.is_empty():
+  var integrity=clampf(g.hp/maxf(1,float(g.stats["max_hp"])),0,1)
+  for i in range(5):
+   g.draw_line(at+Vector2(-37,-74+i*6)*scale_value,at+Vector2(-31,-74+i*6)*scale_value,Color(BLUE if integrity>0.3 else g.CORAL,0.7 if (i+0.5)/5.0<integrity else 0.12),2,true)
  if g.shield>0 or pose=="special":
   g.draw_arc(at+Vector2(0,-52*scale_value),53*scale_value,-1.75,1.5,38,Color(BLUE,0.55),2,true)
  if g.shoot_flash>0:
@@ -177,7 +190,9 @@ func enemy(e: Dictionary) -> bool:
  var base=Vector2(e["x"],e["y"])
  var motion=g.combat_motion.enemy_pose(e)
  g.draw_ellipse_shadow(base,24 if not boss else 47,5 if not boss else 8)
- sprite(enemies,"enemies",atlas,base+motion["offset"]+g.combat_motion.camera_offset(),height,tint,float(motion["angle"]),motion["scale"])
+ var source=frame_region("enemies",atlas,enemies,3,2)
+ var reduced=bool(g.profile.data["settings"].get("reduced_motion",false))
+ ActorRig.draw_enemy(g,enemies,source,base+Vector2(motion["offset"].x,0)+g.combat_motion.camera_offset(),height,tint,kind,boss,float(e["age"]),float(e.get("speed",17)),reduced,g.quality,float(motion["angle"])*0.4,motion["scale"])
  if kind in [5,6,10,11,14] or boss:
   var accent=VIOLET if kind==14 else (AMBER if kind in [6,11] else MINT)
   if kind==10:accent=BLUE
@@ -195,31 +210,31 @@ func enemy(e: Dictionary) -> bool:
  return true
 
 func hud() -> void:
- plate(Rect2(16,16,508,103),BLUE,Color("0c1527"),10)
- text("Einsatz %02d"%g.level,Vector2(29,45),23,PAPER)
- text(Content.WORLDS[int(g.layout["world"])],Vector2(30,65),12,QUIET)
- text("%02d FEINDE"%(g.remaining+g.enemies.size()),Vector2(331,80),9,QUIET,true)
- var title="WELLE %02d"%g.wave
- text(title,Vector2(330,41),15,PAPER)
- text("/ %02d"%g.wave_count,Vector2(419,41),11,QUIET,true)
+ var health=clampf(g.hp/maxf(1,float(g.stats["max_hp"])),0,1)
+ var health_color=g.CORAL if health<0.3 else BLUE
+ plate(Rect2(16,16,508,103),BLUE,Color("091517"),9)
+ text("QUARANTÄNE / %02d"%g.level,Vector2(29,36),11,QUIET,true)
+ text(Content.WORLDS[int(g.layout["world"])],Vector2(29,60),20,PAPER)
+ text("WELLE %02d / %02d"%[g.wave,g.wave_count],Vector2(330,39),13,BLUE,true)
  for i in range(g.wave_count):
-  g.draw_rect(Rect2(331+i*minf(18,118.0/g.wave_count),56,12 if g.wave_count<8 else 5,3),MINT if i<g.wave else Color("28344d"))
- g.bar(Rect2(30,81,252,7),g.hp/maxf(1,float(g.stats["max_hp"])),g.CORAL)
- text("%03d / %03d HP"%[maxi(0,int(g.hp)),int(g.stats["max_hp"])],Vector2(30,108),11,PAPER,true)
- text("CR  %s"%g.compact(int(g.profile.data["coins"])),Vector2(355,105),15,AMBER,true)
- plate(Rect2(16,354,508,57),BLUE,Color("101c30"),8)
- g.draw_line(Vector2(169,366),Vector2(169,400),Color(PAPER,0.07),1,true)
- g.draw_line(Vector2(370,366),Vector2(370,400),Color(PAPER,0.07),1,true)
+  g.draw_rect(Rect2(331+i*minf(18,118.0/g.wave_count),53,12 if g.wave_count<8 else 5,3),BLUE if i<g.wave else Color("243638"))
+ text("%02d KONTAKTE"%(g.remaining+g.enemies.size()),Vector2(331,80),10,QUIET,true)
+ text("CR %s"%g.compact(int(g.profile.data["coins"])),Vector2(353,104),13,AMBER,true)
+ for i in range(12):
+  var segment=Rect2(30+i*20,75,16,8)
+  g.draw_rect(segment,Color(health_color,0.85) if (i+0.5)/12.0<=health else Color("203033"))
+ text("ANZUG  %03d / %03d"%[maxi(0,int(g.hp)),int(g.stats["max_hp"])],Vector2(30,105),10,health_color,true)
+ plate(Rect2(16,354,508,57),BLUE,Color("0b191b"),8)
+ for x in [169,370]:g.draw_line(Vector2(x,365),Vector2(x,400),Color(BLUE,0.13),1,true)
  text("MUNITION / %s"%g.compact(int(g.stats["capacity"])),Vector2(29,370),9,QUIET,true)
- var ammo_tint=AMBER if g.ammo<=30 else MINT
- text(g.compact(g.ammo),Vector2(29,395),25,ammo_tint)
- g.bar(Rect2(30,402,122,3),float(g.ammo)/maxf(1,float(g.stats["capacity"])),ammo_tint)
+ var ammo_tint=AMBER if g.ammo<=30 else BLUE
+ text(g.compact(g.ammo),Vector2(29,396),27,ammo_tint,true)
+ g.bar(Rect2(30,402,122,2),float(g.ammo)/maxf(1,float(g.stats["capacity"])),ammo_tint)
  text(g.weapon()[0].to_upper(),Vector2(183,375),12,PAPER)
- var state="NACHLADEN" if g.reload_timer>0 else "%02d IM MAGAZIN"%g.magazine
- text(state,Vector2(184,397),9,QUIET,true)
- text("IMPULS",Vector2(385,370),9,QUIET,true)
+ text("NACHLADEN" if g.reload_timer>0 else "%02d IM MAGAZIN"%g.magazine,Vector2(184,397),9,QUIET,true)
+ text("KINETIK",Vector2(385,370),9,QUIET,true)
  text("BEREIT" if g.energy>=50 else "%02d / 50"%int(g.energy),Vector2(385,391),15,BLUE,true)
- g.bar(Rect2(385,398,121,4),g.energy/100.0,BLUE)
+ g.bar(Rect2(385,398,121,3),g.energy/100.0,BLUE)
 
 func wave_cue() -> void:
  if g.wave_banner<=0 or g.mode!="play":return
@@ -230,7 +245,7 @@ func wave_cue() -> void:
 func factory() -> void:
  # Active reactor forge: recessed circular engine, powered rails and three gates.
  plate(Rect2(16,473,508,401),BLUE,Color("080f1d"),12)
- rounded_texture(forge,Rect2(28,486,484,379),18,Color(0.85,0.94,1,1))
+ rounded_texture(forge,Rect2(28,486,484,379),8,Color(0.63,0.78,0.75,1))
  var center=Vector2(270,668)
  # Slow induction arcs belong to the back plate; impacts supply the bright action.
  for radius in [116,159]:
@@ -264,10 +279,10 @@ func factory() -> void:
     g.draw_line(Vector2(x,y+offset),Vector2(x+width,y+offset),Color(tint,0.12+power*0.3),1,true)
    g.draw_line(Vector2(x,y),Vector2(x+width,y),Color(tint,0.3+power*0.5),1.3,true)
    for electrode_x in [x,x+width]:
-    plate(Rect2(electrode_x-3,y-20,6,40),tint,Color("24354a"),2)
+    plate(Rect2(electrode_x-3,y-20,6,40),tint,Color("304343"),2)
     g.draw_line(Vector2(electrode_x,y-13),Vector2(electrode_x,y+13),Color(tint,0.8),2,true)
    var badge_x=x+width*0.5
-   plate(Rect2(badge_x-36,y-23,72,46),tint,Color("101e31"),9)
+   plate(Rect2(badge_x-36,y-23,72,46),tint,Color("0c1c20"),9)
    g.draw_line(Vector2(badge_x-25,y+19),Vector2(badge_x+25,y+19),Color(tint,0.12+power*0.7),2,true)
    text("×%d"%factor,Vector2(badge_x-25 if factor<10 else badge_x-30,y+10),28,tint)
    # Bright traveling energy flecks, accelerated only while balls are in flight.
@@ -353,7 +368,7 @@ func factory() -> void:
   var offset=fmod(g.clock*(25 if busy else 10)+n*5,17)
   var alpha=0.15+charge*0.5
   g.draw_polyline(PackedVector2Array([Vector2(x-6,838+offset),Vector2(x,843+offset),Vector2(x+6,838+offset)]),Color(MINT,alpha),1.5,true)
- plate(Rect2(185,845,170,21),MINT,Color("0d202e"),4)
+ plate(Rect2(185,845,170,21),MINT,Color("0d2021"),4)
  text("MUNITIONSSCHMIEDE",Vector2(202,860),10,MINT,true)
 
 func icon_key(id: int) -> String:
@@ -374,28 +389,24 @@ func icon_key(id: int) -> String:
 func menu() -> void:
  var reduced=bool(g.profile.data["settings"].get("reduced_motion",false))
  var settle=0.0 if reduced else pow(maxf(0,1-g.screen_age/1.1),3)
- var drift=0.0 if reduced else sin(g.clock*0.23)*3
- if key_art!=null:
-  cover(key_art,Rect2(-8-settle*8+drift,-8-settle*10,556+settle*16,980+settle*20))
+ var drift=0.0 if reduced else sin(g.clock*0.15)*2
+ if key_art!=null:cover(key_art,Rect2(-8-settle*8+drift,-8-settle*10,556+settle*16,980+settle*20),Color(0.78,0.88,0.83,1))
  else:page_background()
- g.draw_texture_rect(shade_top,Rect2(0,0,540,190),false,Color(0.8,0.6,1,0.72))
- g.draw_texture_rect(shade_bottom,Rect2(0,495,540,465),false,Color(0.7,0.6,0.9,1))
- # Bounded embers and drifting depth. No gameplay state participates in the title scene.
- var count=8 if reduced or g.quality==0 else 26
- for i in range(count):
-  var x=fposmod(i*91.7+sin(g.clock*0.4+i)*11,540)
-  var y=290+fposmod(i*47.3-g.clock*(10+i%5*3),345)
-  var a=0.1+0.25*pow(maxf(0,sin(g.clock*1.2+i*2.1)),2)
-  var color=AMBER if i%3 else BLUE
-  g.draw_circle(Vector2(x,y),1.2 if i%2 else 1.8,Color(color,a))
-  if i%4==0:g.draw_line(Vector2(x,y),Vector2(x-2,y+7),Color(color,a*0.3),1,true)
- if not reduced:
-  var beat=fposmod(g.clock,2.1)
-  var flash=maxf(0,1-beat/0.13) if beat<0.13 else (maxf(0,1-(beat-0.21)/0.1) if beat>=0.21 and beat<0.31 else 0.0)
-  if flash>0 and g.reactor_fx.glow!=null:
-   g.draw_texture_rect(g.reactor_fx.glow,Rect2(300,340,130,85),false,Color(1,0.63,0.3,flash*0.8))
- plate(Rect2(30,611,480,57),BLUE,Color(0.07,0.075,0.13,0.92),16)
- g.draw_circle(Vector2(48,40),3.5,Color("ff826d"))
+ g.draw_texture_rect(shade_top,Rect2(0,0,540,335),false)
+ g.draw_texture_rect(shade_bottom,Rect2(0,495,540,465),false)
+ g.draw_rect(Rect2(0,0,540,960),Color(0.01,0.04,0.035,0.14))
+ # Low intensity dust, no rapid flicker or fullscreen strobe.
+ for i in range(8 if g.quality==0 else 18):
+  var x=fposmod(i*91.7+(0 if reduced else g.clock*(1+i%3)),540)
+  var y=290+fposmod(i*47.3-(0 if reduced else g.clock*7),345)
+  g.draw_circle(Vector2(x,y),0.7,Color(BLUE,0.18))
+ plate(Rect2(30,611,480,57),BLUE,Color(0.025,0.07,0.075,0.94),8)
+ for x in [19,521]:
+  g.draw_line(Vector2(x,28),Vector2(x,580),Color(BLUE,0.1),1,true)
+  for i in range(5):g.draw_line(Vector2(x,48+i*113),Vector2(x+(5 if x<100 else -5),48+i*113),Color(BLUE,0.38),1,true)
+ g.draw_line(Vector2(32,263),Vector2(158,263),Color(BLUE,0.6),1,true)
+ text("LOKALES TERMINAL  /  SYSTEM BEREIT",Vector2(32,282),9,BLUE,true)
+ g.draw_circle(Vector2(47,40),2,BLUE)
 
 func style_slider(slider: HSlider) -> void:
  var rail=StyleBoxFlat.new()

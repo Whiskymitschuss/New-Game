@@ -1,4 +1,6 @@
-# DEADWAVE HEROES / Neon Update 0.2.0
+# DEADWAVE HEROES / Art Direction
+
+## Neon Update 0.2.0
 
 Ziel: eine eigenständige futuristische Sci-Fi-Comic-Präsentation mit detaillierten Figuren, lesbarer Ressourcenproduktion und einer ruhigen, hochwertigen Benutzeroberfläche. Dunkles Marineblau bildet die Basis; Cyan kennzeichnet Technik, Mint Energie/Produktion, Violett Evolution und Amber Belohnungen. Der Soldat in warmer orangefarbener Rüstung bleibt vor der kühlen Stadt gut erkennbar.
 
@@ -39,3 +41,16 @@ Der harte technische Rahmenstil wird durch runde, leicht geschichtete Flächen e
 `CombatMotion` animiert die vorhandenen Rasterfiguren prozedural durch Atembewegung, Rückstoß, Schritt, Stauchung und Trefferreaktion. Es handelt sich weiterhin nicht um vollständige handgezeichnete Sprite-Framefolgen. Todesbilder, Hülsen, Funken und Impulsringe besitzen begrenzte Lebensdauer und Budgets, eigener Visual-RNG verändert keine Kampfentscheidungen. Alle Zusatzeffekte liegen in einem auf y121..350 begrenzten Canvas. Pause friert sie ein. Reduzierte Bewegung bewahrt lokale Trefferinformation und entfernt stärkere Verschiebung/Flugpartikel.
 
 Die Hauptansichten wurden in Godot nativ mit 2160 × 3840 aufgenommen. `tests/film_cinema.gd` bedient echte Menüs und den echten Kampf; die MP4 zeigt 19,1 Sekunden in 540 × 960 bei fest aufgezeichneten 30 Bildern/s mit Spielaudio. Aufzeichnung ist kein Smartphone-FPS-Benchmark. Quelle ist Godots MovieMaker-Ausgabe; FFmpeg kodiert sie lediglich zu H.264/AAC für die Wiedergabe auf Smartphones.
+
+
+## Quarantine 0.2.6
+
+Die aktuelle Oberfläche führt eine eigene industrielle Sci-Fi-Horror-Formsprache ein: dunkle Stahl-/Glasflächen, knochenweißes Schriftbild, kühle Cyan-Hologramme und Amber als Warnfarbe. Das betrifft Startansicht, HUD, Reaktor, Levelkarte, Arsenal, Charakterwerte, Optionen, Upgrades, Pause und Ergebnis. Eingelassene Leuchtschienen, feine feste Rasterlinien und kleine elektrische Kontaktmarken ersetzen die Coral-Flächen des historischen Cinema-Updates. Der lokale Buttonshader verwendet zurückhaltende Radien von ungefähr 8–10 Pixeln, erhält geerbte Transparenz und lässt native Eingabe- und Textrechtecke stabil. Keine Vollbild-Störimpulse oder absichtliche Eingabeverzögerung.
+
+Die vom Nutzer gewünschte Referenz *Dead Space* liefert die grobe Stimmung von Isolation und technischer Bedrohung. Layout, Code, Figuren, Symbole und Bilder dieses Projekts sind eigenständig; keine Übernahme seiner Oberfläche, Logos, Figuren oder sonstigen Grafikassets. Die neue Originalillustration `assets/art/quarantine_terminal.png` wurde für DEADWAVE HEROES generiert und unverändert eingebunden. Native Quelle: 941 × 1672. Godot skaliert diese Illustration; sie wird nicht als native 4K-Textur bezeichnet.
+
+`ActorRig` zerlegt die vorhandenen Atlasregionen zur Laufzeit in texturierte Körpersegmente. Eine längere Bodenkontaktphase und eine kürzere angehobene Schwungphase treiben Füße und Knie getrennt an; Oberkörper und Waffe bleiben verbunden. Es gibt langsames Schlurfen, schnelles Laufen, schwere Schritte, Kriechen, vierbeinige Bewegung und das Schweben des Roboters. Der Held tritt während der ersten 0,68 Sekunden des Einsatzes kurz an und bleibt danach mit gesetzten Stiefeln in der automatischen Schusshaltung. Keine Verwechslung mit frei steuerbarer Heldenbewegung. Sparqualität reduziert die Unterteilung. Das Verfahren verformt vorhandene Rastergrafiken; es ersetzt keine vollständigen handgezeichneten Lauf-/Schuss-Framefolgen und keine vollwertigen neuen Skelettassets.
+
+`BloodFX` zeichnet kurze gerichtete Sprays, ballistische Tropfen, nasse Glanzpunkte und unregelmäßige Bodenflecken mit kleinen Satellitenspritzern. Blut dunkelt ab und blendet aus; Roboter zeigen Öl und kühles Kühlmittelfeedback. Trefferpunkte und Gegnerdaten werden nur als visuelle Momentaufnahme gelesen. Feste Grenzen für hohe/niedrige Qualität: 128/48 Flugpartikel, 36/16 Flecken und 16/8 Sprühereignisse. Reguläre Blutflecken leben höchstens zwölf Sekunden, Öl neun Sekunden; reduzierte Bewegung verwendet örtliche kurze Rückmeldung ohne fliegende Sprays. Ein eigener Zufallsgenerator beeinflusst keine Spielentscheidungen. Der Canvas ist auf y121..350 begrenzt; HUD und Kugelreaktor erhalten keine Blutüberlagerung. Pause/Upgrade frieren die Darstellung ein. Die gespeicherte Option „Bluteffekte“ kann sie ganz abschalten.
+
+Die sechs Hauptansichten wurden als native Godot-Ausgaben in 2160 × 3840 unter `docs/screenshots/quarantine-*-v0.2.6.png` aufgenommen. Die echte native Eingabeaufnahme unter `docs/previews/DeadwaveHeroes-v0.2.6-motion.mp4` dauert 25,1 Sekunden in 540 × 960 bei 30 Bildern/s mit Spielaudio. Das sind Aufnahmebedingungen mit festem Zeitschritt, keine gemessenen Geräte-FPS. Tatsächlich erzeugte Aufnahmen, Tests und öffentliche Buildnachweise werden in `docs/BUILD_REPORT.md` dokumentiert.

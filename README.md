@@ -1,6 +1,18 @@
 # DEADWAVE HEROES · RF Worlds
 
-Spielbarer Godot-4.6.3-Prototyp **v0.2.5**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+Spielbarer Godot-4.6.3-Prototyp **v0.2.6**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+
+## Quarantine 0.2.6
+
+Eigenständige Sci-Fi-Horror-Oberfläche: dunkler Stahl, eingelassene Konsolen, kalte Cyan-Hologramme, warmes Schriftweiß und bernsteinfarbene Warnungen. Startmenü, HUD, Reaktor, Arsenal, Karte, Upgrade-Auswahl, Pause und Ergebnisansichten verwenden dieselbe Formsprache. Feine Rasterlinien, beleuchtete Kontakte und lokale Lichtläufe bleiben zurückhaltend; Touchflächen und Text bewegen sich beim Drücken nicht. Die neue Originalillustration `assets/art/quarantine_terminal.png` bildet den Einstieg. Die gewünschte Horror-Stimmung ist eine gestalterische Referenz; es wurden weder Oberfläche noch Grafiken, Logos oder Figuren aus *Dead Space* kopiert.
+
+Die vorhandenen Figurenillustrationen werden jetzt als texturierte Segmente mit getrennten Schritten für Beine, Knie und Füße verformt. Läufer, schwere Gegner, Kriecher und vierbeinige Gegner besitzen unterschiedliche Gangarten. Der Held macht beim Einsatzbeginn einen kurzen, 0,68 Sekunden langen Antritt und geht anschließend in eine stehende Schusshaltung mit Atmung und Rückstoß über. Das sind prozedurale Cutout-Animationen bestehender Rastergrafiken, keine vollständigen handgezeichneten Einzelbildfolgen und keine neue frei steuerbare Laufmechanik.
+
+Treffer und Abschüsse erzeugen gerichtete Blutspritzer, Tropfen und unregelmäßige Bodenflecken, die abdunkeln und ausblenden. Roboter geben stattdessen Öl/Kühlmittelfeedback. Heldenblut erscheint nur bei tatsächlich erlittenem Lebensschaden. Unter Optionen sind **Bluteffekte** abschaltbar und **Bewegung reduziert** wählbar. Effekte bleiben auf das Schlachtfeld begrenzt, pausieren mit dem Spiel und verändern keine Kampfwerte, Kugelmengen oder Spielzufallsentscheidungen. Partikel und Flecken haben feste Budgets pro Qualitätsstufe.
+
+[Startansicht](docs/screenshots/quarantine-menu-v0.2.6.png) · [Spielansicht](docs/screenshots/quarantine-gameplay-v0.2.6.png) · [Arsenal](docs/screenshots/quarantine-arsenal-v0.2.6.png) · [Upgrades](docs/screenshots/quarantine-upgrades-v0.2.6.png) · [Karte](docs/screenshots/quarantine-map-v0.2.6.png) · [Optionen](docs/screenshots/quarantine-settings-v0.2.6.png) · [Bewegte Vorschau (MP4)](docs/previews/DeadwaveHeroes-v0.2.6-motion.mp4)
+
+Build-, Aufnahme- und Veröffentlichungsnachweise stehen in [BUILD_REPORT.md](docs/BUILD_REPORT.md). Eine MovieMaker-Aufnahme mit festem Zeitschritt ist keine FPS-Messung auf einem Smartphone. Waffenfreischaltungen, Hintergrundmusik und das bisherige Savegame bleiben integriert.
 
 ## Cinema & Motion 0.2.5
 
@@ -52,15 +64,15 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.5-debug/DeadwaveHeroes-v0.2.5-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.5-debug). Dieser öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
+**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.6-debug/DeadwaveHeroes-v0.2.6-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.6-debug). Nach erfolgreicher Veröffentlichung benötigt der öffentliche Download keinen GitHub-Login und kein Entpacken eines Actions-Archivs. Den tatsächlich geprüften Veröffentlichungsstand dokumentiert `docs/BUILD_REPORT.md`.
 
-Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.5-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut. Geht dieser Cache verloren, kann ein späterer Testbuild eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
+Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.6-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Für Updates muss derselbe lokale Debug-Schlüssel verwendet werden; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut. Geht dieser Cache verloren, kann ein späterer Testbuild eine Deinstallation erfordern. Dabei geht der lokale Spielstand verloren.
 
 **Neon Update 0.2.0:** Der wiederholte Abwurf wird im Physikserver korrekt zurückgesetzt; 24 Abwürfe mit denselben Poolkörpern werden in beiden Qualitätsstufen geprüft. Neue detaillierte Helden-/Gegnergrafiken, eigene Sci-Fi-Stadt, futuristisches HUD, Reaktor-Labyrinth, Klassenporträts und dreispaltige Upgrade-Karten sind integriert. Die Oberfläche skaliert als Vektor-/Canvas-UI; echte Vorschauen mit 2160 × 3840 Pixeln stehen unter `docs/screenshots/neon-*-4k.png`. Das ist ein Nachweis der hochauflösenden Darstellung, keine Zusage von 4K/60 FPS auf einem Smartphone.
 
-Das Savegame-Format ist unverändert. Debug-Schlüssel werden seit v0.1.1 im Buildcache wiederverwendet; der Zertifikatsvergleich der veröffentlichten APKs bestätigt für v0.2.0 dieselbe Signieridentität wie v0.1.1. Das neue APK kann als Update installiert werden; nicht vorher deinstallieren.
+Das Savegame-Format bleibt unverändert. Debug-Schlüssel werden seit v0.1.1 im Buildcache wiederverwendet. Ob eine konkrete neue APK dieselbe Signieridentität wie die vorherige öffentliche Version besitzt, wird am heruntergeladenen Artefakt geprüft und im Buildbericht dokumentiert. Ein erfolgreicher Export allein ist kein Nachweis eines auf einem Gerät installierten Updates.
 
-Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.5-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
+Nach einem erfolgreichen GitHub-Actions-Lauf steht die APK unter **Actions → Build DEADWAVE HEROES → letzter erfolgreicher Lauf → Artifacts → DeadwaveHeroes-v0.2.6-debug**. Ein vorhandener Workflow ist kein Nachweis eines erfolgten Remote-Laufs; siehe `docs/BUILD_REPORT.md`.
 
 ## Entwicklung und Builds (Linux)
 
@@ -94,7 +106,7 @@ source /workspace/tools/env.sh
 
 ## Design und Regressionstests
 
-`tests/reuse.gd` prüft das wiederholte Recycling derselben Physikkörper (120 Assertions). `tests/ui_layout.gd` prüft alle 48 Upgrade-Karten und die Klassenporträts (228 Assertions). `tests/render_balls.gd` prüft echte sichtbare Bildpunkte und vier aufeinanderfolgende gerenderte Abwürfe (17 Assertions, grafische Sitzung erforderlich). Die bestehende Suite enthält weitere 314 Assertions; dazu kommen drei vollständige Tutorial-Durchläufe.
+`tests/reuse.gd` prüft das wiederholte Recycling derselben Physikkörper. `tests/ui_layout.gd` prüft alle 48 Upgrade-Karten, Klassenporträts und Waffennamen. `tests/render_balls.gd` prüft echte sichtbare Bildpunkte und vier aufeinanderfolgende gerenderte Abwürfe; hierfür ist eine grafische Sitzung erforderlich. Hinzu kommen Eingabe-/Shaderprüfungen für `InterfaceMotion`, die Gelenk-/Standphasen von `ActorRig`, die Grenzen und Zustände von `BloodFX` sowie vollständige Kampagnen-/Waffenprobeläufe. Tatsächlich ausgeführte Suiten, Ergebnisse und verbleibende Gerätetestlücken werden pro Version im Buildbericht festgehalten.
 
 ```bash
 # In einer vorhandenen grafischen Sitzung, nachdem env.sh geladen wurde:
@@ -102,11 +114,11 @@ source /workspace/tools/env.sh
 "$GODOT_BIN" --path . --audio-driver Dummy --fixed-fps 60 --script res://tests/capture.gd -- --4k
 ```
 
-Die Capture-Szene stellt Gegner für reproduzierbare UI-Aufnahmen auf. Sie verwendet echte Spielressourcen, Physik und Menüs. Details zu Assetauflösungen und visuellen Grenzen: `docs/ART_DIRECTION.md`.
+Die historische `tests/capture.gd` stellt Gegner für reproduzierbare UI-Aufnahmen auf. Neuere Capture-/Film-Skripte dokumentieren reguläre Spielabläufe; deren Eingaben und Aufnahmebedingungen stehen im Buildbericht. Details zu Assetauflösungen und visuellen Grenzen: `docs/ART_DIRECTION.md`.
 
 ## Bewusster Entwicklungsstand
 
-Dies ist **kein fertiges v1.0-Spiel**. Die Inhaltszahl ist technisch vorhanden; das beweist nicht, dass alle 100 Level unter menschlichen Spielbedingungen ausbalanciert oder alle Bossbegegnungen ausreichend abwechslungsreich sind. Die Waffen verwenden direkte Treffer mit sichtbaren Schussspuren und Status-/Flächeneffekten; physikalisch fliegende Raketen und Granaten sind weitere Arbeit. Gegner und Bosse nutzen gemeinsame Animations-/Spritebausteine. Das Neon-Design ist ein umfassender visueller Ausbau, aber die Rasterfiguren haben noch keine vollständig gezeichneten Animationssequenzen. Audio und einzelne Weltvarianten benötigen weitere Art-Produktion. Eine separate Ausrüstungsbeute-/Skinfreischaltungsökonomie, mehr Boss-Angriffsmuster, Welt-Ambiences, detaillierte Tutorialführung, Gerätemessungen und Releasevorbereitung fehlen noch. Keine Android-Gerätetests und keine Windows-Ausführung sind durch den Linux-Export allein nachgewiesen.
+Dies ist **kein fertiges v1.0-Spiel**. Die Inhaltszahl ist technisch vorhanden; das beweist nicht, dass alle 100 Level unter menschlichen Spielbedingungen ausbalanciert oder alle Bossbegegnungen ausreichend abwechslungsreich sind. Die Waffen verwenden direkte Treffer mit sichtbaren Schussspuren und Status-/Flächeneffekten; physikalisch fliegende Raketen und Granaten sind weitere Arbeit. Gegner und Bosse nutzen gemeinsame Animations-/Spritebausteine. Die Quarantine-Präsentation verwendet texturierte Cutout-Gelenke und prozedurale Effekte; die Rasterfiguren haben weiterhin keine vollständig gezeichneten Animationssequenzen. Audio und einzelne Weltvarianten benötigen weitere Art-Produktion. Eine separate Ausrüstungsbeute-/Skinfreischaltungsökonomie, mehr Boss-Angriffsmuster, Welt-Ambiences, detaillierte Tutorialführung, Gerätemessungen und Releasevorbereitung fehlen noch. Keine Android-Gerätetests und keine Windows-Ausführung sind durch den Linux-Export allein nachgewiesen.
 
 Siehe `docs/ROADMAP.md`, `docs/BUILD_REPORT.md` und `docs/ARCHITECTURE.md`.
 

@@ -12,3 +12,8 @@
 - Die zwölf Waffenillustrationen und das Schlosssymbol unter `assets/ui/weapons/` sind eigens erstellte SVG-Vektoren; Generator `scripts/generate_weapon_art.py`.
 
 - `assets/art/first_light.png`: neue Original-Startillustration für dieses Projekt per Bildgenerierung erstellt. Die bewegte Vorschau ist eine echte Godot-Aufzeichnung mit der integrierten, vom Nutzer gelieferten Hintergrundmusik.
+
+
+- Quarantine 0.2.6: `assets/art/quarantine_terminal.png` ist eine neue für dieses Projekt generierte Originalillustration (native Quelle 941 × 1672), unverändert lokal eingebunden. Die Sci-Fi-Horror-Richtung orientiert sich an der gewünschten Stimmung; keine Benutzeroberfläche, Bilder, Figuren, Logos oder sonstigen Assets aus *Dead Space* wurden übernommen.
+- `ActorRig`, `BloodFX` und die Quarantine-Konsolenoberfläche sind eigener GDScript-/Shadercode. Texturierte Gangsegmente verwenden die bereits dokumentierten eigenen Helden-/Gegneratlanten; Blut-/Ölformen werden prozedural gezeichnet. Es wurden dafür keine fremden Sprite-Framefolgen, Bluttexturen oder Skelettanimationen eingebunden.
+- Die Quarantine-Vorschau verwendet die Spielausgabe und die bestehende, vom Nutzer bereitgestellte Hintergrundmusik. Die Aufzeichnung ist kein zusätzlicher Fremdasset-Zukauf und kein Smartphone-Leistungsnachweis. Tatsächliche Aufnahme-/Buildnachweise stehen im Buildbericht.

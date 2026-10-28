@@ -1,10 +1,10 @@
 class_name InterfaceMotion
 extends RefCounted
 # Presentation only: the native Button keeps its original rect, scale and input.
-# A rounded surface behind its text provides the spring, ripple and light sweep.
-const PRIMARY := Color("ff886e")
-const IVORY := Color("fff3e9")
-const COOL := Color("9abfff")
+# A recessed console surface behind its text provides spring, ripple and a quiet scan sweep.
+const PRIMARY := Color("90d6cf")
+const IVORY := Color("e3e4d4")
+const COOL := Color("76bdb7")
 const ENTRANCE_META := "interface_motion_entrance"
 const SURFACE_META := "interface_motion_surface"
 static var cached_shader: Shader
@@ -12,11 +12,13 @@ static var cached_shader: Shader
 const SURFACE_SHADER := """shader_type canvas_item;
 render_mode unshaded;
 uniform vec2 box_size = vec2(240.0, 60.0);
-uniform float corner_radius = 20.0;
+uniform float corner_radius = 9.0;
 uniform float visual_scale = 1.0;
-uniform vec4 fill_color : source_color = vec4(0.1, 0.12, 0.2, 1.0);
-uniform vec4 edge_color : source_color = vec4(0.5, 0.6, 0.8, 0.25);
-uniform vec4 glow_color : source_color = vec4(1.0, 0.6, 0.5, 1.0);
+uniform vec4 fill_color : source_color = vec4(0.055, 0.09, 0.10, 1.0);
+uniform vec4 edge_color : source_color = vec4(0.46, 0.74, 0.72, 0.35);
+uniform vec4 glow_color : source_color = vec4(0.56, 0.84, 0.81, 1.0);
+uniform float enabled_amount = 1.0;
+uniform float primary_amount = 0.0;
 uniform float glow_amount = 0.0;
 uniform float focus_amount = 0.0;
 uniform float sheen_phase = -1.0;
@@ -40,13 +42,26 @@ void fragment() {
  float mask = 1.0 - smoothstep(-aa, aa, distance_to_edge);
  float edge = 1.0 - smoothstep(0.2, 1.8 + focus_amount, abs(distance_to_edge + 1.0));
  vec3 base = fill_color.rgb;
- base += vec3(pow(1.0 - UV.y, 3.0) * 0.035);
+ base += vec3(0.025, 0.033, 0.030) * pow(1.0 - UV.y, 3.0);
  float sheen = 1.0 - smoothstep(0.0, 0.09, abs(UV.x * 0.82 + UV.y * 0.18 - sheen_phase));
- base += glow_color.rgb * sheen * glow_amount * 0.10;
+ base += glow_color.rgb * sheen * glow_amount * 0.045;
  vec2 pixel = local + half_size;
  float ripple = ring(pixel, ripple0) + ring(pixel, ripple1) + ring(pixel, ripple2);
- base += glow_color.rgb * min(ripple, 1.3) * 0.23;
+ base += glow_color.rgb * min(ripple, 1.3) * 0.17;
+ // Fine fixed raster lines stay local to the panel; no screen flicker or jitter.
+ float raster = step(0.82, fract(pixel.y * 0.25));
+ base -= vec3(raster * (0.012 + primary_amount * 0.008));
  base = mix(base, edge_color.rgb, edge * edge_color.a);
+ // Restrained hardware marks: a powered left rail, upper-right contact and footer tick.
+ float rail = (1.0 - smoothstep(0.55, 1.6, abs(pixel.x - 4.5)))
+  * step(11.0, pixel.y) * step(pixel.y, box_size.y - 11.0);
+ float contact = (1.0 - smoothstep(0.4, 1.2, abs(pixel.y - 5.0)))
+  * step(box_size.x - 25.0, pixel.x) * step(pixel.x, box_size.x - 11.0);
+ float footer = (1.0 - smoothstep(0.4, 1.2, abs(pixel.y - box_size.y + 5.0)))
+  * step(13.0, pixel.x) * step(pixel.x, 22.0);
+ float hardware = max(rail * 0.80, max(contact, footer) * 0.38) * enabled_amount;
+ vec3 powered_color = mix(glow_color.rgb, vec3(0.12, 0.31, 0.30), primary_amount * 0.72);
+ base = mix(base, powered_color, hardware);
  COLOR = vec4(base, fill_color.a * mask) * inherited_color;
 }
 """
@@ -73,7 +88,7 @@ static func bind_button(button: Button,accent: bool=false,game: Node=null) -> Co
  var surface=ButtonSurface.new()
  surface.accent=accent
  surface.game=game
- surface.name="RoundedMotionSurface"
+ surface.name="ConsoleMotionSurface"
  surface.mouse_filter=Control.MOUSE_FILTER_IGNORE
  surface.focus_mode=Control.FOCUS_NONE
  surface.show_behind_parent=true
@@ -123,7 +138,7 @@ class ButtonSurface extends Control:
  var pressed=false
  var hovered=false
  var elapsed=0.0
- var highlight=Color("9abfff")
+ var highlight=Color("76bdb7")
  var selected=false
  var ready_style=false
 
@@ -148,7 +163,7 @@ class ButtonSurface extends Control:
   size=button.size
   if effect:
    effect.set_shader_parameter("box_size",size.max(Vector2.ONE))
-   effect.set_shader_parameter("corner_radius",minf(24.0,size.y*0.42))
+   effect.set_shader_parameter("corner_radius",minf(10.0,size.y*0.2))
 
  func refresh_style() -> void:
   if not is_instance_valid(button) or not is_inside_tree():return
@@ -165,11 +180,11 @@ class ButtonSurface extends Control:
   transparent.content_margin_bottom=maxf(0,source.get_margin(SIDE_BOTTOM))
   for state in ["normal","hover","pressed","hover_pressed","disabled","focus"]:
    button.add_theme_stylebox_override(state,transparent)
-  button.add_theme_color_override("font_color",Color("241e2a") if accent else InterfaceMotion.IVORY)
-  button.add_theme_color_override("font_hover_color",Color("241e2a") if accent else InterfaceMotion.IVORY)
-  button.add_theme_color_override("font_pressed_color",Color("241e2a") if accent else InterfaceMotion.IVORY)
-  button.add_theme_color_override("font_focus_color",Color("241e2a") if accent else InterfaceMotion.IVORY)
-  button.add_theme_color_override("font_disabled_color",Color("9297b0"))
+  button.add_theme_color_override("font_color",Color("071d20") if accent else InterfaceMotion.IVORY)
+  button.add_theme_color_override("font_hover_color",Color("071d20") if accent else InterfaceMotion.IVORY)
+  button.add_theme_color_override("font_pressed_color",Color("071d20") if accent else InterfaceMotion.IVORY)
+  button.add_theme_color_override("font_focus_color",Color("071d20") if accent else InterfaceMotion.IVORY)
+  button.add_theme_color_override("font_disabled_color",Color("778782"))
   ready_style=true
   update_uniforms()
   queue_redraw()
@@ -216,20 +231,22 @@ class ButtonSurface extends Control:
  func update_uniforms() -> void:
   if not effect or not is_instance_valid(button):return
   var disabled=button.disabled
-  var fill=Color("ff886e") if accent else Color("1d2238")
-  if not accent and selected:fill=Color("282d47")
-  fill=fill.lerp(Color("ffb7a6") if accent else Color("323950"),hover_blend*0.7)
-  if disabled:fill=Color("12182b")
+  var fill=InterfaceMotion.PRIMARY if accent else Color("111d20")
+  if not accent and selected:fill=Color("183638")
+  fill=fill.lerp(Color("b5e6dd") if accent else Color("233d3e"),hover_blend*0.7)
+  if disabled:fill=Color("0e1518")
   var edge=highlight
-  edge.a=0.08 if disabled else (0.64 if selected else 0.22+hover_blend*0.2)
+  edge.a=0.10 if disabled else (0.75 if selected else 0.33+hover_blend*0.2)
   if button.has_focus():edge=Color(InterfaceMotion.IVORY,0.86)
+  effect.set_shader_parameter("enabled_amount",0.0 if disabled else 1.0)
+  effect.set_shader_parameter("primary_amount",1.0 if accent else 0.0)
   effect.set_shader_parameter("fill_color",fill)
   effect.set_shader_parameter("edge_color",edge)
-  effect.set_shader_parameter("glow_color",InterfaceMotion.IVORY if accent else highlight)
+  effect.set_shader_parameter("glow_color",InterfaceMotion.COOL if accent else highlight)
   effect.set_shader_parameter("glow_amount",0.0 if disabled else (1.0 if accent else hover_blend))
   effect.set_shader_parameter("focus_amount",1.0 if button.has_focus() else 0.0)
   effect.set_shader_parameter("visual_scale",visual_scale)
-  effect.set_shader_parameter("sheen_phase",-1.0 if InterfaceMotion.reduced(game) or disabled else fmod(elapsed*0.30,1.8)-0.4)
+  effect.set_shader_parameter("sheen_phase",-1.0 if InterfaceMotion.reduced(game) or disabled else fmod(elapsed*0.18,1.8)-0.4)
   for i in range(3):
    var value=Vector4.ZERO
    if i<ripples.size():
