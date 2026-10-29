@@ -48,7 +48,7 @@ jobs:
             sudo apt-get update
             sudo apt-get install --no-install-recommends -y xvfb
           fi
-          for suite in render_balls interface_motion combat_motion actor_rig blood_fx hero_gear workshop support_drone elemental_presentation; do
+          for suite in bonus_ops render_balls interface_motion combat_motion actor_rig blood_fx hero_gear workshop support_drone elemental_presentation; do
             test_data=$(mktemp -d /tmp/deadwave-render-XXXXXXXX)
             XDG_DATA_HOME="$test_data" xvfb-run -a "$GODOT_BIN" --path . --rendering-method gl_compatibility --audio-driver Dummy --fixed-fps 60 --script "res://tests/$suite.gd" -- --render > "builds/test-render-$suite.log" 2>&1
             cat "builds/test-render-$suite.log"
@@ -57,16 +57,16 @@ jobs:
       - name: Upload Android debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: DeadwaveHeroes-v0.2.9-debug
+          name: DeadwaveHeroes-v0.2.10-debug
           path: |
-            builds/DeadwaveHeroes-v0.2.9-debug.apk
+            builds/DeadwaveHeroes-v0.2.10-debug.apk
             builds/manifest.json
           if-no-files-found: error
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
-          name: DeadwaveHeroes-v0.2.9-windows
-          path: builds/DeadwaveHeroes-v0.2.9-windows.zip
+          name: DeadwaveHeroes-v0.2.10-windows
+          path: builds/DeadwaveHeroes-v0.2.10-windows.zip
           if-no-files-found: error
       - name: Preserve build and test evidence
         if: always()

@@ -24,6 +24,8 @@ var power_message_left := 0.0
 var blood_fx: BloodFX
 var combat_motion: CombatMotion
 var elemental_fx: ElementalFx
+const COMBAT_PACE=1.25
+var bonus_ops: BonusOps
 var support_drone: SupportDrone
 var profile = Profile.new()
 var arsenal: ArsenalView
@@ -143,6 +145,9 @@ func _ready() -> void:
  ball_visuals=BallVisuals.new()
  ball_visuals.balls=pool
  add_child(ball_visuals)
+ bonus_ops=BonusOps.new()
+ bonus_ops.game=self
+ add_child(bonus_ops)
  show_menu()
  if "--smoke" in OS.get_cmdline_user_args():
   auto_test=true
@@ -236,7 +241,7 @@ func show_menu() -> void:
  var settings=button("OPTIONEN",Rect2(358,783,152,63),show_settings)
  button("WERKBANK  ·  DAUERHAFTE AUSRÜSTUNG",Rect2(30,853,480,44),show_workshop)
  label("HELD LV %d   ·   %s CR"%[profile.data["level"],compact(profile.data["coins"])],Vector2(32,902),10,MUTED,470)
- label("OFFLINE BEREIT                                 v0.2.9",Vector2(32,920),10,MUTED)
+ label("OFFLINE BEREIT                                 v0.2.10",Vector2(32,920),10,MUTED)
  reveal_ui(0)
 
 func page_header(title: String,subtitle: String) -> void:
@@ -282,7 +287,7 @@ func show_character() -> void:
  var w=weapon()
  var rank=Progression.effective_rank(profile.data,int(profile.data["weapon"]))
  label(cls["name"].to_upper()+" / LEVEL %d"%int(profile.data["level"]),Vector2(30,188),24,LIME)
- var values=["Erfahrung|%d / %d"%[profile.data["xp"],int(profile.data["level"])*100],"Maximalleben|%d"%int(float(cls["hp"])+(int(profile.data["level"])-1)*4),"Angriffsschaden|%.1f"%(float(w[1])*float(cls["damage"])*(1+rank*0.1)*(1+0.05*Workshop.rank(profile.data,"weapon"))),"Schüsse / Sekunde|%.2f"%(1.0/float(w[2])),"Kritische Chance|5%", "Kritischer Schaden|175%", "Rüstung|%d + Einsatz-Upgrades"%Workshop.rank(profile.data,"armor"), "Ausweichchance|0% + Run-Upgrades", "Regeneration|%.1f HP / s"%cls["regen"], "Munitionskapazität|%d"%(Content.ammo_capacity(int(profile.data["unlocked"]))+40*Workshop.rank(profile.data,"belt")), "Spezialenergie|100 / Impuls kostet 50", "Entdeckte Fähigkeiten|%d / %d"%[profile.data["abilities"].size(),Content.UPGRADES.size()]]
+ var values=["Erfahrung|%d / %d"%[profile.data["xp"],int(profile.data["level"])*100],"Maximalleben|%d"%int(float(cls["hp"])+(int(profile.data["level"])-1)*4),"Angriffsschaden|%.1f"%(float(w[1])*float(cls["damage"])*(1+rank*0.1)*(1+0.05*Workshop.rank(profile.data,"weapon"))),"Schüsse / Sekunde|%.2f"%(COMBAT_PACE/float(w[2])),"Kritische Chance|5%", "Kritischer Schaden|175%", "Rüstung|%d + Einsatz-Upgrades"%Workshop.rank(profile.data,"armor"), "Ausweichchance|0% + Run-Upgrades", "Regeneration|%.1f HP / s"%(float(cls["regen"])*COMBAT_PACE), "Munitionskapazität|%d"%(Content.ammo_capacity(int(profile.data["unlocked"]))+40*Workshop.rank(profile.data,"belt")), "Spezialenergie|100 / Impuls kostet 50", "Entdeckte Fähigkeiten|%d / %d"%[profile.data["abilities"].size(),Content.UPGRADES.size()]]
  for i in range(values.size()):
   var parts=values[i].split("|")
   label(parts[0],Vector2(30,260+i*43),14,MUTED)
@@ -336,6 +341,7 @@ func show_licenses() -> void:
 
 func start_level(number: int) -> void:
  deployment_age=0
+ bonus_ops.reset()
  ammo_cargo.reset()
  wave_booster.clear()
  overdrive_left=0
@@ -421,6 +427,7 @@ func build_hud() -> void:
  aim_surface.mouse_default_cursor_shape=Control.CURSOR_HSIZE
  aim_surface.gui_input.connect(aim_input)
  controls.add_child(aim_surface)
+ if is_instance_valid(bonus_ops):bonus_ops.mount()
 
 func toggle_switch() -> void:
  if reactor_switch.toggle():
@@ -1231,7 +1238,7 @@ func _physics_process(delta: float) -> void:
   gear_flash=maxf(0,gear_flash-delta)
   power_message_left=maxf(0,power_message_left-delta)
   physics_balls(delta)
-  update_combat(delta)
+  update_combat(delta*COMBAT_PACE)
  if auto_test and clock>1.0 and attempts>0 and active_balls()==0 and mode=="play":
   drop_ammo()
  if auto_test and mode=="upgrade":

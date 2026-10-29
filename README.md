@@ -1,6 +1,14 @@
 # DEADWAVE HEROES · RF Worlds
 
-Spielbarer Godot-4.6.3-Prototyp **v0.2.9**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+Spielbarer Godot-4.6.3-Prototyp **v0.2.10**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+
+## Live Ops 0.2.10
+
+Der Kampf läuft mit 125 % Tempo: Gegner, Schüsse, Nachladen und Kampfstatus werden gemeinsam beschleunigt; Kugeln behalten ihre normale Physik. Waffenanzeigen berücksichtigen das effektive Tempo.
+
+Während des Kampfes erscheinen freiwillige Bonusangebote. Drei Wischrichtungen liefern bis zu 24 normale Munition (bei vollem Lager bis zu zwölf Energie), ein vierstelliger Code aus den Tasten 1–4 liefert 18 dauerhaft gespeicherte Credits. Ein Angebot bleibt zehn Sekunden verfügbar; nach Öffnen bleiben sieben Sekunden. Fehler setzen die Eingabefolge zurück, ohne Ressourcen abzuziehen. Pause hält die Frist an. Höchstens zwei Angebote pro Welle, abwechselnde Aufgaben, einmalige Belohnungen. Der Kampf läuft währenddessen weiter und das Kugelfeld bleibt bedienbar.
+
+[Bonusaktion im Spiel](docs/screenshots/live-ops-v0.2.10.png). Der Screenshot stammt aus einem gezielten Eingabetest. Aktueller Build- und Downloadnachweis im [Buildbericht](docs/BUILD_REPORT.md).
 
 ## Elemental 0.2.9
 
