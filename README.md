@@ -10,7 +10,7 @@ Die **Unterstützungsdrohne** bekommt ein kompaktes gepanzertes Gehäuse mit zwe
 
 [Brand](docs/screenshots/elemental-fire-v0.2.9.png) · [Kryo](docs/screenshots/elemental-frost-v0.2.9.png) · [EMP](docs/screenshots/elemental-emp-v0.2.9.png) · [Drohne](docs/screenshots/support-drone-v0.2.9.png) · [Bewegte Vorschau](docs/previews/DeadwaveHeroes-v0.2.9-motion.mp4)
 
-Die vorgesehenen Elemental-Aufnahmen sind gezielte Darstellungstests im laufenden Godot-Spiel mit kontrollierten Testzuständen, echten Schüssen und realen Statuseffekten. Sie zeigen keinen erspielten Kampagnenfortschritt. Tatsächlich ausgeführte Prüfungen, erzeugte Dateien und veröffentlichte Downloads werden im [Buildbericht](docs/BUILD_REPORT.md) dokumentiert. Die verifizierte Vorgängerversion steht weiterhin im Abschnitt Forge 0.2.8.
+Die veröffentlichten Elemental-Aufnahmen sind gezielte Darstellungstests im laufenden Godot-Spiel mit kontrollierten Testzuständen, echten Schüssen und realen Statuseffekten. Sie zeigen keinen erspielten Kampagnenfortschritt. Tatsächlich ausgeführte Prüfungen, erzeugte Dateien und veröffentlichte Downloads werden im [Buildbericht](docs/BUILD_REPORT.md) dokumentiert. Die verifizierte Vorgängerversion steht weiterhin im Abschnitt Forge 0.2.8.
 
 ## Forge 0.2.8
 
@@ -104,15 +104,15 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-Zielversion für den nächsten geprüften Download ist **v0.2.9**: [APK](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.9-debug/DeadwaveHeroes-v0.2.9-debug.apk) · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.9-debug). Der tatsächliche Build- und Downloadnachweis folgt im [Buildbericht](docs/BUILD_REPORT.md). Ein erfolgreicher v0.2.9-Download wird hier noch nicht behauptet.
+**[Android-APK v0.2.9 herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.9-debug/DeadwaveHeroes-v0.2.9-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.9-debug). Der öffentliche Download wurde vollständig geprüft; Prüfsummen und Signaturnachweis stehen im [Buildbericht](docs/BUILD_REPORT.md).
 
 Bereits verifiziert: **[APK v0.2.8 herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.8-debug/DeadwaveHeroes-v0.2.8-debug.apk)**. Der öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
 
 Die neue Exportkonfiguration erzeugt `builds/DeadwaveHeroes-v0.2.9-debug.apk` für Android 7/API 24 oder neuer, ARMv7/ARM64. Die APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Es ist eine **Debug-Testversion**. Release-Signierschlüssel liegen nicht im Repository; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel.
 
-Das Savegame-Format bleibt kompatibel. Die öffentliche v0.2.8 besitzt dieselbe Signieridentität wie v0.2.7. Der Vergleich der nächsten öffentlichen v0.2.9 mit v0.2.8 wird am tatsächlich heruntergeladenen Artefakt dokumentiert. Ein Test auf einem physischen Android-Gerät steht noch aus.
+Das Savegame-Format bleibt kompatibel. Die heruntergeladene öffentliche v0.2.9 besitzt dieselbe Signieridentität und dasselbe Paket wie v0.2.8 bei höherem Versionscode. Die Update-Bedingungen sind geprüft; ein Test auf einem physischen Android-Gerät steht noch aus.
 
-APK, Windows-ZIP und Prüfprotokolle der verifizierten v0.2.8 stehen im erfolgreichen [GitHub-Actions-Lauf 40774732831](https://github.com/Whiskymitschuss/New-Game/actions/runs/40774732831) unter **Artifacts**. Für v0.2.9 folgen der konkrete Lauf und seine Ergebnisse nach Abschluss.
+APK, Windows-ZIP und Prüfprotokolle der v0.2.9 stehen im erfolgreichen [GitHub-Actions-Lauf 40847844687](https://github.com/Whiskymitschuss/New-Game/actions/runs/40847844687) unter **Artifacts**.
 
 ## Entwicklung und Builds (Linux)
 
