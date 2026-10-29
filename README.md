@@ -112,7 +112,7 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-**[Android-APK v0.2.9 herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.9-debug/DeadwaveHeroes-v0.2.9-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.9-debug). Der öffentliche Download wurde vollständig geprüft; Prüfsummen und Signaturnachweis stehen im [Buildbericht](docs/BUILD_REPORT.md).
+**[Android-APK v0.2.10 herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.10-debug/DeadwaveHeroes-v0.2.10-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.10-debug). Download, Prüfsumme und Update-Signatur sind verifiziert; Details stehen im [Buildbericht](docs/BUILD_REPORT.md).
 
 Bereits verifiziert: **[APK v0.2.8 herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.8-debug/DeadwaveHeroes-v0.2.8-debug.apk)**. Der öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
 
