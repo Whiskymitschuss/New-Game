@@ -194,7 +194,6 @@ func enemy(e: Dictionary) -> bool:
  var source=frame_region("enemies",atlas,enemies,3,2)
  var reduced=bool(g.profile.data["settings"].get("reduced_motion",false))
  ActorRig.draw_enemy(g,enemies,source,base+Vector2(motion["offset"].x,0)+g.combat_motion.camera_offset(),height,tint,kind,boss,float(e["age"]),float(e.get("speed",17))*SpecialAmmo.speed_factor(e),reduced,g.quality,float(motion["angle"])*0.4,motion["scale"])
- SpecialAmmo.paint(g,e,float(g.clock),reduced,int(g.quality))
  if kind in [5,6,10,11,14] or boss:
   var accent=VIOLET if kind==14 else (AMBER if kind in [6,11] else MINT)
   if kind==10:accent=BLUE
@@ -232,21 +231,26 @@ func hud() -> void:
  var ammo_tint=AMBER if g.ammo<=30 else BLUE
  text(g.compact(g.ammo),Vector2(29,396),27,ammo_tint,true)
  g.bar(Rect2(30,402,122,2),float(g.ammo)/maxf(1,float(g.stats["capacity"])),ammo_tint)
- text(g.weapon()[0].to_upper(),Vector2(183,371),11,PAPER)
+ text(g.weapon()[0].to_upper(),Vector2(183,369),11,PAPER)
  var cargo=g.get("ammo_cargo")
  var next_kind=String(cargo.peek()) if cargo!=null else "normal"
  for i in range(3):
   var ammo_kind=["fire","frost","emp"][i]
   var count=int(cargo.count(ammo_kind)) if cargo!=null else 0
   var color=SpecialAmmo.color(ammo_kind)
-  var x=184+i*59
-  g.draw_circle(Vector2(x+2,382),1.7,Color(color,0.9 if count>0 else 0.24))
-  text(["BR","KR","EMP"][i]+" %02d"%count,Vector2(x+7,385),8,Color(color,1.0 if count>0 else 0.43),true)
-  if next_kind==ammo_kind and count>0:
-   g.draw_line(Vector2(x+7,389),Vector2(x+47,389),Color(color,0.65),1,true)
+  var x=183+i*62
+  var selected=next_kind==ammo_kind and count>0
+  plate(Rect2(x,376,58,18),Color(color,1.0 if selected else 0.45),Color("17282b") if selected else Color("0b171a"),4)
+  text(["BRAND","KRYO","EMP"][i]+" %02d"%count,Vector2(x+5,389),10,Color(color,1.0 if count>0 else 0.58),true)
+  if selected:
+   g.draw_line(Vector2(x+5,375),Vector2(x+53,375),Color(color,0.92),1.4,true)
+   g.draw_line(Vector2(x+5,394),Vector2(x+53,394),Color(color,0.45),1,true)
  var magazine_state="NACHLADEN" if g.reload_timer>0 else "%02d IM MAGAZIN"%g.magazine
+ if next_kind!="normal":magazine_state="› "+SpecialAmmo.display_name(next_kind)+" · "+magazine_state
  if g.overdrive_left>0:magazine_state+=" · BOOST %ds"%ceili(g.overdrive_left)
- text(magazine_state,Vector2(184,402),8,AMBER if g.overdrive_left>0 else QUIET,true)
+ var magazine_size=9
+ if mono_font.get_string_size(magazine_state,HORIZONTAL_ALIGNMENT_LEFT,-1,magazine_size).x>181:magazine_size=8
+ text(magazine_state,Vector2(184,406),magazine_size,AMBER if g.overdrive_left>0 else (SpecialAmmo.color(next_kind) if next_kind!="normal" else QUIET),true)
  text("KINETIK",Vector2(385,370),9,QUIET,true)
  text("BEREIT" if g.energy>=50 else "%02d / 50"%int(g.energy),Vector2(385,391),15,BLUE,true)
  g.bar(Rect2(385,398,121,3),g.energy/100.0,BLUE)
@@ -272,6 +276,28 @@ func circuit_disc(at: Vector2,radii: Vector2,color: Color) -> void:
   points.append(at+Vector2(cos(angle)*radii.x,sin(angle)*radii.y))
  g.draw_colored_polygon(points,color)
 
+func imprint_glyph(kind: String,at: Vector2,size: float,color: Color,phase: float=0.0,alpha: float=1.0) -> void:
+ if kind=="fire":
+  var sway=sin(phase*4.1)*0.09
+  var shape=PackedVector2Array([Vector2(-0.48,0.25),Vector2(-0.56,-0.12),Vector2(-0.27,-0.47),Vector2(-0.25,-0.12),Vector2(0.05+sway,-0.94),Vector2(0.27,-0.55),Vector2(0.28,-0.22),Vector2(0.45,-0.43),Vector2(0.55,-0.06),Vector2(0.4,0.27),Vector2(0,0.43)])
+  for i in range(shape.size()):shape[i]=at+shape[i]*size
+  g.draw_colored_polygon(shape,Color(color,alpha*0.92))
+  var core=PackedVector2Array([at+Vector2(-0.22,0.22)*size,at+Vector2(-0.1,-0.12)*size,at+Vector2(0.04,-0.39)*size,at+Vector2(0.26,0.13)*size,at+Vector2(0.04,0.35)*size])
+  g.draw_colored_polygon(core,Color("ffe3b0",alpha))
+ elif kind=="frost":
+  for axis in range(3):
+   var ray=Vector2.from_angle(axis*PI/3)*size*0.68
+   g.draw_line(at-ray,at+ray,Color(color,alpha),1.4,true)
+   for side in [-1,1]:
+    var tip=ray*side*0.64
+    var branch=Vector2(-ray.y,ray.x)*0.24
+    g.draw_line(at+tip-ray*side*0.24+branch,at+tip,Color(color,alpha*0.85),1.1,true)
+    g.draw_line(at+tip-ray*side*0.24-branch,at+tip,Color(color,alpha*0.85),1.1,true)
+  g.draw_circle(at,1.4,Color("e2f8ff",alpha))
+ else:
+  var bolt=PackedVector2Array([at+Vector2(0.12,-0.78)*size,at+Vector2(-0.4,0.04)*size,at+Vector2(0.03,0.01)*size,at+Vector2(-0.14,0.66)*size,at+Vector2(0.43,-0.15)*size,at+Vector2(0.02,-0.1)*size])
+  g.draw_colored_polygon(bolt,Color(color,alpha))
+
 func circuit_gate(x: float,y: float,width: float,factor: int,power: float,side: int,spin: float,imprint: String="normal") -> void:
  # The whole powered aperture is the true crossing span; open lanes have no gate.
  if factor<2:return
@@ -296,15 +322,23 @@ func circuit_gate(x: float,y: float,width: float,factor: int,power: float,side: 
  text(caption,Vector2(caption_x,y-22),25,color)
  g.draw_line(Vector2(caption_x,y-16),Vector2(caption_x+caption_width,y-16),Color(color,0.2+power*0.5),1,true)
  if imprint!="normal":
-  # The imprint is part of this real aperture; no extra invisible pickup field.
-  var badge_x=caption_x
-  if imprint=="fire":
-   g.draw_polyline(PackedVector2Array([Vector2(badge_x+1,y-3),Vector2(badge_x+1,y-8),Vector2(badge_x+4,y-11),Vector2(badge_x+6,y-7),Vector2(badge_x+8,y-9),Vector2(badge_x+9,y-3)]),color,1.2,true)
-  else:
-   for arm in range(3):
-    var ray=Vector2.from_angle(arm*PI/3)*4
-    g.draw_line(Vector2(badge_x+5,y-6)-ray,Vector2(badge_x+5,y-6)+ray,color,1.1,true)
-  text("BRAND" if imprint=="fire" else "KRYO",Vector2(badge_x+14,y-3),8,color,true)
+  # This badge belongs to the real aperture; the flare budget follows actual
+  # crossing charge rather than suggesting a second hidden pickup field.
+  var badge_x=x+11 if side==0 else x+width-67
+  imprint_glyph(imprint,Vector2(badge_x+7,y-5),11,color,spin)
+  text("BRAND" if imprint=="fire" else "KRYO",Vector2(badge_x+20,y+1),10,color,true)
+  var charge=clampf(power,0,1)
+  if charge>0.025:
+   for i in range(3 if g.quality==1 else 2):
+    var travel=fposmod(spin*0.36+i*0.37,1.0)
+    var flare_at=Vector2(x+22+(width-44)*travel,y+10-sin(travel*PI)*3)
+    if imprint=="fire":
+     imprint_glyph("fire",flare_at,8+charge*9,color,spin+i,charge*0.7)
+     g.draw_line(flare_at-Vector2(0,9+charge*10),flare_at-Vector2(0,12+charge*10),Color("ffe0a3",charge*0.7),1.3,true)
+    else:
+     var shard=PackedVector2Array([flare_at+Vector2(-3,1),flare_at+Vector2(0,-8-charge*9),flare_at+Vector2(3,0),flare_at+Vector2(0,3)])
+     g.draw_colored_polygon(shard,Color(color,charge*0.65))
+     g.draw_line(flare_at-Vector2(0,6),flare_at+Vector2(0,1),Color("e8faff",charge*0.82),1.2,true)
  for i in range(2 if g.quality==0 else 3):
   var phase=fposmod(spin*0.35+i*0.32,1.0)
   var px=x+12+(width-24)*phase
@@ -312,7 +346,7 @@ func circuit_gate(x: float,y: float,width: float,factor: int,power: float,side: 
   g.draw_line(Vector2(px,y-7-drop),Vector2(px,y-3-drop),Color(color,0.16+power*0.42),1,true)
 
 func circuit_portal(at: Vector2,exit: bool,spin: float) -> void:
- var color=Color("9baef5")
+ var color=SpecialAmmo.color("emp")
  var halo=Color(color,0.06)
  var direction=-1.0 if exit else 1.0
  # Dark throat and concentric depth are readable as a hole, not a flat ring icon.
@@ -336,7 +370,14 @@ func circuit_portal(at: Vector2,exit: bool,spin: float) -> void:
  # A tiny inner highlight gives the outgoing hole its unambiguous exit cue.
  if exit:g.draw_line(at+Vector2(-4,7),at+Vector2(4,7),Color(MINT,0.55),1.2,true)
  else:
-  text("EMP",at+Vector2(-9,39),8,SpecialAmmo.color("emp"),true)
+  for i in range(3 if g.quality==1 else 2):
+   var angle=spin*0.55+i*TAU/3
+   var ray=Vector2.from_angle(angle)
+   var tangent=Vector2(-ray.y,ray.x)
+   var spoke=PackedVector2Array([at+ray*11,at+ray*17+tangent*2.5,at+ray*19-tangent*1.8,at+ray*24])
+   g.draw_polyline(spoke,Color(color,0.5),1.1,true)
+  imprint_glyph("emp",at+Vector2(-15,37),8,color)
+  text("EMP",at+Vector2(-7,41),10,color,true)
 
 func circuit_obstacle(ob: Dictionary,spin: float) -> void:
  var p: Vector2=ob["pos"]

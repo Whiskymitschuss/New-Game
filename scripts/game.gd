@@ -23,6 +23,8 @@ var power_message := ""
 var power_message_left := 0.0
 var blood_fx: BloodFX
 var combat_motion: CombatMotion
+var elemental_fx: ElementalFx
+var support_drone: SupportDrone
 var profile = Profile.new()
 var arsenal: ArsenalView
 var run_xp := 0
@@ -126,6 +128,12 @@ func _ready() -> void:
  combat_motion=CombatMotion.new()
  combat_motion.game=self
  add_child(combat_motion)
+ support_drone=SupportDrone.new()
+ support_drone.game=self
+ add_child(support_drone)
+ elemental_fx=ElementalFx.new()
+ elemental_fx.game=self
+ add_child(elemental_fx)
  blood_fx=BloodFX.new()
  blood_fx.game=self
  add_child(blood_fx)
@@ -228,7 +236,7 @@ func show_menu() -> void:
  var settings=button("OPTIONEN",Rect2(358,783,152,63),show_settings)
  button("WERKBANK  ·  DAUERHAFTE AUSRÜSTUNG",Rect2(30,853,480,44),show_workshop)
  label("HELD LV %d   ·   %s CR"%[profile.data["level"],compact(profile.data["coins"])],Vector2(32,902),10,MUTED,470)
- label("OFFLINE BEREIT                                 v0.2.8",Vector2(32,920),10,MUTED)
+ label("OFFLINE BEREIT                                 v0.2.9",Vector2(32,920),10,MUTED)
  reveal_ui(0)
 
 func page_header(title: String,subtitle: String) -> void:
@@ -367,6 +375,8 @@ func start_level(number: int) -> void:
  last_drop_message=""
  reactor_fx.reset()
  combat_motion.reset()
+ elemental_fx.reset()
+ support_drone.reset()
  blood_fx.reset()
  produced=0
  dropped=0
@@ -804,8 +814,10 @@ func update_combat(delta: float) -> void:
   shoot()
  drone_timer-=delta
  if float(stats["drone"])>0 and drone_timer<=0 and not enemies.is_empty():
+  var drone_target=Vector2(enemies[0]["x"],enemies[0]["y"]-20)
+  support_drone.on_shot(drone_target)
   hit_enemy(enemies[0],8*float(stats["drone"])*(1+level*0.03))
-  tracers.append({"from":Vector2(122,242),"to":Vector2(enemies[0]["x"],enemies[0]["y"]-20),"life":0.15,"color":CYAN})
+  tracers.append({"from":support_drone.muzzle_position(),"to":drone_target,"life":0.15,"color":CYAN})
   drone_timer=0.8
  if hp<=0:
   finish_level(false)
@@ -903,6 +915,7 @@ func shoot() -> void:
  shoot_flash=0.1
  hero_pose="attack"
  combat_motion.on_shot(Vector2(target["x"],target["y"]-28),int(profile.data["weapon"]),critical)
+ elemental_fx.on_shot(round_kind,Vector2(146,263),Vector2(target["x"],target["y"]-28),target)
  hit_enemy(target,damage,true,critical)
  SpecialAmmo.apply_hit(self,target,round_kind,damage)
  target["poison"]=float(stats["poison"])
@@ -1436,13 +1449,6 @@ func _draw() -> void:
  if layout.is_empty():return
  backdrop(int(layout["world"]),121,380)
  draw_hero(Vector2(94,340),1.1,hero_pose)
- if float(stats.get("drone",0))>0:
-  var p=Vector2(125,211+sin(clock*4)*4)
-  draw_circle(p,14,Color(CYAN,0.08))
-  future.plate(Rect2(p-Vector2(12,5),Vector2(24,12)),CYAN,Color("30455c"),3)
-  draw_circle(p,3,CYAN)
-  line(p+Vector2(-22,-9),p+Vector2(-7,-9),INK,1.5)
-  line(p+Vector2(7,-9),p+Vector2(22,-9),INK,1.5)
  for e in enemies:draw_enemy(e)
  for t in tracers:
   line(t["from"],t["to"],Color(t["color"],clampf(t["life"]*3,0,0.25)),7)

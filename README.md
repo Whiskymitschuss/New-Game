@@ -1,6 +1,16 @@
 # DEADWAVE HEROES · RF Worlds
 
-Spielbarer Godot-4.6.3-Prototyp **v0.2.8**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+Spielbarer Godot-4.6.3-Prototyp **v0.2.9**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+
+## Elemental 0.2.9
+
+**Brand, Kryo und EMP** erhalten eigene, deutlich sichtbare Schuss-, Einschlags- und Statuseffekte. Brand verbindet glühende Geschossspuren mit Flammen und Funken am getroffenen Gegner. Kryo setzt auf kalte Leuchtspuren, Eissplitter und Reif; EMP auf elektrische Bögen und kurze Impulsringe. Die vorhandene Munition und die echten Statuswerte steuern die Darstellung. Lesbare Typanzeigen im Waffenstreifen und klarere Veredelungsaperturen helfen bei der Wegwahl.
+
+Die **Unterstützungsdrohne** bekommt ein kompaktes gepanzertes Gehäuse mit zwei Antrieben, Kamera und eigener Waffe. Schweben, Rückstoß und der sichtbare Schuss folgen ihrer tatsächlichen Position. Die Effekte verwenden feste Budgets und berücksichtigen reduzierte Bewegung sowie die sparsame Qualitätsstufe.
+
+[Brand](docs/screenshots/elemental-fire-v0.2.9.png) · [Kryo](docs/screenshots/elemental-frost-v0.2.9.png) · [EMP](docs/screenshots/elemental-emp-v0.2.9.png) · [Drohne](docs/screenshots/support-drone-v0.2.9.png) · [Bewegte Vorschau](docs/previews/DeadwaveHeroes-v0.2.9-motion.mp4)
+
+Die vorgesehenen Elemental-Aufnahmen sind gezielte Darstellungstests im laufenden Godot-Spiel mit kontrollierten Testzuständen, echten Schüssen und realen Statuseffekten. Sie zeigen keinen erspielten Kampagnenfortschritt. Tatsächlich ausgeführte Prüfungen, erzeugte Dateien und veröffentlichte Downloads werden im [Buildbericht](docs/BUILD_REPORT.md) dokumentiert. Die verifizierte Vorgängerversion steht weiterhin im Abschnitt Forge 0.2.8.
 
 ## Forge 0.2.8
 
@@ -94,15 +104,15 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-**[APK direkt herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.8-debug/DeadwaveHeroes-v0.2.8-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.8-debug). Der geprüfte öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs. Details stehen im [Buildbericht](docs/BUILD_REPORT.md).
+Zielversion für den nächsten geprüften Download ist **v0.2.9**: [APK](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.9-debug/DeadwaveHeroes-v0.2.9-debug.apk) · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.9-debug). Der tatsächliche Build- und Downloadnachweis folgt im [Buildbericht](docs/BUILD_REPORT.md). Ein erfolgreicher v0.2.9-Download wird hier noch nicht behauptet.
 
-Die erzeugte Datei ist `builds/DeadwaveHeroes-v0.2.8-debug.apk` (Android 7/API 24 oder neuer; ARMv7/ARM64). APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Das ist eine **Debug-Testversion**, keine Veröffentlichungsversion. Keine Release-Signierschlüssel liegen im Repository. Die öffentliche v0.2.8 besitzt dasselbe Signierzertifikat wie v0.2.7 und einen höheren Versionscode. CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel erneut.
+Bereits verifiziert: **[APK v0.2.8 herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.8-debug/DeadwaveHeroes-v0.2.8-debug.apk)**. Der öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
 
-**Neon Update 0.2.0:** Der wiederholte Abwurf wird im Physikserver korrekt zurückgesetzt; 24 Abwürfe mit denselben Poolkörpern werden in beiden Qualitätsstufen geprüft. Neue detaillierte Helden-/Gegnergrafiken, eigene Sci-Fi-Stadt, futuristisches HUD, Reaktor-Labyrinth, Klassenporträts und dreispaltige Upgrade-Karten sind integriert. Die Oberfläche skaliert als Vektor-/Canvas-UI; echte Vorschauen mit 2160 × 3840 Pixeln stehen unter `docs/screenshots/neon-*-4k.png`. Das ist ein Nachweis der hochauflösenden Darstellung, keine Zusage von 4K/60 FPS auf einem Smartphone.
+Die neue Exportkonfiguration erzeugt `builds/DeadwaveHeroes-v0.2.9-debug.apk` für Android 7/API 24 oder neuer, ARMv7/ARM64. Die APK aufs Smartphone übertragen, öffnen und bei Bedarf die Installation aus dieser Quelle erlauben. Es ist eine **Debug-Testversion**. Release-Signierschlüssel liegen nicht im Repository; CI verwendet den im Actions-Cache gespeicherten Debug-Schlüssel.
 
-Das Savegame-Format bleibt kompatibel. Paket, Versionscode und Signierzertifikat der heruntergeladenen v0.2.8 erfüllen die Update-Bedingungen gegenüber v0.2.7. Ein Test auf einem physischen Android-Gerät steht noch aus.
+Das Savegame-Format bleibt kompatibel. Die öffentliche v0.2.8 besitzt dieselbe Signieridentität wie v0.2.7. Der Vergleich der nächsten öffentlichen v0.2.9 mit v0.2.8 wird am tatsächlich heruntergeladenen Artefakt dokumentiert. Ein Test auf einem physischen Android-Gerät steht noch aus.
 
-APK, Windows-ZIP und Prüfprotokolle stehen außerdem im erfolgreichen [GitHub-Actions-Lauf 40774732831](https://github.com/Whiskymitschuss/New-Game/actions/runs/40774732831) unter **Artifacts**.
+APK, Windows-ZIP und Prüfprotokolle der verifizierten v0.2.8 stehen im erfolgreichen [GitHub-Actions-Lauf 40774732831](https://github.com/Whiskymitschuss/New-Game/actions/runs/40774732831) unter **Artifacts**. Für v0.2.9 folgen der konkrete Lauf und seine Ergebnisse nach Abschluss.
 
 ## Entwicklung und Builds (Linux)
 

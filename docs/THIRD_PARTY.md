@@ -24,3 +24,7 @@
 
 
 - Forge 0.2.8 verwendet keine neuen externen Assets. Weichenanzeige, Spezialmunitionsmarkierungen, Statusdarstellung und Werkbankoberfläche sind eigener prozeduraler Godot-Zeichencode. Werkbankheld und permanente Ausrüstungsanbauten verwenden die bereits dokumentierten eigenen Atlanten und Systeme. Bestehende Schriften und die vom Nutzer bereitgestellte Hintergrundmusik bleiben unverändert eingebunden.
+
+
+- Elemental 0.2.9 benötigt keine neuen externen Assets. Brand-, Kryo- und EMP-Effekte, Veredelungsanzeigen und das neue Drohnengehäuse sind eigener prozeduraler Godot-Zeichencode. Bestehende eigene Figuren-/Umgebungsatlanten, Schriften und die vom Nutzer bereitgestellte Hintergrundmusik werden weiterverwendet.
+- Die vorgesehenen Elemental-Bilder und die MP4 sind gezielte Aufnahmen des echten Godot-Spiels mit kontrollierten Darstellungstestzuständen. Sie sind kein zusätzliches Fremdartwork und werden nicht als erspielter Kampagnenfortschritt ausgewiesen. Erzeugte Dateien und tatsächliche Prüfungen werden im Buildbericht nachgewiesen.
