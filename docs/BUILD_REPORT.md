@@ -338,3 +338,47 @@ Vollständiger lokaler build.sh-Lauf erfolgreich: 30 headless Suiten, 12.649 aus
 - [Veröffentlichung 41015838173](https://github.com/Whiskymitschuss/New-Game/actions/runs/41015838173) erfolgreich in 22 s.
 - Vollständig öffentlich heruntergeladene [APK v0.2.11](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.11-debug/DeadwaveHeroes-v0.2.11-debug.apk): 74732709 Bytes, SHA-256 `aa4cd4a8906e34b1abc8edf0b58bf28851cee577dd019009b1a8a428ed1343e5`, identisch zu öffentlicher SHA256SUMS.txt. Signatur und 16-KB-Ausrichtung geprüft. Paket com.rfworlds.deadwaveheroes, Code 14, Version 0.2.11; Zertifikat identisch zu v0.2.10. Update-Bedingungen erfüllt.
 - Öffentliche MP4-Vorschau und PNG vollständig heruntergeladen und bytegleich zu den geprüften Aufnahmen verglichen. Keine Smartphone-Installation, Touch-/Audio-/FPS-Prüfung auf Hardware oder Windows-Ausführung durchgeführt.
+
+
+## Perfect Orbit v0.2.12 · 30.10.2026
+
+Implementiert sind ein langsamer wanderndes Goldfenster (Mitte `270 + sin(t × 0,9) × 148`, Halbbereich 27 Pixel) auf der weiterhin 640 Pixel/s schnellen Schiene, eine tatsächlich kollisionsfreie Goldkugel pro perfektem Abwurf und ein separater Orbitalspeicher. Während der Injektion bleiben Fenster und Abwurfposition stehen. Die Goldkugel nutzt weiterhin Multiplikatoren, Portale und den Sammler. Sichtbare Aufteilungen erben die Durchdringung; nur der ursprüngliche Repräsentant besitzt das einmalige Sammelticket für +12% Orbit. Reguläre Kugelmenge und Poolgrenzen bleiben erhalten. Reaktivierte Poolkörper verlieren die Goldmarkierung.
+
+Der echte Sammler meldet exakt `gutgeschrieben − eingelagert` an den Speicher: zwei Überlaufeinheiten = 1%, Resthälften bleiben erhalten, maximal 100%. ORBIT belegt die rechte Spalte des Waffenstreifens; IMPULS und Energie bleiben an der bisherigen unteren Taste. ORBIT verlangt volle Ladung, einen sichtbaren lebenden Gegner und abgelaufene Abklingzeit. Kein Verbrauch ohne Ziel, kein zweiter Auslöser während des Angriffs, keine automatischen Abschüsse. 0,45 aktive Sekunden Zielwarnung, einmaliger echter Schaden, 0,7 Sekunden sichtbarer Einschlag, acht aktive Sekunden Abklingzeit ab Auslösen. Schaden `(45 + Einsatz × 2,5) × Spezialfaktor`, Bossobergrenze 12% Maximalleben vor normaler Gegnerrüstung. Schaden und Belohnungen nutzen den vorhandenen `hit_enemy`-Pfad. Wellenwechsel warten das Angriffsende ab; Pause und Upgrade-Auswahl halten die Timer an. Der Speicher bleibt innerhalb des Einsatzes erhalten und wird bei einem neuen Einsatz zurückgesetzt. Savegame-Format und dauerhafte Progression ändern sich nicht.
+
+Die orbitalen Säulen, Zielmarkierungen und Schockringe liegen in einer ausgeschnittenen Zeichenfläche `Rect2(0,121,540,229)`. Sie überdecken weder HUD noch Reaktor. Niedrige Qualität und reduzierte Bewegung behalten eine zurückhaltende lesbare Darstellung ohne bildschirmfüllenden Weißblitz. Keine zusätzliche Gameplay-Zufallsquelle und keine Objektanzahl proportional zur virtuellen Kugelmenge.
+
+### Gezielt ausgeführte neue Prüfungen
+
+- `tests/timing_strike.gd`: 36 Funktionsprüfungen, 0 Fehler. Einschließlich echter Sammler-Überläufe, halber Prozentpunkte, begrenzter Extremmengen, einmaliger Goldbelohnung nach physischer Poolaufteilung, Abwurf-/Pausensperren, Zielauswahl, angekündigtem einmaligem Schaden, Bossobergrenze, echten Abschussbelohnungen, Abklingzeit, Wellenwechsel und Neustart.
+- Derselbe Test mit echtem OpenGL-Renderer und nativen Eingaben: 42 Prüfungen, 0 Fehler. Ein echter Druck auf ABWERFEN erzeugt die perfekte Salve; der native ORBIT-Knopf startet den Angriff. Pixelvergleiche belegen große sichtbare Einschläge, unveränderte Pixel außerhalb des Kampfgebiets und weiterhin sichtbare Effekte bei niedriger Qualität und reduzierter Bewegung.
+- Separater `auto_launcher.gd -- --campaign`: Einsatz 1 ohne manuelles Setzen der Schiene gewonnen, 105 Abschüsse, zwei automatisch abgepasste Abwürfe, 69,48 simulierte Sekunden; 14 Prüfungen, 0 Fehler. Dieser Pilot benötigt den optionalen Orbitalschlag nicht.
+
+### Aufnahmen
+
+`docs/previews/DeadwaveHeroes-v0.2.12-motion.mp4` stammt direkt aus Godot MovieMaker, 482 Quellbilder bei nominell 60 Bildern/s, konvertiert zu H.264/AAC, 540 × 960, 30 Bilder/s, 8,033 Sekunden. Aufnahmelog `builds/orbit-film.log`: zwei überprüfte Spielaktionen, 0 Fehler. Es handelt sich ausdrücklich um eine kontrollierte Demonstration mit zwei stationären Gegnern mit 1.500 HP, fast vollem Munitionslager, vierfachem Sammelfaktor und einmalig auf das Goldfenster ausgerichteter Vorrichtung. Die nativen Tasten lösen den echten perfekten Abwurf und den aus tatsächlich gesammeltem Überlauf geladenen Angriff aus. Das Video zeigt keinen erspielten Fortschritt. Die beiden PNGs sind native 540×960-Darstellungstests mit kontrollierten Zuständen, ebenfalls keine 4K-Geräteaufnahmen.
+
+MovieMaker brauchte auf dem Software-Renderer llvmpipe rund 39 Sekunden für acht Sekunden Video. Das ist keine gemessene Smartphone-Bildrate. Android-Installation, Berührungsgefühl, Audio und Leistung auf einem physischen Gerät sowie die Windows-Laufzeit wurden nicht geprüft.
+
+Mediennachweise:
+
+```json
+{
+  "docs/previews/DeadwaveHeroes-v0.2.12-motion.mp4": {
+    "bytes": 1086056,
+    "sha256": "7e5707f9fc41f14c6df5d6f1c88fe31737970387aff5e9b16a2127abf43f0c06"
+  },
+  "docs/screenshots/perfect-drop-v0.2.12.png": {
+    "bytes": 570560,
+    "sha256": "887823db56d58e3310487ab2159c19140d54ef9ed702ead663c895c185d16459"
+  },
+  "docs/screenshots/orbital-strike-v0.2.12.png": {
+    "bytes": 572854,
+    "sha256": "dd8134a4dd47d39489cb9fe213d2fe6d67cc7ee4b44856b5fc1cfb3dde06b0da"
+  }
+}
+```
+
+Gesamtlauf, Export und öffentlicher Download werden nach ihrer tatsächlichen Fertigstellung unten dokumentiert.
+
+Zusätzlich bestanden alle elf vorhandenen OpenGL-Suites mit 405 Prüfungen und null Fehlern. Zusammen mit dem neuen Darstellungstest sind es zwölf Suites mit 447 Prüfungen. Der separate Timing-Pilot und die beiden Filmprüfungen sind darin nicht enthalten.

@@ -21,6 +21,7 @@ func _draw() -> void:
   var cargo=ball.get("ammo_kind")
   var typed=cargo is String and cargo in ["fire","frost","emp"]
   if typed:tint=SpecialAmmo.color(String(cargo))
+  if ball.perfect:tint=Color("ffd68b")
   var trail=ball.linear_velocity.limit_length(420)*0.035
   draw_line(at-trail*1.9,at,Color(tint,0.09),9,true)
   draw_line(at-trail,at,Color(tint,0.32),5,true)
@@ -34,4 +35,7 @@ func _draw() -> void:
   draw_circle(at-Vector2(2,2.5),2.4,Color.WHITE)
   if ball.glow>0:
    draw_arc(at,10+ball.glow*9,0,TAU,20,Color(tint,ball.glow*1.6),1,true)
+  if ball.perfect:
+   draw_arc(at,12,0,TAU,24,Color("ffdd99"),1.8,true)
+   draw_line(at-Vector2(0,16),at+Vector2(0,16),Color("fff1c9",0.8),1.2,true)
   rendered_count+=1

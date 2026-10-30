@@ -25,6 +25,7 @@ var blood_fx: BloodFX
 var combat_motion: CombatMotion
 var elemental_fx: ElementalFx
 const COMBAT_PACE=1.25
+var timing_strike: TimingStrike
 var bonus_ops: BonusOps
 var support_drone: SupportDrone
 var profile = Profile.new()
@@ -147,6 +148,9 @@ func _ready() -> void:
  ball_visuals=BallVisuals.new()
  ball_visuals.balls=pool
  add_child(ball_visuals)
+ timing_strike=TimingStrike.new()
+ timing_strike.game=self
+ add_child(timing_strike)
  bonus_ops=BonusOps.new()
  bonus_ops.game=self
  add_child(bonus_ops)
@@ -243,7 +247,7 @@ func show_menu() -> void:
  var settings=button("OPTIONEN",Rect2(358,783,152,63),show_settings)
  button("WERKBANK  ·  DAUERHAFTE AUSRÜSTUNG",Rect2(30,853,480,44),show_workshop)
  label("HELD LV %d   ·   %s CR"%[profile.data["level"],compact(profile.data["coins"])],Vector2(32,902),10,MUTED,470)
- label("OFFLINE BEREIT                                 v0.2.11",Vector2(32,920),10,MUTED)
+ label("OFFLINE BEREIT                                 v0.2.12",Vector2(32,920),10,MUTED)
  reveal_ui(0)
 
 func page_header(title: String,subtitle: String) -> void:
@@ -346,6 +350,7 @@ func start_level(number: int) -> void:
  launcher_phase=220.0
  set_aim(270.0)
  bonus_ops.reset()
+ timing_strike.reset()
  ammo_cargo.reset()
  wave_booster.clear()
  overdrive_left=0
@@ -400,7 +405,7 @@ func start_level(number: int) -> void:
  build_hud()
  begin_wave()
  audio.play_music("battle")
- status_text="Pendel beobachten. Im richtigen Moment ABWERFEN." if level<=3 else "Produziere Munition. Halte die Stellung."
+ status_text="Goldenes Fenster treffen: perfekte Kugel + Orbitalladung." if level<=3 else "Produziere Munition. Halte die Stellung."
 
 func build_hud() -> void:
  clear_ui()
@@ -427,12 +432,13 @@ func build_hud() -> void:
  future.style_slider(slider)
  controls.add_child(slider)
  aim_slider=slider
- # Large touch surface; positioning never fires a drop accidentally.
+ # Input-transparent board: the automatic rail is controlled by release timing.
  var aim_surface=Control.new()
  aim_surface.position=Vector2(30,496)
  aim_surface.size=Vector2(480,332)
  aim_surface.mouse_filter=Control.MOUSE_FILTER_IGNORE
  controls.add_child(aim_surface)
+ if is_instance_valid(timing_strike):timing_strike.mount()
  if is_instance_valid(bonus_ops):bonus_ops.mount()
 
 func toggle_switch() -> void:
@@ -543,13 +549,16 @@ func active_balls() -> int:
    count+=1
  return count
 
-func emit_ball(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0,used_portal: bool=false,ammo_kind: String="normal") -> bool:
+func emit_ball(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0,used_portal: bool=false,ammo_kind: String="normal",perfect: bool=false,perfect_ticket: bool=false) -> bool:
  var limit=MAX_BALLS if quality==1 else 64
  for i in range(limit):
   if not pool[i].live:
    pool[i].activate(at,velocity,amount,mask)
    pool[i].portal_used=used_portal
    pool[i].ammo_kind=ammo_kind
+   pool[i].perfect=perfect
+   pool[i].perfect_ticket=perfect_ticket
+   if perfect:pool[i].collision_mask=0
    return true
  return false
 
@@ -568,8 +577,9 @@ func drop_ammo() -> void:
  reactor_switch.begin_drop()
  dropped+=count
  profile.data["stats"]["drops"]+=1
+ var perfect=timing_strike.capture_drop()
  for i in range(count):
-  pending_balls.append({"at":Vector2(aim+rng.randf_range(-20,20),498),"velocity":Vector2(rng.randf_range(-48,48)+(aim-270)*0.16,rng.randf_range(8,25))})
+  pending_balls.append({"perfect":perfect and i==0,"at":Vector2(aim+rng.randf_range(-20,20),498),"velocity":Vector2(rng.randf_range(-48,48)+(aim-270)*0.16,rng.randf_range(8,25))})
  drop_emit_timer=0
  audio.play_effect("drop")
  status_text="Jede Kugel zählt. Multiplikatoren vervielfachen ihren Wert."
@@ -580,7 +590,7 @@ func emit_pending_balls(delta: float) -> void:
  drop_emit_timer-=delta
  while drop_emit_timer<=0 and not pending_balls.is_empty():
   var next: Dictionary=pending_balls[0]
-  if not emit_ball(next["at"],next["velocity"]):
+  if not emit_ball(next["at"],next["velocity"],1,0,false,"normal",bool(next.get("perfect",false)),bool(next.get("perfect",false))):
    return # Preserve queued units when representative splits occupy the pool.
   pending_balls.pop_front()
   reactor_fx.pulse(next["at"],CYAN,"inject",0.6)
@@ -605,11 +615,13 @@ func multiply_ball(ball: AmmoBall,row: int) -> void:
  # Split representative weights exactly, never instantiate factor-many bodies.
  if ball.weight>=4 and active_balls()<48 and quality==1:
   var portion=int(ball.weight/2)
-  if emit_ball(ball.position+Vector2(8,8),ball.linear_velocity+Vector2(45,0),portion,ball.gates,ball.portal_used,ball.ammo_kind):
+  if emit_ball(ball.position+Vector2(8,8),ball.linear_velocity+Vector2(45,0),portion,ball.gates,ball.portal_used,ball.ammo_kind,ball.perfect):
    ball.weight-=portion
  audio.play_effect("multiply",0.9+row*0.15)
 
 func collect_ball(ball: AmmoBall) -> void:
+ if not ball.live:return
+ timing_strike.collect_perfect(ball)
  var amount=ball.weight
  collected+=amount
  # Preserve fractional collection upgrades across pooled representatives.
@@ -622,6 +634,7 @@ func collect_ball(ball: AmmoBall) -> void:
  produced+=accepted
  drop_credited+=accepted
  drop_overflow+=credited-accepted
+ timing_strike.add_overflow(credited-accepted)
  energy=minf(100,energy+0.15)
  var at=Vector2(clampf(ball.position.x,38,502),852)
  reactor_fx.pulse(at,LIME if accepted>0 else FutureArt.AMBER,"collect" if accepted>0 else "overflow",1.2)
@@ -835,7 +848,7 @@ func update_combat(delta: float) -> void:
   finish_level(false)
  elif remaining==0 and enemies.is_empty():
   wave_delay+=delta
-  if wave_delay>0.9 and active_balls()==0 and pending_balls.is_empty():
+  if wave_delay>0.9 and active_balls()==0 and pending_balls.is_empty() and not timing_strike.busy():
    if wave>=wave_count:
     finish_level(true)
    else:
@@ -1243,6 +1256,7 @@ func _physics_process(delta: float) -> void:
   gear_flash=maxf(0,gear_flash-delta)
   power_message_left=maxf(0,power_message_left-delta)
   update_launcher(delta)
+  timing_strike.update(delta)
   physics_balls(delta)
   update_combat(delta*COMBAT_PACE)
  if auto_test and clock>1.0 and attempts>0 and active_balls()==0 and mode=="play":

@@ -2,6 +2,8 @@ class_name AmmoBall
 extends RigidBody2D
 var weight: int = 1
 var ammo_kind := "normal"
+var perfect := false
+var perfect_ticket := false
 var gates: int = 0
 var age: float = 0.0
 var previous := Vector2.ZERO
@@ -59,6 +61,8 @@ func activate(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> void:
  previous=at
  weight=amount
  ammo_kind="normal"
+ perfect=false
+ perfect_ticket=false
  gates=mask
  age=0
  glow=0.0
@@ -75,6 +79,8 @@ func activate(at: Vector2,velocity: Vector2,amount: int=1,mask: int=0) -> void:
  queue_redraw()
 
 func deactivate() -> void:
+ perfect=false
+ perfect_ticket=false
  live=false
  reset_pending=false
  visible=false

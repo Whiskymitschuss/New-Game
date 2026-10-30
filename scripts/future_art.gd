@@ -251,9 +251,7 @@ func hud() -> void:
  var magazine_size=9
  if mono_font.get_string_size(magazine_state,HORIZONTAL_ALIGNMENT_LEFT,-1,magazine_size).x>181:magazine_size=8
  text(magazine_state,Vector2(184,406),magazine_size,AMBER if g.overdrive_left>0 else (SpecialAmmo.color(next_kind) if next_kind!="normal" else QUIET),true)
- text("KINETIK",Vector2(385,370),9,QUIET,true)
- text("BEREIT" if g.energy>=50 else "%02d / 50"%int(g.energy),Vector2(385,391),15,BLUE,true)
- g.bar(Rect2(385,398,121,3),g.energy/100.0,BLUE)
+ # The orbit action owns this column; kinetic energy remains on IMPULS.
 
 func wave_cue() -> void:
  if g.wave_banner<=0 or g.mode!="play":return

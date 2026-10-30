@@ -20,21 +20,21 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SOURCE_RUN_ID: ${{ inputs.source_run_id || github.event.workflow_run.id }}
-      RELEASE_TAG: v0.2.11-debug
+      RELEASE_TAG: v0.2.12-debug
       SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Download the already tested APK
-        run: gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name DeadwaveHeroes-v0.2.11-debug --dir release-assets
+        run: gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name DeadwaveHeroes-v0.2.12-debug --dir release-assets
       - name: Verify APK matches the successful build manifest
         run: |
           python3 - <<'PY'
           import hashlib,json
           from pathlib import Path
           root=Path('release-assets')
-          name='DeadwaveHeroes-v0.2.11-debug.apk'
+          name='DeadwaveHeroes-v0.2.12-debug.apk'
           info=json.loads((root/'manifest.json').read_text())[name]
           apk=root/name
           assert apk.stat().st_size==info['bytes'], 'APK size mismatch'
@@ -45,9 +45,9 @@ jobs:
       - name: Publish direct download as an explicitly marked debug prerelease
         run: |
           cat > /tmp/deadwave-release-notes.md <<'NOTES'
-          Spielbarer Prototyp v0.2.11 von RF Worlds. Die APK unten direkt herunterladen und auf Android installieren. Android 7 oder neuer, ARMv7/ARM64. Die Datei stammt unverändert aus dem zugehörigen erfolgreich geprüften GitHub-Build.
+          Spielbarer Prototyp v0.2.12 von RF Worlds. Die APK unten direkt herunterladen und auf Android installieren. Android 7 oder neuer, ARMv7/ARM64. Die Datei stammt unverändert aus dem zugehörigen erfolgreich geprüften GitHub-Build.
 
-          Timing Rail: Die Abwurfvorrichtung pendelt automatisch schnell links und rechts (640 Pixel/s bei 540-Pixel-Spielbreite). ABWERFEN fixiert die gewählte Position für die Salve; anschließend pendelt sie weiter, auch während Kugeln noch fallen. Keine manuelle Schiebersteuerung. Pause hält das Pendel an. Bonusspiele und schnelleres Kampftempo bleiben integriert.
+          Perfect Orbit: Ein wanderndes Goldfenster belohnt präzise Abwürfe mit einer hindernisdurchdringenden Goldkugel und einmalig +12% Orbitalladung beim Sammeln. Je zwei überschüssige Munition liefern 1% Ladung. Der separat auslösbare Orbitalschlag markiert Ziele 0,45 Sekunden vor dem Einschlag, hat acht Sekunden Abklingzeit und trifft Bosse höchstens für 12% Maximalleben. Kein zusätzlicher Munitionsverbrauch. Schnelle automatische Schiene und Bonusspiele bleiben erhalten.
 
           Das Savegame-Format bleibt kompatibel. Der Debug-Schlüssel wird aus dem Buildcache wiederverwendet.
 
@@ -57,4 +57,4 @@ jobs:
             echo "This version already has a direct download; keeping its existing APK."
             exit 0
           fi
-          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --prerelease --title 'DEADWAVE HEROES v0.2.11 · Android Debug' --notes-file /tmp/deadwave-release-notes.md release-assets/DeadwaveHeroes-v0.2.11-debug.apk release-assets/SHA256SUMS.txt docs/screenshots/timing-rail-v0.2.11.png docs/previews/DeadwaveHeroes-v0.2.11-motion.mp4
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --prerelease --title 'DEADWAVE HEROES v0.2.12 · Android Debug' --notes-file /tmp/deadwave-release-notes.md release-assets/DeadwaveHeroes-v0.2.12-debug.apk release-assets/SHA256SUMS.txt docs/screenshots/orbital-strike-v0.2.12.png docs/screenshots/perfect-drop-v0.2.12.png docs/previews/DeadwaveHeroes-v0.2.12-motion.mp4

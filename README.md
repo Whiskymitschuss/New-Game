@@ -1,6 +1,16 @@
 # DEADWAVE HEROES · RF Worlds
 
-Spielbarer Godot-4.6.3-Prototyp **v0.2.11**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+Spielbarer Godot-4.6.3-Prototyp **v0.2.12**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+
+## Perfect Orbit 0.2.12
+
+Das langsam wandernde **Goldfenster** auf der schnellen Schiene belohnt präzises Timing. Ein perfekter Abwurf enthält eine goldene Kugel, die physische Hindernisse durchdringt, aber weiterhin die tatsächlichen Multiplikatoren, Portale und den Sammler nutzt. Ihre Menge bleibt regulär. Beim Sammeln gibt sie einmalig **+12% Orbitalladung**; sichtbare Aufteilungen vervielfachen diesen Bonus nicht.
+
+**Überlauf wird zur Waffe:** Zwei überschüssige Munition laden 1% Orbit, bis maximal 100%. Halbe Prozentpunkte bleiben erhalten. Der neue ORBIT-Knopf im Waffenstreifen löst den Angriff bei voller Ladung gegen sichtbare Gegner aus. Eine Zielmarkierung kündigt den Einschlag 0,45 Sekunden an; goldene Energiesäulen und Bodenschockringe zeigen die echte Wirkung. Schaden: `(45 + 2,5 × Einsatznummer) × Spezialfaktor`, vor normaler Gegnerrüstung. Bosse erhalten höchstens 12% Maximalleben vor Rüstung. Acht aktive Spielsekunden Abklingzeit. Ohne sichtbares Ziel geht keine Ladung verloren. Pause hält Countdown und Abklingzeit an. Der Speicher bleibt zwischen Wellen erhalten und beginnt bei einem neuen Einsatz bei null.
+
+Kinetik bleibt über die IMPULS-Taste verfügbar. Der Orbitalschlag verbraucht weder Munition noch Kinetik. Der normale Abwurf verlangt weiterhin Platz im Munitionslager. Effekte bleiben auf das Kampfgebiet begrenzt und berücksichtigen reduzierte Bewegung und niedrige Grafikqualität.
+
+[Perfekter Abwurf](docs/screenshots/perfect-drop-v0.2.12.png) · [Orbitalschlag](docs/screenshots/orbital-strike-v0.2.12.png) · [Bewegte Vorschau](docs/previews/DeadwaveHeroes-v0.2.12-motion.mp4)
 
 ## Timing Rail 0.2.11
 
@@ -118,7 +128,7 @@ Die Levelkarte enthält 100 feste, gespeicherte Layouts in zehn Welten. Waffen w
 
 ## Android installieren
 
-**[Android-APK v0.2.11 herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.11-debug/DeadwaveHeroes-v0.2.11-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.11-debug). Vollständig heruntergeladen und auf Prüfsumme, Signatur und Update-Bedingungen gegenüber v0.2.10 geprüft; Nachweise im [Buildbericht](docs/BUILD_REPORT.md).
+**[Android-APK v0.2.12 herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.12-debug/DeadwaveHeroes-v0.2.12-debug.apk)** · [Downloadseite](https://github.com/Whiskymitschuss/New-Game/releases/tag/v0.2.12-debug). Build- und Downloadnachweise im [Buildbericht](docs/BUILD_REPORT.md).
 
 Bereits verifiziert: **[APK v0.2.8 herunterladen](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.8-debug/DeadwaveHeroes-v0.2.8-debug.apk)**. Der öffentliche Download benötigt keinen GitHub-Login und kein Entpacken eines Actions-Archivs.
 
