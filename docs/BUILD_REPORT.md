@@ -319,3 +319,14 @@ Gezielte Prüfungen: 15 Headless-Prüfungen bestanden; zusätzlicher nativer Ope
 - [Veröffentlichung 40960362123](https://github.com/Whiskymitschuss/New-Game/actions/runs/40960362123) erfolgreich in 20 s.
 - Vollständig heruntergeladene öffentliche [APK v0.2.10](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.10-debug/DeadwaveHeroes-v0.2.10-debug.apk): 74728613 Bytes, SHA-256 `d2cb31d4c0b0ea5d30f4a16c1cd262d1995565389832a6c8d1b880febf9d371b`, identisch zu öffentlicher SHA256SUMS.txt. Signatur und 16-KB-Ausrichtung geprüft. Paket com.rfworlds.deadwaveheroes, Code 13, Version 0.2.10. Das Zertifikat ist identisch zu v0.2.9; die Update-Bedingungen sind erfüllt.
 - Öffentliches Screenshot-Artefakt vollständig heruntergeladen und bytegleich zur eingecheckten gezielten Eingabeprüfung bestätigt. Keine Smartphone-Installation, Touch-/Audio-/FPS-Messung auf Hardware oder Windows-Ausführung durchgeführt.
+
+
+## 0.2.11 / Timing Rail · 30.10.2026
+
+Schnelles automatisches Pendel mit 640 px/s, Grenzen x50–490, kontinuierliche Reflexion und korrekte Reststrecke am Rand. Keine Steuerung durch Touch, Maus oder Tastaturfokus auf dem Schieber. ABWERFEN löst unmittelbar beim Drücken aus und fixiert die Salvenposition bis zum Ende der Warteschlange. Anschließend Bewegung trotz noch fallender Kugeln. Pause/Upgrade halten die Phase; neuer Einsatz setzt sie reproduzierbar auf Mitte zurück. Kein Verbrauch des Kampfzufalls und keine Änderung der Kugelmengen oder Poolgrenzen.
+
+Neue Einheitssuite: 13 Prüfungen bestanden. Zusätzlicher echter Timing-Pilot gewinnt Einsatz 1 ohne direktes Setzen der Position: 105 Abschüsse, zwei am Pendelstand ausgelöste Abwürfe, 69,48 simulierte Sekunden, 14 Prüfungen bestanden. Native GL-/Filmprüfung bestätigt Drücken statt Loslassen und sichtbare physische Abwürfe: 15 Prüfungen bestanden. Vorhandene Touch-Steuerungsprüfungen wurden auf die ausdrücklich gewünschte automatische Steuerung aktualisiert; Erhaltung der Mengen und Ballwiederverwendung bleiben geprüft.
+
+Native Vorschau (gezielter Eingabetest im echten Spiel): 12.100000 Sekunden, 540 × 960, 30 Bilder/s, H.264/AAC, 2859959 Bytes, SHA-256 `6d297d490f9c1ef502464aedc08a43a5801f578a75344d26a94e26eb29826062`. Die Aufnahme zeigt automatisches Pendeln und zwei native Tastendrücke. Keine Smartphone-FPS-Messung.
+
+Vollständige lokale und öffentliche Regression, Exporte und Downloadverifikation noch im Abschluss. Keine Installation, Touch-/Audio-/FPS-Prüfung auf einem physischen Android-Gerät oder Windows-Ausführung durchgeführt.

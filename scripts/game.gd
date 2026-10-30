@@ -69,6 +69,8 @@ var stats: Dictionary = {}
 var hp = 120.0
 var ammo: int = 40
 var attempts = 5
+const LAUNCHER_SPEED=640.0
+var launcher_phase=220.0
 var aim = 270.0
 var fire_timer = 0.0
 var spawn_timer = 0.0
@@ -241,7 +243,7 @@ func show_menu() -> void:
  var settings=button("OPTIONEN",Rect2(358,783,152,63),show_settings)
  button("WERKBANK  ·  DAUERHAFTE AUSRÜSTUNG",Rect2(30,853,480,44),show_workshop)
  label("HELD LV %d   ·   %s CR"%[profile.data["level"],compact(profile.data["coins"])],Vector2(32,902),10,MUTED,470)
- label("OFFLINE BEREIT                                 v0.2.10",Vector2(32,920),10,MUTED)
+ label("OFFLINE BEREIT                                 v0.2.11",Vector2(32,920),10,MUTED)
  reveal_ui(0)
 
 func page_header(title: String,subtitle: String) -> void:
@@ -341,6 +343,8 @@ func show_licenses() -> void:
 
 func start_level(number: int) -> void:
  deployment_age=0
+ launcher_phase=220.0
+ set_aim(270.0)
  bonus_ops.reset()
  ammo_cargo.reset()
  wave_booster.clear()
@@ -396,12 +400,13 @@ func start_level(number: int) -> void:
  build_hud()
  begin_wave()
  audio.play_music("battle")
- status_text="Ziehen: Abwurfposition wählen. Dann ABWERFEN." if level<=3 else "Produziere Munition. Halte die Stellung."
+ status_text="Pendel beobachten. Im richtigen Moment ABWERFEN." if level<=3 else "Produziere Munition. Halte die Stellung."
 
 func build_hud() -> void:
  clear_ui()
  button("Ⅱ",Rect2(467,27,43,39),pause_game)
  drop_button=button("ABWERFEN",Rect2(24,888,228,54),drop_ammo,true)
+ drop_button.action_mode=BaseButton.ACTION_MODE_BUTTON_PRESS
  drop_button.add_theme_font_size_override("font_size",14)
  switch_button=button(reactor_switch.caption(),Rect2(264,888,120,54),toggle_switch)
  switch_button.add_theme_font_size_override("font_size",11)
@@ -409,14 +414,16 @@ func build_hud() -> void:
  special_button=button("IMPULS",Rect2(396,888,120,54),special_attack)
  special_button.add_theme_font_size_override("font_size",12)
  special_button.tooltip_text="Kostet 50 Energie. Trifft die Horde und gibt einen Schild."
- drop_button.tooltip_text="%d Startkugeln. Ein Versuch pro Abwurf. Max. 12 Spezialladungen pro Abwurf, 36 im Vorrat."%int(stats["drop"])
+ drop_button.tooltip_text="%d Startkugeln. Ein Versuch pro Abwurf. Pendel timen! Die Abwurfposition bleibt während der Salve fixiert. Max. 12 Spezialladungen."%int(stats["drop"])
  var slider=HSlider.new()
  slider.position=Vector2(45,438)
  slider.size=Vector2(450,28)
  slider.min_value=50
  slider.max_value=490
  slider.value=aim
- slider.value_changed.connect(func(value): aim=value)
+ slider.editable=false
+ slider.mouse_filter=Control.MOUSE_FILTER_IGNORE
+ slider.focus_mode=Control.FOCUS_NONE
  future.style_slider(slider)
  controls.add_child(slider)
  aim_slider=slider
@@ -424,8 +431,7 @@ func build_hud() -> void:
  var aim_surface=Control.new()
  aim_surface.position=Vector2(30,496)
  aim_surface.size=Vector2(480,332)
- aim_surface.mouse_default_cursor_shape=Control.CURSOR_HSIZE
- aim_surface.gui_input.connect(aim_input)
+ aim_surface.mouse_filter=Control.MOUSE_FILTER_IGNORE
  controls.add_child(aim_surface)
  if is_instance_valid(bonus_ops):bonus_ops.mount()
 
@@ -433,21 +439,20 @@ func toggle_switch() -> void:
  if reactor_switch.toggle():
   reactor_fx.pulse(reactor_switch.body.position,CYAN,"switch",0.8)
 
-func aim_input(event: InputEvent) -> void:
- if mode!="play":return
- if event is InputEventScreenTouch:
-  dragging=event.pressed
-  if dragging:set_aim(event.position.x+30)
- elif event is InputEventScreenDrag:
-  set_aim(event.position.x+30)
- elif event is InputEventMouseButton and event.button_index==MOUSE_BUTTON_LEFT:
-  dragging=event.pressed
-  if dragging:set_aim(event.position.x+30)
- elif event is InputEventMouseMotion and event.button_mask & MOUSE_BUTTON_MASK_LEFT:
-  set_aim(event.position.x+30)
+func aim_input(_event: InputEvent) -> void:
+ # The rail is automatic; input only releases a burst using ABWERFEN.
+ pass
+
+func update_launcher(delta: float) -> void:
+ if mode!="play" or not pending_balls.is_empty():return
+ launcher_phase=fposmod(launcher_phase+maxf(0,delta)*LAUNCHER_SPEED,880.0)
+ var offset=launcher_phase if launcher_phase<=440.0 else 880.0-launcher_phase
+ aim=50.0+offset
+ if is_instance_valid(aim_slider):aim_slider.set_value_no_signal(aim)
 
 func set_aim(value: float) -> void:
  aim=clampf(value,50,490)
+ launcher_phase=aim-50.0
  if is_instance_valid(aim_slider):aim_slider.set_value_no_signal(aim)
 
 func route_factor() -> int:
@@ -465,9 +470,9 @@ func reactor_hint() -> String:
  if ammo>=int(stats["capacity"]):return "LAGER VOLL · ABWURF WIEDER NACH VERBRAUCH"
  if attempts<=0:return "KEIN ABWURF · NÄCHSTE WELLE GIBT +1" if wave<wave_count else "LETZTE HORDE · IMPULS ZUR UNTERSTÜTZUNG"
  if ammo<=30:return "MUNITION KNAPP · JETZT KUGELN ABWERFEN"
- if level<=3 and wave==1 and dropped==0:return "PORTAL: EMP · MITTE: BRAND/KRYO · BIS 12 LADUNGEN"
+ if level<=3 and wave==1 and dropped==0:return "SCHNELLES PENDEL · ABWERFEN IM RICHTIGEN MOMENT"
  if not wave_booster.is_empty() and not bool(wave_booster.get("consumed",false)):return "POWERZELLE SICHTBAR · MIT EINER KUGEL AKTIVIEREN"
- return "IM REAKTOR ZIEHEN · WEG WÄHLEN · ABWERFEN"
+ return "PENDEL BEOBACHTEN · ABWURF RICHTIG TIMEN"
 
 func clear_geometry() -> void:
  reactor_switch.reset()
@@ -1237,6 +1242,7 @@ func _physics_process(delta: float) -> void:
   overdrive_left=maxf(0,overdrive_left-delta)
   gear_flash=maxf(0,gear_flash-delta)
   power_message_left=maxf(0,power_message_left-delta)
+  update_launcher(delta)
   physics_balls(delta)
   update_combat(delta*COMBAT_PACE)
  if auto_test and clock>1.0 and attempts>0 and active_balls()==0 and mode=="play":

@@ -1,6 +1,12 @@
 # DEADWAVE HEROES · RF Worlds
 
-Spielbarer Godot-4.6.3-Prototyp **v0.2.10**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+Spielbarer Godot-4.6.3-Prototyp **v0.2.11**, Android und Windows, Hochformat 540 × 960. Eigenständige generierte Sci-Fi-Illustrationen und skalierbare Vektoroberfläche mit „Endless Survival“ als Hintergrundmusik. Vollständig offline, keine Werbung, keine In-App-Käufe.
+
+## Timing Rail 0.2.11
+
+Die Abwurfvorrichtung pendelt selbstständig mit 640 Bildpunkten/s zwischen x50 und x490. Eine Hin-und-zurück-Fahrt dauert 1,375 Sekunden. **ABWERFEN** reagiert auf das Drücken: Die aktuelle Position wird für die gesamte Kugelsalve festgehalten. Nach der Injektion pendelt die Vorrichtung wieder, auch während Kugeln noch fallen. Pause und Upgrade-Auswahl halten das Pendel an. Die Anzeige ist nicht mehr manuell ziehbar; die Weiche bleibt steuerbar. Reduzierte Bewegung entfernt keine spielentscheidende Pendelbewegung.
+
+[Spielansicht](docs/screenshots/timing-rail-v0.2.11.png) · [Bewegte Vorschau](docs/previews/DeadwaveHeroes-v0.2.11-motion.mp4)
 
 ## Live Ops 0.2.10
 
@@ -103,7 +109,7 @@ Die vom Nutzer bereitgestellte Originaldatei „Endless Survival.mp3“ ist unve
 ## Spielen
 
 1. Einsatz starten. Oben kämpft der Held automatisch und verbraucht echte Munition.
-2. Direkt im Reaktor oder den Schieberegler über dem Spielfeld ziehen und **ABWERFEN** drücken. Die Abwurfversuche sind begrenzt; jede neue Welle gewährt einen weiteren.
+2. Das schnelle Pendel über dem Reaktor beobachten und im passenden Moment **ABWERFEN** drücken. Die Abwurfversuche sind begrenzt; jede neue Welle gewährt einen weiteren.
 3. Echte Physikkugeln passieren unterschiedlich starke Multiplikatoren. Links/rechts gewählte Wege ändern die Produktionsmenge. Der Sammler schreibt die repräsentierte Menge als Munition gut, bis zur Kapazität.
 4. Während des Abwurfs bei Bedarf einmal die **WEICHE** umstellen. Portal und aktive mittlere Tore veredeln einen begrenzten Teil der gesammelten Munition zu EMP, Brand oder Kryo. Zwischen Wellen eine kostenlose Verbesserung wählen. **IMPULS** verbraucht 50 Energie, trifft Gegner und erzeugt einen Schutzschild. Bei Bosswarnungen einsetzen.
 5. Einsätze abschließen, Sterne und Münzen verdienen. Im Arsenal Waffen ausrüsten und dauerhaft verbessern; in der Werkbank Gürtel, Panzer und Waffenmodul ausbauen. Alle drei Klassen sind im Prototyp sofort verfügbar.

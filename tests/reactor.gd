@@ -10,19 +10,20 @@ func run() -> void:
  game=load("res://main.tscn").instantiate();root.add_child(game);await process_frame
  game.start_level(1);game.set_physics_process(false)
  game.reactor_fx.set_process(false)
- # The large real touch control updates the slider without ever firing ammunition.
+ # Touch/drag cannot override the automatic rail or accidentally release ammunition.
+ var original_aim=game.aim
  var surface: Control=game.controls.get_child(game.controls.get_child_count()-1)
  var touch=InputEventScreenTouch.new();touch.pressed=true;touch.position=Vector2(380,100)
  var attempts=game.attempts
  surface.gui_input.emit(touch)
- check(game.aim==410 and game.aim_slider.value==410,"touch chamber and slider agree in local coordinates")
+ check(game.aim==original_aim and not game.aim_slider.editable,"automatic rail rejects manual touch steering")
  check(game.attempts==attempts and game.pending_balls.is_empty(),"positioning does not accidentally drop")
  var drag=InputEventScreenDrag.new();drag.position=Vector2(-200,20)
  surface.gui_input.emit(drag)
- check(game.aim==50,"touch drag is clamped to the safe injection region")
+ check(game.aim==original_aim,"touch drag cannot move the automatic injector")
  var mouse=InputEventMouseMotion.new();mouse.button_mask=MOUSE_BUTTON_MASK_LEFT;mouse.position=Vector2(470,70)
  surface.gui_input.emit(mouse)
- check(game.aim==490,"mouse drag follows the same input path")
+ check(game.aim==original_aim,"mouse drag cannot override the automatic injector")
  game.aim=410
  game.drop_ammo()
  game.emit_pending_balls(0.07)

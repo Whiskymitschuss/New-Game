@@ -117,11 +117,12 @@ func run() -> void:
  game.pause_game();image=await frame_image()
  check(not game.reactor_fx.visible,"the real rendered flare hides under the pause UI")
  game.mode="play";game.build_hud()
+ var previous_aim=game.aim
  var press=InputEventMouseButton.new();press.button_index=MOUSE_BUTTON_LEFT;press.pressed=true;press.position=Vector2(100,700)
  root.push_input(press)
  var release=press.duplicate();release.pressed=false;root.push_input(release)
  await process_frame
- check(absf(game.aim-100)<1 and absf(game.aim_slider.value-100)<1,"native viewport mouse input targets the large reactor aiming surface")
+ check(absf(game.aim-previous_aim)<1 and not game.aim_slider.editable,"native mouse input cannot steer the automatic rail")
  print("RENDER RESULT: %d checks, %d failures"%[checks,failures])
  game.queue_free()
  await process_frame
