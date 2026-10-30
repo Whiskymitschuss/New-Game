@@ -382,3 +382,65 @@ Mediennachweise:
 Gesamtlauf, Export und öffentlicher Download werden nach ihrer tatsächlichen Fertigstellung unten dokumentiert.
 
 Zusätzlich bestanden alle elf vorhandenen OpenGL-Suites mit 405 Prüfungen und null Fehlern. Zusammen mit dem neuen Darstellungstest sind es zwölf Suites mit 447 Prüfungen. Der separate Timing-Pilot und die beiden Filmprüfungen sind darin nicht enthalten.
+
+### Lokaler vollständiger Build
+
+`source /workspace/tools/env.sh && ./scripts/build.sh` endete mit Exitcode 0. 31 Headless-Suites mit 12.685 expliziten Prüfungen, 0 Fehler; zusätzlich zehn Klassen-/Kampagnen-Siege und sechs Waffen-Meilenstein-Siege. Die älteren Kampagnen verwenden diagnostisch gesetzte Wege; der oben separat dokumentierte Timing-Pilot bedient dagegen die automatisch bewegte Schiene. Android-Debug-Export und Windows-Export erfolgreich; `apksigner verify` und `zipalign -c -P 16 -v 4` bestanden. Lokale Dateiwerte (der lokale Debug-Schlüssel unterscheidet sich vom öffentlichen CI-Schlüssel):
+
+```json
+{
+  "DeadwaveHeroes-v0.2.12-debug.apk": {
+    "bytes": 74741062,
+    "sha256": "a9b08ceb61e94abe4a1aa51ff7f01a6983e480a85f26be8314169010d21f2850"
+  },
+  "DeadwaveHeroes-v0.2.12-windows.zip": {
+    "bytes": 51558102,
+    "sha256": "2c62091c79c880e8416327babcc8016ec7c274be881930b36a59cbc5a0768bb3"
+  }
+}
+```
+
+Implementierung und Medien wurden als `81aab9f` nach `main` übertragen. Öffentlicher Buildlauf: `41106313085`; seine abschließende Prüfung folgt nach Fertigstellung.
+
+### Öffentlicher Build und tatsächlich geprüfter Download
+
+[Build 41106313085](https://github.com/Whiskymitschuss/New-Game/actions/runs/41106313085) endete erfolgreich nach 5 Minuten 39 Sekunden; die verpflichtenden 31 Headless- und zwölf OpenGL-Suites sowie Android-/Windows-Export waren erfolgreich. [Veröffentlichung 41107136364](https://github.com/Whiskymitschuss/New-Game/actions/runs/41107136364) endete erfolgreich nach 25 Sekunden. Quelle ist Implementierungscommit `81aab9f`. Die Datei wurde vollständig aus der öffentlichen Veröffentlichung nach `/tmp/DeadwaveHeroes-v0.2.12-public.apk` heruntergeladen, nicht aus einem lokalen Build übernommen.
+
+**[Tatsächlich geprüfte Android-Debug-APK v0.2.12](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.12-debug/DeadwaveHeroes-v0.2.12-debug.apk)** · [Öffentliches Spielvideo](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.12-debug/DeadwaveHeroes-v0.2.12-motion.mp4)
+
+Die öffentliche APK umfasst **74.741.062 Bytes**. SHA-256 stimmt exakt mit dem veröffentlichten `SHA256SUMS.txt` überein. `apksigner verify --verbose --print-certs`, 16-KiB-ZIP-Ausrichtungsprüfung und Paketmetadatenprüfung waren erfolgreich. Paket `com.rfworlds.deadwaveheroes`, Version 0.2.12, **VersionCode 15**, Android ab API 24, Ziel-API 36, ARMv7/ARM64. Derselbe Signierer wie bei v0.2.11 und eine höhere Versionsnummer erfüllen die geprüften Update-Bedingungen; das ist kein tatsächlich auf einem Smartphone durchgeführter Installationstest.
+
+MP4 und beide PNGs wurden ebenfalls vollständig aus der öffentlichen Veröffentlichung heruntergeladen und bytegenau mit den eingecheckten Dateien verglichen. Nachweise: `builds/public-v0212-proof.json`, `public-v0212-SHA256SUMS.txt`, `public-v0212-signature.log`, `public-v0212-align.log`, `public-v0212-badging.log`.
+
+```json
+{
+  "source": "81aab9f",
+  "build": "41106313085",
+  "bytes": 74741062,
+  "sha256": "cdc2508d323da2b565b5ec3b60d5c19eefd5deb15cb7a7c43a4426f34abb5538",
+  "same_signer_as_v0211": true,
+  "certificate_sha256": "6ce3f6820da591451121735c9ced6574b9d333c5dc6775cbaa2e6d810c85bfd6",
+  "package": "com.rfworlds.deadwaveheroes",
+  "version_name": "0.2.12",
+  "version_code": 15,
+  "min_api": 24,
+  "target_api": 36,
+  "media": {
+    "DeadwaveHeroes-v0.2.12-motion.mp4": {
+      "bytes": 1086056,
+      "sha256": "7e5707f9fc41f14c6df5d6f1c88fe31737970387aff5e9b16a2127abf43f0c06"
+    },
+    "perfect-drop-v0.2.12.png": {
+      "bytes": 570560,
+      "sha256": "887823db56d58e3310487ab2159c19140d54ef9ed702ead663c895c185d16459"
+    },
+    "orbital-strike-v0.2.12.png": {
+      "bytes": 572854,
+      "sha256": "dd8134a4dd47d39489cb9fe213d2fe6d67cc7ee4b44856b5fc1cfb3dde06b0da"
+    }
+  },
+  "publish": "41107136364"
+}
+```
+
+Weiterhin ausdrücklich eine Debug-Testversion: keine Prüfung auf einem physischen Android-Gerät, keine gemessene Smartphone-Bildrate und keine Prüfung der Windows-Laufzeit. Keine Behauptung einer fertig signierten Produktionsveröffentlichung.
