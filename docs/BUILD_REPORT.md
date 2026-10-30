@@ -329,4 +329,12 @@ Neue Einheitssuite: 13 Prüfungen bestanden. Zusätzlicher echter Timing-Pilot g
 
 Native Vorschau (gezielter Eingabetest im echten Spiel): 12.100000 Sekunden, 540 × 960, 30 Bilder/s, H.264/AAC, 2859959 Bytes, SHA-256 `6d297d490f9c1ef502464aedc08a43a5801f578a75344d26a94e26eb29826062`. Die Aufnahme zeigt automatisches Pendeln und zwei native Tastendrücke. Keine Smartphone-FPS-Messung.
 
-Vollständige lokale und öffentliche Regression, Exporte und Downloadverifikation noch im Abschluss. Keine Installation, Touch-/Audio-/FPS-Prüfung auf einem physischen Android-Gerät oder Windows-Ausführung durchgeführt.
+Vollständiger lokaler build.sh-Lauf erfolgreich: 30 headless Suiten, 12.649 ausdrückliche Prüfungen ohne Fehler, zehn Klassen-/Kampagnenläufe und sechs Waffenmeilensteine mit Sieg. Bestandskampagnen verwenden kontrollierte Abwurfrouten; das tatsächliche automatische Timing wird zusätzlich im oben beschriebenen eigenständigen Pilot geprüft. Android-/Windows-Export, Signatur und 16-KB-Ausrichtung bestanden. Die öffentliche Downloadverifikation folgt unten. Keine Installation, Touch-/Audio-/FPS-Prüfung auf einem physischen Android-Gerät oder Windows-Ausführung durchgeführt.
+
+
+### Veröffentlichung 0.2.11 verifiziert
+
+- Quellstand `73ef258`. [GitHub-Build 41015283049](https://github.com/Whiskymitschuss/New-Game/actions/runs/41015283049) erfolgreich: 5 min 37 s insgesamt, Job 5 min 32 s. Alle 30 Funktionssuiten, Exporte und elf Grafiksuiten erfolgreich.
+- [Veröffentlichung 41015838173](https://github.com/Whiskymitschuss/New-Game/actions/runs/41015838173) erfolgreich in 22 s.
+- Vollständig öffentlich heruntergeladene [APK v0.2.11](https://github.com/Whiskymitschuss/New-Game/releases/download/v0.2.11-debug/DeadwaveHeroes-v0.2.11-debug.apk): 74732709 Bytes, SHA-256 `aa4cd4a8906e34b1abc8edf0b58bf28851cee577dd019009b1a8a428ed1343e5`, identisch zu öffentlicher SHA256SUMS.txt. Signatur und 16-KB-Ausrichtung geprüft. Paket com.rfworlds.deadwaveheroes, Code 14, Version 0.2.11; Zertifikat identisch zu v0.2.10. Update-Bedingungen erfüllt.
+- Öffentliche MP4-Vorschau und PNG vollständig heruntergeladen und bytegleich zu den geprüften Aufnahmen verglichen. Keine Smartphone-Installation, Touch-/Audio-/FPS-Prüfung auf Hardware oder Windows-Ausführung durchgeführt.
